@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, useMemo, startTransition } from "r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { createMeeting } from "@/lib/actions/meetings";
 import { useRouter } from "next/navigation";
 import type { DivisionGroup } from "@/lib/data/members";
@@ -89,7 +90,15 @@ export function NewMeetingForm({
   }, [search, divisions]);
 
   return (
-    <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
+    <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+      {pending && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm gap-3">
+          <Spinner size="lg" />
+          <p className="text-sm font-mono text-accent-magenta font-bold animate-pulse">
+            Membuat rapat...
+          </p>
+        </div>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -97,7 +106,7 @@ export function NewMeetingForm({
           fd.set("invitee_ids", JSON.stringify(Array.from(selectedIds)));
           startTransition(() => formAction(fd));
         }}
-        className="flex flex-col gap-6"
+        className={`flex flex-col gap-6 ${pending ? "pointer-events-none select-none" : ""}`}
       >
 
         {state?.error && (

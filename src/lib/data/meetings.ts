@@ -31,7 +31,7 @@ export async function getMeetings(): Promise<MeetingData[]> {
       ended_at,
       created_at,
       creator:committee_assignments!creator_id(
-        user:users(full_name)
+        user:profiles(full_name)
       )
     `)
     .eq("committee_year_id", YEAR_ID)

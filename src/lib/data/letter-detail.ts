@@ -37,8 +37,8 @@ export async function getLetterDetail(id: string): Promise<LetterDetail | null> 
       created_at,
       updated_at,
       division:divisions(name),
-      requester:committee_assignments!requester_id(user:users(full_name)),
-      handler:committee_assignments!current_handler_id(user:users(full_name))
+      requester:committee_assignments!requester_id(user:profiles(full_name)),
+      handler:committee_assignments!current_handler_id(user:profiles(full_name))
     `)
     .eq("id", id)
     .single();
@@ -51,7 +51,7 @@ export async function getLetterDetail(id: string): Promise<LetterDetail | null> 
       id,
       note,
       created_at,
-      reviewer:committee_assignments(user:users(full_name))
+      reviewer:committee_assignments(user:profiles(full_name))
     `)
     .eq("letter_request_id", id)
     .order("created_at", { ascending: false });

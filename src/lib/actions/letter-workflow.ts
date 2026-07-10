@@ -129,15 +129,17 @@ async function sendStatusNotification(letterId: string, newStatus: string) {
     const supabase = createAdminClient();
     const { data: letter } = await supabase
       .from("letter_requests")
-      .select("subject, requester:committee_assignments!requester_id(user:users(email, full_name))")
+      .select("subject, requester:committee_assignments!requester_id(id, user_id, user:profiles(full_name))")
       .eq("id", letterId)
       .single();
 
     if (letter) {
       const { sendEmailNotification } = await import("@/lib/email");
       const requester = (letter as any).requester;
-      const email = requester?.user?.email;
       const name = requester?.user?.full_name ?? "PIC";
+
+      const authUser = await supabase.auth.admin.getUserById(requester?.user_id);
+      const email = authUser?.data?.user?.email;
 
       if (email) {
         const statusLabels: Record<string, string> = {

@@ -39,7 +39,7 @@ export async function getMeetingDetail(id: string): Promise<MeetingDetail | null
       .select(`
         id, title, agenda, meeting_type, meeting_link, location,
         started_at, ended_at, created_at,
-        creator:committee_assignments!creator_id(user:users(full_name, email))
+        creator:committee_assignments!creator_id(user:profiles(full_name))
       `)
       .eq("id", id)
       .single(),
@@ -47,7 +47,7 @@ export async function getMeetingDetail(id: string): Promise<MeetingDetail | null
       .from("meeting_invitees")
       .select(`
         id, committee_assignment_id, rsvp_status, email_sent,
-        assignment:committee_assignments(user:users(full_name, email))
+        assignment:committee_assignments(user:profiles(full_name))
       `)
       .eq("meeting_id", id),
     supabase
@@ -55,7 +55,7 @@ export async function getMeetingDetail(id: string): Promise<MeetingDetail | null
       .select(`
         id, content, decision_points, action_items,
         published_at, created_at,
-        writer:committee_assignments(user:users(full_name))
+        writer:committee_assignments(user:profiles(full_name))
       `)
       .eq("meeting_id", id)
       .maybeSingle(),

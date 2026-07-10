@@ -28,7 +28,7 @@ export async function getLetters(): Promise<LetterData[]> {
       created_at,
       division:divisions(name, slug),
       requester:committee_assignments!requester_id(
-        user:users(full_name, nim)
+        user:profiles(full_name, nim)
       )
     `)
     .eq("committee_year_id", YEAR_ID)
