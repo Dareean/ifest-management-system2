@@ -178,7 +178,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
             setIsOpen(false);
             handleLogout();
           }}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-[#ba1a1a] hover:bg-error-container/20 transition-colors text-left w-full cursor-pointer"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-error hover:bg-error-container/20 transition-colors text-left w-full cursor-pointer"
         >
           <LogOut className="size-5 shrink-0" />
           <span className="tracking-wide font-sans">KELUAR</span>
@@ -245,7 +245,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
       )}
 
       {/* Desktop Sidebar (Permanent) */}
-      <aside className="hidden md:flex flex-col w-72 h-screen sticky top-0 bg-white border-r border-outline-variant/40 p-6 justify-between shrink-0">
+      <aside className="hidden md:flex flex-col w-72 h-screen sticky top-0 bg-white border-r border-outline-variant/40 p-6 justify-between shrink-0 overflow-y-auto">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <LogoSection />

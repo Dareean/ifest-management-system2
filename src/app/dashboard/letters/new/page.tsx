@@ -19,7 +19,7 @@ export default function NewLetterPage() {
     <div className="max-w-2xl flex flex-col gap-8">
       {/* Header */}
       <div>
-        <p className="text-[#FF3D8B] font-mono text-xs font-bold tracking-widest uppercase mb-1">
+        <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
           Sistem Surat
         </p>
         <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">

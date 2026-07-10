@@ -15,9 +15,9 @@ import { updateRsvp, saveNotes, publishNotes, endMeeting } from "@/lib/actions/m
 import type { MeetingDetail } from "@/lib/data/meeting-detail";
 
 const rsvpColors: Record<string, string> = {
-  pending: "bg-gray-55 border-gray-200 text-gray-600",
-  accepted: "bg-emerald-50 border-emerald-200 text-emerald-700",
-  declined: "bg-red-50 border-red-200 text-red-700",
+  pending: "bg-surface-container border-outline-variant text-on-surface-variant",
+  accepted: "bg-accent-green/10 border-accent-green/30 text-accent-green",
+  declined: "bg-error-container border-error/30 text-error",
 };
 
 const rsvpIcons: Record<string, React.ReactNode> = {
@@ -102,7 +102,7 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
       {meeting.agenda && (
         <div className="flex flex-col gap-4">
           <h2 className="text-xl font-bold tracking-tight text-on-surface flex items-center gap-2">
-            <FileText className="size-5 text-[#ba1a1a]" />
+            <FileText className="size-5 text-error" />
             Agenda Rapat
           </h2>
           <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6">
@@ -114,7 +114,7 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
       {/* Invitees */}
       <div className="flex flex-col gap-4">
         <h2 className="text-xl font-bold tracking-tight text-on-surface flex items-center gap-2">
-          <Users className="size-5 text-[#ba1a1a]" />
+          <Users className="size-5 text-error" />
           Undangan Rapat ({meeting.invitees.length})
         </h2>
         
@@ -142,19 +142,19 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
                     {!meeting.endedAt && inv.rsvpStatus !== "accepted" && (
                       <button
                         onClick={() => handleRsvp(inv.id, "accepted")}
-                        className="p-1 rounded hover:bg-emerald-50 border border-transparent hover:border-emerald-200 transition-all cursor-pointer"
+                        className="p-1 rounded hover:bg-accent-green/10 border border-transparent hover:border-accent-green/30 transition-all cursor-pointer"
                         title="Konfirmasi hadir"
                       >
-                        <Check className="size-4 text-emerald-600" />
+                        <Check className="size-4 text-accent-green" />
                       </button>
                     )}
                     {!meeting.endedAt && inv.rsvpStatus !== "declined" && (
                       <button
                         onClick={() => handleRsvp(inv.id, "declined")}
-                        className="p-1 rounded hover:bg-red-50 border border-transparent hover:border-red-200 transition-all cursor-pointer"
-                        title="Tidak bisa hadir"
+                        className="p-1 rounded hover:bg-error-container border border-transparent hover:border-error/30 transition-all cursor-pointer"
+                        title="Konfirmasi tidak hadir"
                       >
-                        <X className="size-4 text-red-500" />
+                        <X className="size-4 text-error" />
                       </button>
                     )}
                   </div>
@@ -189,7 +189,7 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-xl font-bold tracking-tight text-on-surface flex items-center gap-2">
-              <FileText className="size-5 text-[#ba1a1a]" />
+              <FileText className="size-5 text-error" />
               Notula Rapat
             </h2>
             {meeting.notes.publishedAt ? (

@@ -15,7 +15,7 @@ export default async function MeetingsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-[#FF3D8B] font-mono text-xs font-bold tracking-widest uppercase mb-1">
+          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
             Meeting Planner
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
@@ -39,7 +39,7 @@ export default async function MeetingsPage() {
       {/* Main Container */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Calendar className="size-5 text-[#ba1a1a]" />
+          <Calendar className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">Jadwal Pertemuan</h2>
         </div>
 
@@ -58,7 +58,7 @@ export default async function MeetingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {meetings.map((mtg) => (
               <Link href={`/dashboard/meetings/${mtg.id}`} key={mtg.id} className="block group">
-                <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-full hover:border-[#FF3D8B]/50 transition-all">
+                <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-full hover:border-accent-magenta/50 transition-all">
                   <CardHeader className="p-0">
                     <div className="flex items-center justify-between mb-3">
                       <Badge variant={mtg.meetingType === "adhoc" ? "warning" : "info"} className="text-[10px] font-mono">
@@ -70,7 +70,7 @@ export default async function MeetingsPage() {
                         </span>
                       )}
                     </div>
-                    <CardTitle className="text-base font-bold text-on-surface group-hover:text-[#FF3D8B] transition-colors leading-tight mb-2">
+                    <CardTitle className="text-base font-bold text-on-surface group-hover:text-accent-magenta transition-colors leading-tight mb-2">
                       {mtg.title}
                     </CardTitle>
                     <CardDescription className="text-xs font-mono">

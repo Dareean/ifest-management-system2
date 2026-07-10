@@ -53,7 +53,7 @@ export function FinanceClient({ overview, budgets, requests }: {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-[#FF3D8B] font-mono text-xs font-bold tracking-widest uppercase mb-1">
+          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
             Keuangan
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
@@ -76,8 +76,8 @@ export function FinanceClient({ overview, budgets, requests }: {
       {/* Finance Overview Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1: Total Anggaran */}
-        <div className="bg-white border border-violet-200 bg-violet-50/5 rounded-2xl p-6 transition-all hover:border-violet-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-violet-700 uppercase flex items-center gap-1.5">
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center gap-1.5">
             <DollarSign className="size-3.5" /> TOTAL ANGGARAN
           </p>
           <p className="text-2xl font-black text-on-surface my-2 leading-none">{formatRp(overview.total_budget)}</p>
@@ -85,8 +85,8 @@ export function FinanceClient({ overview, budgets, requests }: {
         </div>
 
         {/* Card 2: Terpakai */}
-        <div className="bg-white border border-amber-200 bg-amber-50/5 rounded-2xl p-6 transition-all hover:border-amber-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-amber-700 uppercase flex items-center gap-1.5">
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center gap-1.5">
             <TrendingDown className="size-3.5 text-error" /> TERPAKAI
           </p>
           <p className="text-2xl font-black text-on-surface my-2 leading-none">{formatRp(overview.total_used)}</p>
@@ -94,17 +94,17 @@ export function FinanceClient({ overview, budgets, requests }: {
         </div>
 
         {/* Card 3: Sisa */}
-        <div className="bg-white border border-emerald-200 bg-emerald-50/5 rounded-2xl p-6 transition-all hover:border-emerald-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-emerald-700 uppercase flex items-center gap-1.5">
-            <TrendingUp className="size-3.5 text-emerald-500" /> SISA ANGGARAN
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center gap-1.5">
+            <TrendingUp className="size-3.5 text-accent-green" /> SISA ANGGARAN
           </p>
           <p className="text-2xl font-black text-on-surface my-2 leading-none">{formatRp(overview.total_remaining)}</p>
           <p className="text-xs text-on-surface-variant font-mono">Sisa dana tersedia</p>
         </div>
 
         {/* Card 4: Pengajuan */}
-        <div className="bg-white border border-rose-200 bg-rose-50/5 rounded-2xl p-6 transition-all hover:border-rose-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-rose-700 uppercase flex items-center gap-1.5">
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center gap-1.5">
             <FileText className="size-3.5" /> PENGAJUAN
           </p>
           <p className="text-2xl font-black text-on-surface my-2 leading-none">
@@ -118,7 +118,7 @@ export function FinanceClient({ overview, budgets, requests }: {
       {/* Budget per Division Section */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <DollarSign className="size-5 text-[#ba1a1a]" />
+          <DollarSign className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">Anggaran per Divisi</h2>
         </div>
 
@@ -142,11 +142,11 @@ export function FinanceClient({ overview, budgets, requests }: {
                     </div>
                     <div className="flex justify-between">
                       <span>Terpakai</span>
-                      <span className="font-bold text-[#ba1a1a]">{formatRp(b.used_amount)}</span>
+                      <span className="font-bold text-error">{formatRp(b.used_amount)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Sisa</span>
-                      <span className={`font-bold ${b.remaining >= 0 ? "text-emerald-600" : "text-error"}`}>
+                      <span className={`font-bold ${b.remaining >= 0 ? "text-accent-green" : "text-error"}`}>
                         {formatRp(b.remaining)}
                       </span>
                     </div>
@@ -183,7 +183,7 @@ export function FinanceClient({ overview, budgets, requests }: {
       {/* Budget Requests Section */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <FileText className="size-5 text-[#ba1a1a]" />
+          <FileText className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">Daftar Pengajuan Dana</h2>
         </div>
 

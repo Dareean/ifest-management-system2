@@ -5,9 +5,9 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-md text-center">
+      <section className="flex-1 flex flex-col items-center justify-center px-4 sm:px-md text-center">
         <p className="eyebrow text-on-surface-variant mb-xs">HMTI UNTAD</p>
-        <h1 className="text-6xl font-semibold tracking-tight leading-none sm:text-7xl lg:text-8xl">
+        <h1 className="max-w-4xl break-words text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-semibold tracking-tight leading-none">
           I-FEST
           <br />
           <span className="text-accent-magenta">Management</span>

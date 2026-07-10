@@ -1,31 +1,28 @@
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ColorBlock } from "@/components/blocks/color-block";
 import { Badge } from "@/components/ui/badge";
 
 export default function AdminOverviewPage() {
   return (
-    <ColorBlock color="pink">
-      <p className="eyebrow text-on-surface-variant mb-md">Selamat Datang di Admin Panel</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-        <Card>
-          <CardHeader>
-            <CardTitle>Dynamic Structure</CardTitle>
-            <CardDescription>
-              Divisi dan role disimpan di database — bukan hardcode. Tahun depan, cukup buat
-              tahun kepanitiaan baru dan assign personel baru.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Reset Tahunan</CardTitle>
-            <CardDescription>
-              Buka menu <Badge variant="info">Tahun Kepanitiaan</Badge> → buat tahun baru →
-              copy struktur dari tahun sebelumnya. Zero perubahan kode.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    </ColorBlock>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+      <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 hover:border-primary/20 transition-all">
+        <CardHeader className="p-0">
+          <CardTitle className="text-base font-bold text-on-surface mb-2">Dynamic Structure</CardTitle>
+          <CardDescription className="text-sm text-on-surface-variant font-sans leading-relaxed">
+            Divisi dan role disimpan di database — bukan hardcode. Tahun depan, cukup buat
+            tahun kepanitiaan baru dan assign personel baru.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      
+      <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 hover:border-primary/20 transition-all">
+        <CardHeader className="p-0">
+          <CardTitle className="text-base font-bold text-on-surface mb-2">Reset Tahunan</CardTitle>
+          <CardDescription className="text-sm text-on-surface-variant font-sans leading-relaxed">
+            Buka menu <Badge variant="info" className="text-[10px] font-mono px-2 py-0.5">Tahun Kepanitiaan</Badge> &rarr; buat tahun baru &rarr;
+            copy struktur dari tahun sebelumnya. Zero perubahan kode.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
   );
 }

@@ -15,7 +15,7 @@ export default async function LettersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-[#FF3D8B] font-mono text-xs font-bold tracking-widest uppercase mb-1">
+          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
             Sistem Surat
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
@@ -39,7 +39,7 @@ export default async function LettersPage() {
       {/* Main List */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Mail className="size-5 text-[#ba1a1a]" />
+          <Mail className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">Daftar Permohonan</h2>
         </div>
 
@@ -60,9 +60,9 @@ export default async function LettersPage() {
               const status = getStatusDisplay(letter.status);
               return (
                 <Link href={`/dashboard/letters/${letter.id}`} key={letter.id} className="block group">
-                  <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:border-[#FF3D8B]/50 transition-all">
+                  <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:border-accent-magenta/50 transition-all">
                     <div className="min-w-0">
-                      <h3 className="font-sans text-lg font-bold text-on-surface group-hover:text-[#FF3D8B] transition-colors leading-tight">
+                      <h3 className="font-sans text-lg font-bold text-on-surface group-hover:text-accent-magenta transition-colors leading-tight">
                         {letter.subject}
                       </h3>
                       <p className="text-xs text-on-surface-variant font-mono mt-1">

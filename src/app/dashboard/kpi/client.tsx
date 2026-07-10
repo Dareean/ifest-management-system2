@@ -14,9 +14,9 @@ import { ExportButton } from "@/components/export-button";
 import type { KpiWithTasks, DivisionKpiSummary } from "@/lib/data/kpi";
 
 const priorityColors: Record<string, string> = {
-  high: "text-red-500",
-  medium: "text-amber-500",
-  low: "text-gray-400",
+  high: "text-error",
+  medium: "text-accent-coral",
+  low: "text-on-surface-variant/60",
 };
 
 const priorityLabels: Record<string, string> = {
@@ -86,7 +86,7 @@ export function KpiClient({ kpis: initialKpis, summaries }: { kpis: KpiWithTasks
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-[#FF3D8B] font-mono text-xs font-bold tracking-widest uppercase mb-1">
+          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
             I-FEST 2026
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
@@ -104,22 +104,22 @@ export function KpiClient({ kpis: initialKpis, summaries }: { kpis: KpiWithTasks
       {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {/* Card 1: Total KPI */}
-        <div className="bg-white border border-violet-200 bg-violet-50/5 rounded-2xl p-6 transition-all hover:border-violet-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-violet-700 uppercase">TOTAL KPI</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">TOTAL KPI</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{totalKpis}</p>
           <p className="text-xs text-on-surface-variant font-mono">Ditetapkan</p>
         </div>
 
         {/* Card 2: Total Tasks */}
-        <div className="bg-white border border-amber-200 bg-amber-50/5 rounded-2xl p-6 transition-all hover:border-amber-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-amber-700 uppercase">TOTAL TASKS</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">TOTAL TASKS</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{totalTasks}</p>
           <p className="text-xs text-on-surface-variant font-mono">Task dikelola</p>
         </div>
 
         {/* Card 3: Selesai */}
-        <div className="bg-white border border-emerald-200 bg-emerald-50/5 rounded-2xl p-6 transition-all hover:border-emerald-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-emerald-700 uppercase">TASK SELESAI</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">TASK SELESAI</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{doneTasks} / {totalTasks}</p>
           <p className="text-xs text-on-surface-variant font-mono">Tugas terselesaikan</p>
         </div>
@@ -151,7 +151,7 @@ export function KpiClient({ kpis: initialKpis, summaries }: { kpis: KpiWithTasks
       {/* Divisi Progress Cards */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <TrendingUp className="size-5 text-[#ba1a1a]" />
+          <TrendingUp className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">
             Ringkasan {activeSummary ? activeSummary.divisionName : "Semua Divisi"}
           </h2>
@@ -188,7 +188,7 @@ export function KpiClient({ kpis: initialKpis, summaries }: { kpis: KpiWithTasks
       {/* KPI Detail per Divisi */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <Target className="size-5 text-[#ba1a1a]" />
+          <Target className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">
             {activeDiv ? (activeSummary?.divisionName ?? "") : "Semua"} — KPI & Task
           </h2>
@@ -259,7 +259,7 @@ export function KpiClient({ kpis: initialKpis, summaries }: { kpis: KpiWithTasks
                             className="flex-shrink-0 cursor-pointer"
                           >
                             {task.status === "done" ? (
-                              <CheckCircle className="size-4 text-emerald-500" />
+                              <CheckCircle className="size-4 text-accent-green" />
                             ) : (
                               <Circle className="size-4 text-on-surface-variant" />
                             )}

@@ -56,7 +56,7 @@ async function GlobalView() {
     <div className="flex flex-col gap-10">
       {/* Welcome Header */}
       <div>
-        <p className="text-[#FF3D8B] font-mono text-xs font-bold tracking-widest uppercase mb-1">
+        <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
           I-FEST 2026
         </p>
         <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
@@ -85,31 +85,31 @@ async function GlobalView() {
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1: Divisi Aktif */}
-        <div className="bg-white border border-violet-200 bg-violet-50/5 rounded-2xl p-6 transition-all hover:border-violet-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-violet-700 uppercase">DIVISI AKTIF</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">DIVISI AKTIF</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{divisions.length}</p>
           <p className="text-xs text-on-surface-variant font-mono">Divisi berjalan</p>
         </div>
 
         {/* Card 2: Total Anggota */}
-        <div className="bg-white border border-amber-200 bg-amber-50/5 rounded-2xl p-6 transition-all hover:border-amber-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-amber-700 uppercase">ANGGOTA</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">ANGGOTA</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{overview.totalMembers}</p>
           <p className="text-xs text-on-surface-variant font-mono">Total panitia</p>
         </div>
 
         {/* Card 3: Total KPI */}
         <Link href="/dashboard/kpi" className="block group">
-          <div className="bg-white border border-emerald-200 bg-emerald-50/5 rounded-2xl p-6 transition-all group-hover:border-emerald-300 h-full">
-            <p className="text-xs font-mono font-bold tracking-wider text-emerald-700 uppercase">TOTAL KPI</p>
+          <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all group-hover:border-outline-variant h-full">
+            <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">TOTAL KPI</p>
             <p className="text-4xl font-black text-on-surface my-2 leading-none">{kpiCount}</p>
             <p className="text-xs text-on-surface-variant font-mono">({doneTasks}/{totalTasks} tasks selesai)</p>
           </div>
         </Link>
 
         {/* Card 4: Total Rapat */}
-        <div className="bg-white border border-rose-200 bg-rose-50/5 rounded-2xl p-6 transition-all hover:border-rose-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-rose-700 uppercase">TOTAL RAPAT</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">TOTAL RAPAT</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{overview.totalMeetings}</p>
           <p className="text-xs text-on-surface-variant font-mono">Pertemuan diadakan</p>
         </div>
@@ -119,10 +119,10 @@ async function GlobalView() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <TrendingUp className="size-5 text-[#ba1a1a]" />
+            <TrendingUp className="size-5 text-error" />
             <h2 className="text-xl font-bold tracking-tight text-on-surface">Progres Divisi</h2>
           </div>
-          <Link href="/dashboard/kpi" className="text-xs font-mono text-[#FF3D8B] hover:underline uppercase tracking-wider font-bold">
+          <Link href="/dashboard/kpi" className="text-xs font-mono text-accent-magenta hover:underline uppercase tracking-wider font-bold">
             Lihat detail KPI →
           </Link>
         </div>
@@ -132,10 +132,10 @@ async function GlobalView() {
             const progress = s.totalTasks > 0 ? Math.round((s.doneTasks / s.totalTasks) * 100) : 0;
             return (
                <Link href="/dashboard/kpi" key={s.divisionId} className="block group">
-                 <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-full hover:border-[#FF3D8B]/50 transition-all">
+                 <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-full hover:border-accent-magenta/50 transition-all">
                    <div>
                      <div className="flex items-start justify-between gap-2 mb-2">
-                       <h3 className="font-sans text-lg font-bold text-on-surface group-hover:text-[#FF3D8B] transition-colors leading-tight">
+                       <h3 className="font-sans text-lg font-bold text-on-surface group-hover:text-accent-magenta transition-colors leading-tight">
                          {s.divisionName}
                        </h3>
                        <Badge variant="outline" className="text-[10px] font-mono whitespace-nowrap">
@@ -169,7 +169,7 @@ async function GlobalView() {
       {/* Recent Activity Section */}
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <FileText className="size-5 text-[#ba1a1a]" />
+          <FileText className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">Aktivitas Terbaru</h2>
         </div>
         <div className="bg-white border border-outline-variant/60 rounded-2xl p-8 flex items-center justify-center">
@@ -196,7 +196,7 @@ async function PersonalView({ personal, profile }: PersonalViewProps) {
     <div className="flex flex-col gap-10">
       {/* Welcome Greeting Header */}
       <div>
-        <p className="text-[#FF3D8B] font-mono text-xs font-bold tracking-widest uppercase mb-1">
+        <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
           DASHBOARD {personal.assignment?.division.toUpperCase()}
         </p>
         <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
@@ -210,29 +210,29 @@ async function PersonalView({ personal, profile }: PersonalViewProps) {
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1: KPI Divisi */}
-        <div className="bg-white border border-violet-200 bg-violet-50/5 rounded-2xl p-6 transition-all hover:border-violet-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-violet-700 uppercase">KPI DIVISI</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">KPI DIVISI</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{personal.kpis.length}</p>
           <p className="text-xs text-on-surface-variant font-mono">Target ditetapkan</p>
         </div>
 
         {/* Card 2: Total Task */}
-        <div className="bg-white border border-amber-200 bg-amber-50/5 rounded-2xl p-6 transition-all hover:border-amber-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-amber-700 uppercase">TOTAL TASK</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">TOTAL TASK</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{totalTasks}</p>
           <p className="text-xs text-on-surface-variant font-mono">Tugas Anda</p>
         </div>
 
         {/* Card 3: Task Selesai */}
-        <div className="bg-white border border-emerald-200 bg-emerald-50/5 rounded-2xl p-6 transition-all hover:border-emerald-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-emerald-700 uppercase">TASK SELESAI</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">TASK SELESAI</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{doneTasks} / {totalTasks}</p>
           <p className="text-xs text-on-surface-variant font-mono">Pekerjaan rampung</p>
         </div>
 
         {/* Card 4: Rapat Baru */}
-        <div className="bg-white border border-rose-200 bg-rose-50/5 rounded-2xl p-6 transition-all hover:border-rose-300">
-          <p className="text-xs font-mono font-bold tracking-wider text-rose-700 uppercase">RAPAT BARU</p>
+        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
+          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">RAPAT BARU</p>
           <p className="text-4xl font-black text-on-surface my-2 leading-none">{pendingRsvp}</p>
           <p className="text-xs text-on-surface-variant font-mono">Belum direspon</p>
         </div>
@@ -245,10 +245,10 @@ async function PersonalView({ personal, profile }: PersonalViewProps) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Target className="size-5 text-[#ba1a1a]" />
+              <Target className="size-5 text-error" />
               <h2 className="text-xl font-bold tracking-tight text-on-surface">KPI Divisi</h2>
             </div>
-            <Link href="/dashboard/kpi" className="text-xs font-mono text-[#FF3D8B] hover:underline uppercase tracking-wider font-bold">
+            <Link href="/dashboard/kpi" className="text-xs font-mono text-accent-magenta hover:underline uppercase tracking-wider font-bold">
               Detail →
             </Link>
           </div>
@@ -301,7 +301,7 @@ async function PersonalView({ personal, profile }: PersonalViewProps) {
         {/* Task Terbaru Section */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
-            <CheckCircle className="size-5 text-[#ba1a1a]" />
+            <CheckCircle className="size-5 text-error" />
             <h2 className="text-xl font-bold tracking-tight text-on-surface">Tugas Terbaru</h2>
           </div>
 
@@ -338,10 +338,10 @@ async function PersonalView({ personal, profile }: PersonalViewProps) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <FileText className="size-5 text-[#ba1a1a]" />
+              <FileText className="size-5 text-error" />
               <h2 className="text-xl font-bold tracking-tight text-on-surface">Surat Terbaru</h2>
             </div>
-            <Link href="/dashboard/letters" className="text-xs font-mono text-[#FF3D8B] hover:underline uppercase tracking-wider font-bold">
+            <Link href="/dashboard/letters" className="text-xs font-mono text-accent-magenta hover:underline uppercase tracking-wider font-bold">
               Semua →
             </Link>
           </div>
@@ -383,10 +383,10 @@ async function PersonalView({ personal, profile }: PersonalViewProps) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Calendar className="size-5 text-[#ba1a1a]" />
+              <Calendar className="size-5 text-error" />
               <h2 className="text-xl font-bold tracking-tight text-on-surface">Undangan Rapat</h2>
             </div>
-            <Link href="/dashboard/meetings" className="text-xs font-mono text-[#FF3D8B] hover:underline uppercase tracking-wider font-bold">
+            <Link href="/dashboard/meetings" className="text-xs font-mono text-accent-magenta hover:underline uppercase tracking-wider font-bold">
               Semua →
             </Link>
           </div>
@@ -411,8 +411,8 @@ async function PersonalView({ personal, profile }: PersonalViewProps) {
                       <Badge
                         variant="outline"
                         className={`text-[9px] font-mono px-2 py-0 ${
-                          mtg.rsvpStatus === "accepted" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                          mtg.rsvpStatus === "declined" ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                          mtg.rsvpStatus === "accepted" ? "bg-accent-green/10 text-accent-green border-accent-green/30" :
+                          mtg.rsvpStatus === "declined" ? "bg-error-container text-error border-error/30" : "bg-accent-lilac/10 text-accent-lilac border-accent-lilac/30"
                         }`}
                       >
                         {mtg.rsvpStatus === "accepted" ? "Hadir" :

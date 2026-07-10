@@ -12,10 +12,10 @@ import { getStatusDisplay } from "@/lib/data/letters";
 import type { LetterDetail } from "@/lib/data/letter-detail";
 
 const statusColor: Record<string, string> = {
-  requested: "bg-amber-100 text-amber-800",
-  in_revision: "bg-blue-100 text-blue-800",
-  approved: "bg-emerald-100 text-emerald-800",
-  sent: "bg-gray-100 text-gray-800",
+  requested: "bg-accent-lilac/10 text-accent-lilac",
+  in_revision: "bg-accent-coral/10 text-accent-coral",
+  approved: "bg-accent-green/10 text-accent-green",
+  sent: "bg-surface-container text-on-surface-variant",
 };
 
 export function LetterDetailClient({ letter }: { letter: LetterDetail }) {
@@ -71,7 +71,7 @@ export function LetterDetailClient({ letter }: { letter: LetterDetail }) {
       {/* Main Letter Content Card */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <FileText className="size-5 text-[#ba1a1a]" />
+          <FileText className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">Isi Surat</h2>
         </div>
         <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
@@ -111,7 +111,7 @@ export function LetterDetailClient({ letter }: { letter: LetterDetail }) {
               </div>
             )}
             {letter.status === "sent" && (
-              <div className="text-sm text-emerald-600 font-bold flex items-center gap-2">
+              <div className="text-sm text-accent-green font-bold flex items-center gap-2">
                 <Check className="size-4" /> Dokumen resmi telah terkirim
               </div>
             )}

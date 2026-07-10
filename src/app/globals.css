@@ -50,24 +50,32 @@
   --color-block-coral: #F3C9B6;
   --color-block-pink: #EFD4D4;
   --color-accent-magenta: #FF3D8B;
+  --color-accent-coral: #F3C9B6;
+  --color-accent-green: #A8D5A2;
+  --color-accent-lime: #DCEEB1;
+  --color-accent-lilac: #C5B0F4;
 
   /* TYPOGRAPHY */
-  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-jetbrains-mono);
 
   /* BORDER RADIUS */
+  --radius: 0.5rem;
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  --radius-xl: 2rem;
   --radius-full: 9999px;
 
   /* SPACING */
-  --space-xs: 8px;
-  --space-sm: 16px;
-  --space-md: 24px;
-  --space-lg: 32px;
-  --space-xl: 48px;
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 32px;
+  --spacing-xl: 48px;
+}
+
+:root {
   --section-gap: 96px;
   --container-max: 1280px;
 }
@@ -86,7 +94,7 @@
   /* Eyebrow style from DESIGN.md — JetBrains Mono, uppercase, spaced */
   .eyebrow {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 14px;
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -99,6 +107,61 @@
     font-size: 0.75rem;
     font-weight: 400;
     letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  /* Display XL — 86px, 600 weight, -0.02em tracking */
+  .display-xl {
+    font-size: 86px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  /* Display LG — 64px, 600 weight, -0.015em tracking */
+  .display-lg {
+    font-size: 64px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1;
+  }
+
+  /* Headline LG — 32px, 500 weight, -0.01em tracking */
+  .headline-lg {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  /* Headline LG Mobile — 28px, 500 weight, -0.01em tracking */
+  .headline-lg-mobile {
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  /* Body LG — 20px, 400 weight, -0.01em tracking */
+  .body-lg {
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+  }
+
+  /* Body MD — 18px, 400 weight, -0.01em tracking */
+  .body-md {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+  }
+
+  /* Button style — 18px, 500 weight, 1.0 line height */
+  .btn-text {
+    font-size: 18px;
+    font-weight: 500;
     line-height: 1;
   }
 }

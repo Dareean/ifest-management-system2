@@ -36,8 +36,8 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-md">
-      <ColorBlock color="lilac" className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-md">
+      <ColorBlock color="lilac" className="w-full max-w-sm sm:max-w-md">
         <p className="eyebrow text-on-surface-variant mb-xs">Akses Terbatas</p>
         <h2 className="text-3xl font-semibold tracking-tight mb-md">
           Masuk ke IMS

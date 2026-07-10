@@ -28,7 +28,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[#FF3D8B] font-mono text-xs font-bold tracking-widest uppercase mb-1">
+          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
             Akun
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
@@ -69,13 +69,13 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
       {/* Account Details Form Section */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <User className="size-5 text-[#ba1a1a]" />
+          <User className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">Detail Akun</h2>
         </div>
 
         <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
           {state?.error && <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono mb-6">{state.error}</div>}
-          {state?.success && <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-4 font-mono mb-6">Profil berhasil diperbarui!</div>}
+          {state?.success && <div className="text-sm text-accent-green bg-accent-green/10 border border-accent-green/30 rounded-lg p-4 font-mono mb-6">Profil berhasil diperbarui!</div>}
 
           <form action={formAction} className="flex flex-col gap-6">
             <input type="hidden" name="userId" value={profile.userId ?? ""} />
@@ -145,7 +145,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
       {profile.assignment && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
-            <Shield className="size-5 text-[#ba1a1a]" />
+            <Shield className="size-5 text-error" />
             <h2 className="text-xl font-bold tracking-tight text-on-surface">Kepanitiaan</h2>
           </div>
           <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6">
@@ -174,14 +174,14 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
       {profile.assignment && (
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
-            <TrendingUp className="size-5 text-[#ba1a1a]" />
+            <TrendingUp className="size-5 text-error" />
             <h2 className="text-xl font-bold tracking-tight text-on-surface">Statistik Personal</h2>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {/* Letters */}
-            <div className="bg-white border border-violet-200 bg-violet-50/5 rounded-2xl p-5 hover:border-violet-300 transition-all text-center">
-              <p className="text-xs font-mono font-bold tracking-wider text-violet-700 uppercase flex items-center justify-center gap-1">
+            <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-5 hover:border-outline-variant transition-all text-center">
+              <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center justify-center gap-1">
                 <FileText className="size-3.5" /> SURAT
               </p>
               <p className="text-3xl font-black text-on-surface my-2 leading-none">{profile.stats.totalLetters}</p>
@@ -189,8 +189,8 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
             </div>
             
             {/* Meetings */}
-            <div className="bg-white border border-amber-200 bg-amber-50/5 rounded-2xl p-5 hover:border-amber-300 transition-all text-center">
-              <p className="text-xs font-mono font-bold tracking-wider text-amber-700 uppercase flex items-center justify-center gap-1">
+            <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-5 hover:border-outline-variant transition-all text-center">
+              <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center justify-center gap-1">
                 <CalendarDays className="size-3.5" /> RAPAT
               </p>
               <p className="text-3xl font-black text-on-surface my-2 leading-none">{profile.stats.totalMeetings}</p>
@@ -198,8 +198,8 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
             </div>
 
             {/* Total Tasks */}
-            <div className="bg-white border border-rose-200 bg-rose-50/5 rounded-2xl p-5 hover:border-rose-300 transition-all text-center">
-              <p className="text-xs font-mono font-bold tracking-wider text-rose-700 uppercase flex items-center justify-center gap-1">
+            <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-5 hover:border-outline-variant transition-all text-center">
+              <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center justify gap-1">
                 <Circle className="size-3.5" /> TOTAL TASK
               </p>
               <p className="text-3xl font-black text-on-surface my-2 leading-none">{profile.stats.totalTasks}</p>
@@ -207,9 +207,9 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
             </div>
 
             {/* Done Tasks */}
-            <div className="bg-white border border-emerald-200 bg-emerald-50/5 rounded-2xl p-5 hover:border-emerald-300 transition-all text-center">
-              <p className="text-xs font-mono font-bold tracking-wider text-emerald-700 uppercase flex items-center justify-center gap-1">
-                <CheckCircle className="size-3.5 text-emerald-500" /> SELESAI
+            <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-5 hover:border-outline-variant transition-all text-center">
+              <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center justify gap-1">
+                <CheckCircle className="size-3.5 text-accent-green" /> SELESAI
               </p>
               <p className="text-3xl font-black text-on-surface my-2 leading-none">{profile.stats.doneTasks}</p>
               <p className="text-[10px] text-on-surface-variant font-mono">Tugas rampung</p>
