@@ -9,21 +9,21 @@ const YEAR_ID = 'c2f2a48e-3e58-4559-aaa0-623a3825348b';
 const DEFAULT_PASSWORD = 'ifest2026';
 
 const personel = [
-  { nama: 'Dareean A. Raffi Mardin', nim: 'F55124086', email: 'dareean@hmti.untad.ac.id', divisi: 'bph', role: 'pic' },
-  { nama: 'Gabriel Kristofan', nim: 'F55124076', email: 'gabriel@hmti.untad.ac.id', divisi: 'bph', role: 'ketua-panitia' },
-  { nama: 'Reyqal Syawalano', nim: 'F52124039', email: 'reyqal@hmti.untad.ac.id', divisi: 'bph', role: 'wakil-ketua' },
-  { nama: 'Nur Ainun', nim: 'F52124024', email: 'ainun@hmti.untad.ac.id', divisi: 'bph', role: 'sekretaris-1' },
-  { nama: 'Yulianingsih', nim: 'F52124004', email: 'yulianingsih@hmti.untad.ac.id', divisi: 'bph', role: 'sekretaris-2' },
-  { nama: 'Lara Fauzia', nim: 'F52124015', email: 'lara@hmti.untad.ac.id', divisi: 'bph', role: 'bendahara' },
-  { nama: 'Putri Intan A.', nim: 'F52124034', email: 'putri.intan@hmti.untad.ac.id', divisi: 'acara', role: 'koordinator' },
-  { nama: 'Febriansyah. H', nim: 'F52124044', email: 'febriansyah@hmti.untad.ac.id', divisi: 'humas', role: 'koordinator' },
-  { nama: 'Moh. Fauzi R.', nim: 'F52124052', email: 'fauzi@hmti.untad.ac.id', divisi: 'sponsorship', role: 'koordinator' },
-  { nama: 'Nur Amelia', nim: 'F52124017', email: 'amelia@hmti.untad.ac.id', divisi: 'kreativitas', role: 'koordinator' },
-  { nama: 'Gaida Muthmainnah', nim: 'F52124023', email: 'gaida@hmti.untad.ac.id', divisi: 'ekonomi-kreatif', role: 'koordinator' },
-  { nama: 'Salsabila', nim: 'F55124044', email: 'salsabila@hmti.untad.ac.id', divisi: 'konsumsi', role: 'koordinator' },
-  { nama: 'Moh. Magribi R.', nim: 'F55124104', email: 'magribi@hmti.untad.ac.id', divisi: 'logistik', role: 'koordinator' },
-  { nama: 'Moh. Nabil S.', nim: 'F55124079', email: 'nabil@hmti.untad.ac.id', divisi: 'lapangan', role: 'koordinator' },
-  { nama: 'Ahmad Jayadi', nim: 'F52124002', email: 'jayadi@hmti.untad.ac.id', divisi: 'keamanan', role: 'koordinator' },
+  { nama: 'Dareean A. Raffi Mardin', nim: 'F55124086', email: 'dareean@ifest.com', divisi: 'bph', role: 'pic' },
+  { nama: 'Gabriel Kristofan', nim: 'F55124076', email: 'gabriel@ifest.com', divisi: 'bph', role: 'ketua-panitia' },
+  { nama: 'Reyqal Syawalano', nim: 'F52124039', email: 'reyqal@ifest.com', divisi: 'bph', role: 'wakil-ketua' },
+  { nama: 'Nur Ainun', nim: 'F52124024', email: 'ainun@ifest.com', divisi: 'bph', role: 'sekretaris-1' },
+  { nama: 'Yulianingsih', nim: 'F52124004', email: 'yulianingsih@ifest.com', divisi: 'bph', role: 'sekretaris-2' },
+  { nama: 'Lara Fauzia', nim: 'F52124015', email: 'lara@ifest.com', divisi: 'bph', role: 'bendahara' },
+  { nama: 'Putri Intan A.', nim: 'F52124034', email: 'putri.intan@ifest.com', divisi: 'acara', role: 'koordinator' },
+  { nama: 'Febriansyah. H', nim: 'F52124044', email: 'febriansyah@ifest.com', divisi: 'humas', role: 'koordinator' },
+  { nama: 'Moh. Fauzi R.', nim: 'F52124052', email: 'fauzi@ifest.com', divisi: 'sponsorship', role: 'koordinator' },
+  { nama: 'Nur Amelia', nim: 'F52124017', email: 'amelia@ifest.com', divisi: 'kreativitas', role: 'koordinator' },
+  { nama: 'Gaida Muthmainnah', nim: 'F52124023', email: 'gaida@ifest.com', divisi: 'ekonomi-kreatif', role: 'koordinator' },
+  { nama: 'Salsabila', nim: 'F55124044', email: 'salsabila@ifest.com', divisi: 'konsumsi', role: 'koordinator' },
+  { nama: 'Moh. Magribi R.', nim: 'F55124104', email: 'magribi@ifest.com', divisi: 'logistik', role: 'koordinator' },
+  { nama: 'Moh. Nabil S.', nim: 'F55124079', email: 'nabil@ifest.com', divisi: 'lapangan', role: 'koordinator' },
+  { nama: 'Ahmad Jayadi', nim: 'F52124002', email: 'jayadi@ifest.com', divisi: 'keamanan', role: 'koordinator' },
 ];
 
 async function seed() {
