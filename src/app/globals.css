@@ -58,6 +58,7 @@
   /* TYPOGRAPHY */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-jetbrains-mono);
+  --font-display: var(--font-syne);
 
   /* BORDER RADIUS */
   --radius: 0.5rem;

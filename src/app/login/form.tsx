@@ -38,56 +38,178 @@ export function LoginForm() {
 
   return (
     <div className="min-h-dvh flex flex-col md:flex-row bg-surface">
-      {/* Brand Panel */}
-      <div className="hidden md:flex md:w-[440px] xl:w-[480px] bg-primary text-on-primary flex-col justify-between p-md lg:p-xl relative overflow-hidden shrink-0">
-        {/* Decorative circles (sized relative to panel) */}
-        <div className="absolute -top-32 -right-32 size-80 rounded-full bg-accent-magenta/8" />
-        <div className="absolute -bottom-40 -left-24 size-96 rounded-full bg-block-lilac/6" />
-        <div className="absolute top-1/3 right-12 size-32 rounded-full bg-block-mint/8" />
+      {/* Brand Panel — 40% width */}
+      <div
+        className="hidden md:flex md:w-[40%] flex-col justify-between p-md lg:p-xl relative overflow-hidden shrink-0"
+        style={{ backgroundColor: '#C5B0F4' }}
+      >
+        {/* ── Visual Assets — 14 stickers, spread naturally across the whole panel ── */}
 
-        <div className="relative z-10 flex flex-col gap-lg">
-          <p className="eyebrow text-on-primary/60">HMTI UNIVERSITAS TADULAKO</p>
-          <h1 className="text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight leading-none">
-            I-FEST
-            <br />
-            <span className="text-accent-magenta">Management</span>
-            <br />
-            System
-          </h1>
-        </div>
+        {/* Zone: TOP-LEFT — cat walking, medium */}
+        <img src="/assets/visual_assets/cat3 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 95, top: '3%', left: '5%', transform: 'rotate(-8deg)', mixBlendMode: 'multiply' }} />
 
-        <div className="relative z-10 flex flex-col gap-md">
-          <p className="text-sm lg:text-base text-on-primary/70 leading-relaxed max-w-sm">
-            Sistem manajemen terpadu untuk kepanitiaan I-FEST —
-            transparan, efisien, dan siap diwariskan.
-          </p>
-          <div className="flex flex-col gap-xs">
-            <div className="flex items-center gap-md">
-              <div className="size-1 shrink-0 rounded-full bg-accent-magenta" />
-              <span className="text-xs font-mono text-on-primary/50 tracking-wider uppercase">Manajemen KPI</span>
-            </div>
-            <div className="flex items-center gap-md">
-              <div className="size-1 shrink-0 rounded-full bg-block-lilac" />
-              <span className="text-xs font-mono text-on-primary/50 tracking-wider uppercase">Notulensi Rapat</span>
-            </div>
-            <div className="flex items-center gap-md">
-              <div className="size-1 shrink-0 rounded-full bg-block-mint" />
-              <span className="text-xs font-mono text-on-primary/50 tracking-wider uppercase">Anggaran Divisi</span>
-            </div>
+        {/* Zone: TOP-CENTER — yellow constellation network */}
+        <img src="/assets/visual_assets/sy4 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 80, top: '5%', left: '42%', transform: 'rotate(12deg)', mixBlendMode: 'multiply', opacity: 0.85 }} />
+
+        {/* Zone: TOP-RIGHT — pink wave arrows */}
+        <img src="/assets/visual_assets/rp2 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 68, top: '2%', right: '6%', transform: 'rotate(-18deg)', mixBlendMode: 'multiply', opacity: 0.82 }} />
+
+        {/* Zone: UPPER-MID LEFT — green scatter dashes */}
+        <img src="/assets/visual_assets/sg2 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 100, top: '22%', left: '-2%', transform: 'rotate(5deg)', mixBlendMode: 'multiply', opacity: 0.75 }} />
+
+        {/* Zone: UPPER-MID RIGHT — blue burst sparks */}
+        <img src="/assets/visual_assets/sb1 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 82, top: '18%', right: '4%', transform: 'rotate(-10deg)', mixBlendMode: 'multiply', opacity: 0.78 }} />
+
+        {/* Zone: MID-LEFT — blue robot snake (tall, vertical) */}
+        <img src="/assets/visual_assets/rb5 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 55, top: '36%', left: '8%', transform: 'rotate(-5deg)', mixBlendMode: 'multiply', opacity: 0.88 }} />
+
+        {/* Zone: CENTER — colorful plant pot (hero mid element) */}
+        <img src="/assets/visual_assets/rr4 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 120, top: '38%', left: '32%', transform: 'rotate(6deg)', mixBlendMode: 'multiply', opacity: 0.90 }} />
+
+        {/* Zone: MID-RIGHT — megaphone (large, bleeds off right edge) */}
+        <img src="/assets/visual_assets/Component 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 185, top: '44%', right: '-18px', transform: 'rotate(-7deg)', mixBlendMode: 'multiply', opacity: 0.88 }} />
+
+        {/* Zone: MID-CENTER — yellow dots scatter */}
+        <img src="/assets/visual_assets/sy3 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 72, top: '56%', left: '48%', transform: 'rotate(-12deg)', mixBlendMode: 'multiply', opacity: 0.70 }} />
+
+        {/* Zone: LOWER-LEFT — red sparkle stars */}
+        <img src="/assets/visual_assets/sr1 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 130, bottom: '16%', left: '0%', transform: 'rotate(-4deg)', mixBlendMode: 'multiply', opacity: 0.85 }} />
+
+        {/* Zone: LOWER-MID — cat sitting (different pose) */}
+        <img src="/assets/visual_assets/cat2 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 70, bottom: '20%', left: '36%', transform: 'rotate(10deg)', mixBlendMode: 'multiply' }} />
+
+        {/* Zone: LOWER-RIGHT — green triangles cluster */}
+        <img src="/assets/visual_assets/sg1 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 78, bottom: '22%', right: '10%', transform: 'rotate(20deg)', mixBlendMode: 'multiply' }} />
+
+        {/* Zone: BOTTOM-LEFT — green vine arrows */}
+        <img src="/assets/visual_assets/rg1 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 54, bottom: '5%', left: '18%', transform: 'rotate(-15deg)', mixBlendMode: 'multiply', opacity: 0.80 }} />
+
+        {/* Zone: BOTTOM-RIGHT — yellow petals */}
+        <img src="/assets/visual_assets/sy1 1.webp" alt="" aria-hidden="true"
+          className="absolute pointer-events-none select-none"
+          style={{ width: 75, bottom: '3%', right: '14%', transform: 'rotate(-22deg)', mixBlendMode: 'multiply', opacity: 0.72 }} />
+
+        {/* ── TOP: Institution logos ── */}
+        <div className="relative z-10 flex flex-col gap-sm">
+          <div
+            className="flex items-center gap-sm px-sm py-xs rounded-2xl self-start"
+            style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)' }}
+          >
+            <img src="/assets/logo_utama/logo_utama_png/logo_untad.png" alt="Logo Universitas Tadulako"
+              className="object-contain flex-shrink-0" style={{ height: 44, width: 44 }} />
+            <div className="w-px self-stretch" style={{ backgroundColor: 'rgba(0,0,0,0.1)' }} />
+            <img src="/assets/logo_utama/logo_utama_png/HMTI LOGO.png" alt="Logo HMTI"
+              className="object-contain flex-shrink-0" style={{ height: 44, width: 44 }} />
+            <div className="w-px self-stretch" style={{ backgroundColor: 'rgba(0,0,0,0.1)' }} />
+            <img src="/assets/logo_utama/logo_utama_png/Logo-IFEST-2026.png" alt="Logo I-FEST 2026"
+              className="object-contain flex-shrink-0" style={{ height: 38 }} />
           </div>
+          <p className="eyebrow" style={{ color: 'rgba(255,255,255,0.65)' }}>HMTI UNIVERSITAS TADULAKO</p>
         </div>
 
-        <p className="relative z-10 caption text-on-primary/30">&copy; 2026 HMTI Universitas Tadulako</p>
+        {/* ── BOTTOM: Heading + copyright ── */}
+        <div className="relative z-10 flex flex-col gap-xs">
+
+          {/* Mascot — centered, larger */}
+          <div className="flex justify-center -mb-6">
+            <img
+              src="/assets/Maskot/18 1.png"
+              alt="Maskot I-FEST"
+              className="pointer-events-none select-none"
+              style={{
+                width: 200,
+                maxWidth: '80%',
+                mixBlendMode: 'multiply',
+                position: 'relative',
+                zIndex: 1,
+                filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.18))',
+              }}
+            />
+          </div>
+
+          {/* Glassmorphism card behind the heading */}
+          <div
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.28) 0%, rgba(197,176,244,0.18) 60%, rgba(255,61,139,0.12) 100%)',
+              backdropFilter: 'blur(18px)',
+              WebkitBackdropFilter: 'blur(18px)',
+              border: '1px solid rgba(255,255,255,0.35)',
+              borderRadius: '20px',
+              padding: '28px 24px 18px',
+              position: 'relative',
+              zIndex: 0,
+            }}
+          >
+            <h1
+              className="font-display font-extrabold tracking-tight leading-[0.95]"
+              style={{ fontSize: 'clamp(2rem, 3vw, 2.8rem)', color: '#fdf8fa' }}
+            >
+              I-FEST
+              <br />
+              <span style={{ color: '#FF3D8B' }}>Management</span>
+              <br />
+              System
+            </h1>
+          </div>
+
+          <p className="caption mt-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            &copy; 2026 HMTI Universitas Tadulako
+          </p>
+        </div>
       </div>
 
-      {/* Mobile Brand Header */}
-      <div className="md:hidden bg-primary text-on-primary px-md py-lg">
-        <p className="eyebrow text-on-primary/60 mb-xs">HMTI UNIVERSITAS TADULAKO</p>
-        <h1 className="text-3xl font-bold tracking-tight leading-snug">
+      {/* Mobile Brand Header — lilac to match */}
+      <div className="md:hidden px-md py-sm relative overflow-hidden" style={{ backgroundColor: '#C5B0F4' }}>
+        {/* Mobile logos row */}
+        <div className="flex items-center gap-xs mb-xs">
+          <img
+            src="/assets/logo_utama/logo_utama_png/logo_untad.png"
+            alt="Logo Universitas Tadulako"
+            className="object-contain"
+            style={{ height: 32, width: 32, mixBlendMode: 'multiply' }}
+          />
+          <img
+            src="/assets/logo_utama/logo_utama_png/HMTI LOGO.png"
+            alt="Logo HMTI"
+            className="object-contain"
+            style={{ height: 32, width: 32, mixBlendMode: 'multiply' }}
+          />
+          <img
+            src="/assets/logo_utama/logo_utama_png/Logo-IFEST-2026.png"
+            alt="Logo I-FEST 2026"
+            className="object-contain"
+            style={{ height: 26, mixBlendMode: 'multiply' }}
+          />
+        </div>
+        <h1 className="font-display font-extrabold tracking-tight leading-snug text-2xl" style={{ color: '#1d1b1d' }}>
           I-FEST
-          <span className="text-accent-magenta"> Management</span>
-          <br />
-          System
+          <span style={{ color: '#FF3D8B' }}> Management System</span>
         </h1>
       </div>
 
