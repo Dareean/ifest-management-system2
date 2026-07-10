@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
-type ActionState = { error?: string; success?: boolean } | null;
+type ActionState = { error?: string; success?: boolean; meetingId?: string } | null;
 
 export async function createMeeting(prevState: ActionState, formData: FormData): Promise<ActionState> {
   const auth = await createClient();
@@ -66,44 +66,41 @@ export async function createMeeting(prevState: ActionState, formData: FormData):
 
   if (inviteeErr) return { error: inviteeErr.message };
 
-  // Targeted in-app notifications
+  // In-app notifications
   const meetingDate = new Date(startedAt).toLocaleDateString("id-ID", {
     weekday: "long", day: "numeric", month: "long",
     hour: "2-digit", minute: "2-digit",
   });
 
+  await admin.from("notifications").insert(
+    inviteeIds.map((id) => ({
+      committee_assignment_id: id,
+      type: "meeting",
+      title: `Rapat baru: ${title}`,
+      body: meetingDate,
+    })),
+  );
+
+  // Send emails in parallel (fire-and-forget style)
   const { data: inviteeDetails } = await admin
     .from("committee_assignments")
-    .select(`
-      id,
-      user_id,
-      user:profiles(full_name)
-    `)
+    .select(`id, user_id, user:profiles(full_name)`)
     .in("id", inviteeIds);
-
-  if (inviteeDetails) {
-    await admin.from("notifications").insert(
-      inviteeDetails.map((inv: any) => ({
-        committee_assignment_id: inv.id,
-        type: "meeting",
-        title: `Rapat baru: ${title}`,
-        body: meetingDate,
-      })),
+  if (inviteeDetails?.length) {
+    const { sendMeetingInvite } = await import("@/lib/email");
+    await Promise.allSettled(
+      (inviteeDetails as any[]).map(async (inv) => {
+        try {
+          const authUser = await admin.auth.admin.getUserById(inv.user_id);
+          const email = authUser?.data?.user?.email;
+          if (email) {
+            await sendMeetingInvite(email, inv.user?.full_name ?? "", title, startedAt, meetingLink, location, agenda);
+          }
+        } catch {}
+      }),
     );
-
-    // Send email (fire-and-forget per invitee)
-    for (const inv of inviteeDetails as any[]) {
-      try {
-        const authUser = await admin.auth.admin.getUserById(inv.user_id);
-        const email = authUser?.data?.user?.email;
-        if (email) {
-          const { sendMeetingInvite } = await import("@/lib/email");
-          await sendMeetingInvite(email, inv.user?.full_name ?? "", title, startedAt, meetingLink, location, agenda);
-        }
-      } catch {}
-    }
   }
 
   revalidatePath("/dashboard/meetings");
-  return { success: true };
+  return { success: true, meetingId: meeting.id };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, useMemo } from "react";
+import { useActionState, useEffect, useState, useMemo, startTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,9 @@ export function NewMeetingForm({
   const isBPH = creatorRoleLevel >= 75;
 
   useEffect(() => {
-    if (state?.success) router.push("/dashboard/meetings");
+    if (state?.success && state.meetingId) {
+      router.push(`/dashboard/meetings/${state.meetingId}`);
+    }
   }, [state, router]);
 
   function toggleMember(id: string) {
@@ -89,14 +91,14 @@ export function NewMeetingForm({
   return (
     <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
       <form
-        action={formAction}
         onSubmit={(e) => {
-          const input = document.getElementById("invitee_ids") as HTMLInputElement;
-          input.value = JSON.stringify(Array.from(selectedIds));
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          fd.set("invitee_ids", JSON.stringify(Array.from(selectedIds)));
+          startTransition(() => formAction(fd));
         }}
         className="flex flex-col gap-6"
       >
-        <input type="hidden" name="invitee_ids" id="invitee_ids" value="" />
 
         {state?.error && (
           <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono">
@@ -216,72 +218,74 @@ export function NewMeetingForm({
           />
 
           {/* Division groups */}
-          {filteredDivisions.map((div) => {
-            const selectableMembers = div.members.filter((m) => canSelect(m));
-            const fullySelected = isDivisionFullySelected(div.divisionId);
-            const showSelectAll = isBPH || div.divisionId === creatorDivisionId;
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredDivisions.map((div) => {
+              const selectableMembers = div.members.filter((m) => canSelect(m));
+              const fullySelected = isDivisionFullySelected(div.divisionId);
+              const showSelectAll = isBPH || div.divisionId === creatorDivisionId;
 
-            return (
-              <div
-                key={div.divisionId}
-                className="mb-4 border border-outline-variant/30 rounded-xl overflow-hidden"
-              >
-                <div className="bg-surface-container/50 px-4 py-2.5 flex items-center justify-between border-b border-outline-variant/20">
-                  <span className="text-sm font-bold text-on-surface">
-                    {div.divisionName}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-on-surface-variant">
-                      {selectableMembers.length} anggota
+              return (
+                <div
+                  key={div.divisionId}
+                  className="border border-outline-variant/30 rounded-xl overflow-hidden"
+                >
+                  <div className="bg-surface-container/50 px-4 py-2.5 flex items-center justify-between border-b border-outline-variant/20">
+                    <span className="text-sm font-bold text-on-surface">
+                      {div.divisionName}
                     </span>
-                    {showSelectAll && selectableMembers.length > 0 && (
-                      <label className="flex items-center gap-1.5 text-xs font-mono cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={fullySelected}
-                          onChange={() => toggleDivision(div.divisionId)}
-                          className="accent-accent-magenta size-3.5"
-                        />
-                        Pilih Semua
-                      </label>
-                    )}
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono text-on-surface-variant">
+                        {selectableMembers.length} anggota
+                      </span>
+                      {showSelectAll && selectableMembers.length > 0 && (
+                        <label className="flex items-center gap-1.5 text-xs font-mono cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={fullySelected}
+                            onChange={() => toggleDivision(div.divisionId)}
+                            className="accent-accent-magenta size-3.5"
+                          />
+                          Pilih Semua
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="divide-y divide-outline-variant/10">
+                    {div.members.map((member) => {
+                      const isSelected = selectedIds.has(member.assignmentId);
+                      const selectable = canSelect(member);
+
+                      return (
+                        <label
+                          key={member.assignmentId}
+                          className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${
+                            !selectable ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-surface-container/50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={!selectable}
+                            onChange={() => selectable && toggleMember(member.assignmentId)}
+                            className="accent-accent-magenta size-4 shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <span className="text-sm text-on-surface font-medium">
+                              {member.name}
+                            </span>
+                          </div>
+                          <span className="text-xs font-mono text-on-surface-variant shrink-0">
+                            {member.roleName}
+                          </span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
-
-                <div className="divide-y divide-outline-variant/10">
-                  {div.members.map((member) => {
-                    const isSelected = selectedIds.has(member.assignmentId);
-                    const selectable = canSelect(member);
-
-                    return (
-                      <label
-                        key={member.assignmentId}
-                        className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${
-                          !selectable ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-surface-container/50"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          disabled={!selectable}
-                          onChange={() => selectable && toggleMember(member.assignmentId)}
-                          className="accent-accent-magenta size-4 shrink-0"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <span className="text-sm text-on-surface font-medium">
-                            {member.name}
-                          </span>
-                        </div>
-                        <span className="text-xs font-mono text-on-surface-variant shrink-0">
-                          {member.roleName}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
 
           {filteredDivisions.length === 0 && (
             <div className="text-center py-8 text-sm font-mono text-on-surface-variant">

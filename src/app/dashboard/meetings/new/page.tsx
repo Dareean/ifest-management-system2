@@ -12,7 +12,7 @@ export default async function NewMeetingPage() {
   const divisions = await getAllMembers();
 
   return (
-    <div className="max-w-2xl flex flex-col gap-8">
+    <div className="max-w-4xl mx-auto flex flex-col gap-8">
       <div>
         <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
           Meeting Planner

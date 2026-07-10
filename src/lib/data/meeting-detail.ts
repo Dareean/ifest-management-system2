@@ -33,49 +33,39 @@ export interface MeetingDetail {
 export async function getMeetingDetail(id: string): Promise<MeetingDetail | null> {
   const supabase = createAdminClient();
 
-  const { data: meeting } = await supabase
-    .from("meetings")
-    .select(`
-      id,
-      title,
-      agenda,
-      meeting_type,
-      meeting_link,
-      location,
-      started_at,
-      ended_at,
-      created_at,
-      creator:committee_assignments!creator_id(user:users(full_name, email))
-    `)
-    .eq("id", id)
-    .single();
+  const [meetingResult, inviteesResult, notesResult] = await Promise.all([
+    supabase
+      .from("meetings")
+      .select(`
+        id, title, agenda, meeting_type, meeting_link, location,
+        started_at, ended_at, created_at,
+        creator:committee_assignments!creator_id(user:users(full_name, email))
+      `)
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("meeting_invitees")
+      .select(`
+        id, committee_assignment_id, rsvp_status, email_sent,
+        assignment:committee_assignments(user:users(full_name, email))
+      `)
+      .eq("meeting_id", id),
+    supabase
+      .from("meeting_notes")
+      .select(`
+        id, content, decision_points, action_items,
+        published_at, created_at,
+        writer:committee_assignments(user:users(full_name))
+      `)
+      .eq("meeting_id", id)
+      .maybeSingle(),
+  ]);
 
+  const meeting = meetingResult.data;
   if (!meeting) return null;
 
-  const { data: invitees } = await supabase
-    .from("meeting_invitees")
-    .select(`
-      id,
-      committee_assignment_id,
-      rsvp_status,
-      email_sent,
-      assignment:committee_assignments(user:users(full_name, email))
-    `)
-    .eq("meeting_id", id);
-
-  const { data: notes } = await supabase
-    .from("meeting_notes")
-    .select(`
-      id,
-      content,
-      decision_points,
-      action_items,
-      published_at,
-      created_at,
-      writer:committee_assignments(user:users(full_name))
-    `)
-    .eq("meeting_id", id)
-    .maybeSingle();
+  const invitees = inviteesResult.data ?? [];
+  const notes = notesResult.data;
 
   const m = meeting as any;
 
@@ -90,7 +80,7 @@ export async function getMeetingDetail(id: string): Promise<MeetingDetail | null
     endedAt: m.ended_at,
     createdAt: m.created_at,
     creator: m.creator?.user?.full_name ?? "",
-    invitees: (invitees ?? []).map((i: any) => ({
+    invitees: invitees.map((i: any) => ({
       id: i.id,
       assignmentId: i.committee_assignment_id,
       name: i.assignment?.user?.full_name ?? "",
