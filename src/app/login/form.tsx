@@ -137,7 +137,7 @@ export function LoginForm() {
         <div className="relative z-10 flex flex-col gap-xs">
 
           {/* Mascot — centered, larger */}
-          <div className="flex justify-center -mb-6">
+          <div className="flex justify-center">
             <img
               src="/assets/Maskot/18 1.png"
               alt="Maskot I-FEST"
