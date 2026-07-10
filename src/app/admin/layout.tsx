@@ -1,12 +1,14 @@
 import type { ReactNode } from "react";
 import { AdminNav } from "./_components/admin-nav";
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export const dynamic = "force-dynamic";
+
+export default async function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-section-gap">
-      <AdminNav />
-      <div className="w-full max-w-[1280px] mx-auto px-md">
-        {children}
+    <div className="min-h-screen flex flex-col">
+      <div className="max-w-[1280px] mx-auto px-md py-xl w-full">
+        <AdminNav />
+        <div className="mt-xl">{children}</div>
       </div>
     </div>
   );
