@@ -37,17 +37,17 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-surface">
-      {/* Brand Panel — Desktop */}
-      <div className="hidden md:flex md:w-[45%] bg-primary text-on-primary flex-col justify-between p-xl relative overflow-hidden">
-        {/* Decorative circles */}
-        <div className="absolute -top-20 -right-20 size-80 rounded-full bg-accent-magenta/10" />
-        <div className="absolute -bottom-32 -left-16 size-96 rounded-full bg-block-lilac/8" />
-        <div className="absolute top-1/3 right-8 size-24 rounded-full bg-block-mint/10" />
+    <div className="min-h-dvh flex flex-col md:flex-row bg-surface">
+      {/* Brand Panel */}
+      <div className="hidden md:flex md:w-[440px] xl:w-[480px] bg-primary text-on-primary flex-col justify-between p-md lg:p-xl relative overflow-hidden shrink-0">
+        {/* Decorative circles (sized relative to panel) */}
+        <div className="absolute -top-32 -right-32 size-80 rounded-full bg-accent-magenta/8" />
+        <div className="absolute -bottom-40 -left-24 size-96 rounded-full bg-block-lilac/6" />
+        <div className="absolute top-1/3 right-12 size-32 rounded-full bg-block-mint/8" />
 
-        <div className="relative z-10">
-          <p className="eyebrow text-on-primary/60 mb-lg">HMTI UNIVERSITAS TADULAKO</p>
-          <h1 className="text-6xl lg:text-7xl xl:text-8xl font-semibold tracking-tight leading-none">
+        <div className="relative z-10 flex flex-col gap-lg">
+          <p className="eyebrow text-on-primary/60">HMTI UNIVERSITAS TADULAKO</p>
+          <h1 className="text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight leading-none">
             I-FEST
             <br />
             <span className="text-accent-magenta">Management</span>
@@ -56,34 +56,34 @@ export function LoginForm() {
           </h1>
         </div>
 
-        <div className="relative z-10 flex flex-col gap-lg">
-          <p className="text-lg text-on-primary/80 leading-relaxed max-w-md">
+        <div className="relative z-10 flex flex-col gap-md">
+          <p className="text-sm lg:text-base text-on-primary/70 leading-relaxed max-w-sm">
             Sistem manajemen terpadu untuk kepanitiaan I-FEST —
             transparan, efisien, dan siap diwariskan.
           </p>
-          <div className="flex flex-col gap-sm">
+          <div className="flex flex-col gap-xs">
             <div className="flex items-center gap-md">
-              <div className="size-1 rounded-full bg-accent-magenta" />
-              <span className="text-sm font-mono text-on-primary/60 tracking-wider uppercase">Manajemen KPI</span>
+              <div className="size-1 shrink-0 rounded-full bg-accent-magenta" />
+              <span className="text-xs font-mono text-on-primary/50 tracking-wider uppercase">Manajemen KPI</span>
             </div>
             <div className="flex items-center gap-md">
-              <div className="size-1 rounded-full bg-block-lilac" />
-              <span className="text-sm font-mono text-on-primary/60 tracking-wider uppercase">Notulensi Rapat</span>
+              <div className="size-1 shrink-0 rounded-full bg-block-lilac" />
+              <span className="text-xs font-mono text-on-primary/50 tracking-wider uppercase">Notulensi Rapat</span>
             </div>
             <div className="flex items-center gap-md">
-              <div className="size-1 rounded-full bg-block-mint" />
-              <span className="text-sm font-mono text-on-primary/60 tracking-wider uppercase">Anggaran Divisi</span>
+              <div className="size-1 shrink-0 rounded-full bg-block-mint" />
+              <span className="text-xs font-mono text-on-primary/50 tracking-wider uppercase">Anggaran Divisi</span>
             </div>
           </div>
         </div>
 
-        <p className="relative z-10 caption text-on-primary/40">&copy; 2026 HMTI Universitas Tadulako</p>
+        <p className="relative z-10 caption text-on-primary/30">&copy; 2026 HMTI Universitas Tadulako</p>
       </div>
 
       {/* Mobile Brand Header */}
-      <div className="md:hidden bg-primary text-on-primary px-lg py-xl">
-        <p className="eyebrow text-on-primary/60 mb-sm">HMTI UNIVERSITAS TADULAKO</p>
-        <h1 className="text-4xl font-bold tracking-tight leading-none">
+      <div className="md:hidden bg-primary text-on-primary px-md py-lg">
+        <p className="eyebrow text-on-primary/60 mb-xs">HMTI UNIVERSITAS TADULAKO</p>
+        <h1 className="text-3xl font-bold tracking-tight leading-snug">
           I-FEST
           <span className="text-accent-magenta"> Management</span>
           <br />
@@ -92,12 +92,12 @@ export function LoginForm() {
       </div>
 
       {/* Form Panel */}
-      <div className="flex-1 flex items-center justify-center px-lg md:px-xl py-xl">
-        <div className="w-full max-w-sm flex flex-col gap-xl">
+      <div className="flex-1 flex items-center justify-center px-md md:px-lg lg:px-xl py-lg md:py-xl min-h-0">
+        <div className="w-full max-w-sm flex flex-col gap-lg md:gap-xl">
           {/* Header */}
           <div className="flex flex-col gap-xs">
             <p className="eyebrow text-on-surface-variant">Akses Terbatas</p>
-            <h2 className="text-3xl font-semibold tracking-tight text-on-surface">
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-on-surface">
               Masuk ke Dashboard
             </h2>
             <p className="text-sm text-on-surface-variant font-sans">
@@ -114,14 +114,14 @@ export function LoginForm() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleLogin} className="flex flex-col gap-lg">
+          <form onSubmit={handleLogin} className="flex flex-col gap-lg md:gap-xl">
             <div className="flex flex-col gap-md">
               <div>
                 <label htmlFor="email" className="caption block mb-xs text-on-surface-variant">
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-on-surface-variant" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-on-surface-variant pointer-events-none" />
                   <Input
                     id="email"
                     type="email"
@@ -139,7 +139,7 @@ export function LoginForm() {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-on-surface-variant" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-on-surface-variant pointer-events-none" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -154,6 +154,7 @@ export function LoginForm() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
                     tabIndex={-1}
+                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                   >
                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
@@ -166,14 +167,14 @@ export function LoginForm() {
             </Button>
           </form>
 
-          {/* Divider for desktop brand features (shown on mobile only) */}
+          {/* Mobile feature list */}
           <div className="md:hidden flex flex-col gap-sm pt-sm border-t border-outline-variant/40">
             <p className="caption text-on-surface-variant">Fitur utama:</p>
             <div className="flex flex-wrap gap-x-lg gap-y-xs">
-              <span className="text-xs font-mono text-on-surface-variant tracking-wider uppercase">KPI</span>
-              <span className="text-xs font-mono text-on-surface-variant tracking-wider uppercase">Rapat</span>
-              <span className="text-xs font-mono text-on-surface-variant tracking-wider uppercase">Anggaran</span>
-              <span className="text-xs font-mono text-on-surface-variant tracking-wider uppercase">Surat</span>
+              <span className="text-xs font-mono text-on-surface-variant/70 tracking-wider uppercase">KPI</span>
+              <span className="text-xs font-mono text-on-surface-variant/70 tracking-wider uppercase">Rapat</span>
+              <span className="text-xs font-mono text-on-surface-variant/70 tracking-wider uppercase">Anggaran</span>
+              <span className="text-xs font-mono text-on-surface-variant/70 tracking-wider uppercase">Surat</span>
             </div>
           </div>
         </div>
