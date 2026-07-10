@@ -2,13 +2,12 @@
 
 import { useActionState, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { ColorBlock } from "@/components/blocks/color-block";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { setBudget, addTransaction, deleteTransaction, createBudgetRequest, handleBudgetRequest, exportFinanceCSV } from "@/lib/actions/finance";
-import { DollarSign, TrendingUp, TrendingDown, FileDown, Plus, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, FileDown, Plus, CheckCircle, XCircle, FileText } from "lucide-react";
 import type { BudgetWithDivision, BudgetRequestData, FinanceOverview } from "@/lib/data/finance";
 
 function formatRp(n: number) {
@@ -50,129 +49,174 @@ export function FinanceClient({ overview, budgets, requests }: {
   };
 
   return (
-    <div className="flex flex-col gap-section-gap">
-      {/* Overview */}
-      <ColorBlock color="mint">
-        <div className="flex items-center justify-between mb-md">
-          <div>
-            <p className="eyebrow text-on-surface-variant mb-xs">Keuangan</p>
-            <h2 className="text-3xl font-semibold tracking-tight">Overview Anggaran</h2>
-          </div>
-          <div className="flex gap-sm">
-            <Button variant="secondary" onClick={() => setShowRequest(true)}>
-              <Plus className="size-4" /> Ajukan Dana
-            </Button>
-            <Button variant="ghost" onClick={handleExport} disabled={exporting}>
-              <FileDown className="size-4" /> {exporting ? "..." : "Export CSV"}
-            </Button>
-          </div>
+    <div className="flex flex-col gap-10">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-[#FF3D8B] font-mono text-xs font-bold tracking-widest uppercase mb-1">
+            Keuangan
+          </p>
+          <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
+            Overview Anggaran
+          </h1>
+          <p className="mt-2 text-base text-on-surface-variant">
+            Kelola dan catat transaksi keuangan kepanitiaan secara transparan.
+          </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><DollarSign className="size-4" /> Total Anggaran</CardTitle>
-              <CardDescription className="text-2xl font-semibold">{formatRp(overview.total_budget)}</CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><TrendingDown className="size-4 text-error" /> Terpakai</CardTitle>
-              <CardDescription className="text-2xl font-semibold">{formatRp(overview.total_used)}</CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><TrendingUp className="size-4 text-emerald-500" /> Sisa</CardTitle>
-              <CardDescription className="text-2xl font-semibold">{formatRp(overview.total_remaining)}</CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><FileDown className="size-4" /> Pengajuan</CardTitle>
-              <CardDescription className="text-2xl font-semibold">
-                {overview.pending_requests}
-                <span className="text-sm font-normal text-on-surface-variant ml-1">pending</span>
-              </CardDescription>
-            </CardHeader>
-          </Card>
+        <div className="flex items-center gap-3 shrink-0 sm:self-end">
+          <Button variant="ghost" onClick={handleExport} disabled={exporting} className="cursor-pointer">
+            <FileDown className="size-4" /> {exporting ? "..." : "Export CSV"}
+          </Button>
+          <Button variant="primary" onClick={() => setShowRequest(true)} className="cursor-pointer">
+            <Plus className="size-4" /> Ajukan Dana
+          </Button>
         </div>
-      </ColorBlock>
+      </div>
 
-      {/* Budget per Division */}
-      <ColorBlock color="surface">
-        <p className="eyebrow text-on-surface-variant mb-xs">Anggaran per Divisi</p>
-        <h3 className="text-2xl font-semibold tracking-tight mb-md">Detail Budget</h3>
+      {/* Finance Overview Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Card 1: Total Anggaran */}
+        <div className="bg-white border border-violet-200 bg-violet-50/5 rounded-2xl p-6 transition-all hover:border-violet-300">
+          <p className="text-xs font-mono font-bold tracking-wider text-violet-700 uppercase flex items-center gap-1.5">
+            <DollarSign className="size-3.5" /> TOTAL ANGGARAN
+          </p>
+          <p className="text-2xl font-black text-on-surface my-2 leading-none">{formatRp(overview.total_budget)}</p>
+          <p className="text-xs text-on-surface-variant font-mono">Anggaran teralokasi</p>
+        </div>
 
-        <div className="flex flex-col gap-sm">
+        {/* Card 2: Terpakai */}
+        <div className="bg-white border border-amber-200 bg-amber-50/5 rounded-2xl p-6 transition-all hover:border-amber-300">
+          <p className="text-xs font-mono font-bold tracking-wider text-amber-700 uppercase flex items-center gap-1.5">
+            <TrendingDown className="size-3.5 text-error" /> TERPAKAI
+          </p>
+          <p className="text-2xl font-black text-on-surface my-2 leading-none">{formatRp(overview.total_used)}</p>
+          <p className="text-xs text-on-surface-variant font-mono">Pengeluaran divisi</p>
+        </div>
+
+        {/* Card 3: Sisa */}
+        <div className="bg-white border border-emerald-200 bg-emerald-50/5 rounded-2xl p-6 transition-all hover:border-emerald-300">
+          <p className="text-xs font-mono font-bold tracking-wider text-emerald-700 uppercase flex items-center gap-1.5">
+            <TrendingUp className="size-3.5 text-emerald-500" /> SISA ANGGARAN
+          </p>
+          <p className="text-2xl font-black text-on-surface my-2 leading-none">{formatRp(overview.total_remaining)}</p>
+          <p className="text-xs text-on-surface-variant font-mono">Sisa dana tersedia</p>
+        </div>
+
+        {/* Card 4: Pengajuan */}
+        <div className="bg-white border border-rose-200 bg-rose-50/5 rounded-2xl p-6 transition-all hover:border-rose-300">
+          <p className="text-xs font-mono font-bold tracking-wider text-rose-700 uppercase flex items-center gap-1.5">
+            <FileText className="size-3.5" /> PENGAJUAN
+          </p>
+          <p className="text-2xl font-black text-on-surface my-2 leading-none">
+            {overview.pending_requests}
+            <span className="text-xs font-normal text-on-surface-variant ml-1.5">pending</span>
+          </p>
+          <p className="text-xs text-on-surface-variant font-mono">Menunggu persetujuan</p>
+        </div>
+      </div>
+
+      {/* Budget per Division Section */}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <DollarSign className="size-5 text-[#ba1a1a]" />
+          <h2 className="text-xl font-bold tracking-tight text-on-surface">Anggaran per Divisi</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {budgets.map((b) => {
             const pct = b.total_budget > 0 ? Math.round((b.used_amount / b.total_budget) * 100) : 0;
             return (
-              <Card key={b.division_id}>
-                <CardContent className="flex flex-col gap-sm pt-md">
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold text-lg">{b.division_name}</div>
-                    <div className="flex items-center gap-sm">
-                      <Badge variant={b.remaining > 0 ? "success" : "danger"}>
-                        {b.transaction_count} transaksi
-                      </Badge>
-                      <Button size="sm" variant="secondary" onClick={() => setShowAddTx(b.id)}>
-                        <Plus className="size-3" /> Transaksi
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setShowSetBudget(b.division_id)}>
-                        Atur Budget
-                      </Button>
+              <Card key={b.division_id} className="bg-white border border-outline-variant/60 rounded-2xl p-5 hover:border-primary/20 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-start justify-between gap-4 mb-3 border-b border-outline-variant/10 pb-3">
+                    <span className="font-bold text-on-surface text-base">{b.division_name}</span>
+                    <Badge variant={b.remaining > 0 ? "success" : "danger"} className="text-[10px] font-mono px-2 py-0.5">
+                      {b.transaction_count} transaksi
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1 text-sm font-mono text-on-surface-variant mb-4">
+                    <div className="flex justify-between">
+                      <span>Total Budget</span>
+                      <span className="font-bold text-on-surface">{formatRp(b.total_budget)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Terpakai</span>
+                      <span className="font-bold text-[#ba1a1a]">{formatRp(b.used_amount)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Sisa</span>
+                      <span className={`font-bold ${b.remaining >= 0 ? "text-emerald-600" : "text-error"}`}>
+                        {formatRp(b.remaining)}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-md text-sm text-on-surface-variant">
-                    <span>Budget: {formatRp(b.total_budget)}</span>
-                    <span>Terpakai: {formatRp(b.used_amount)}</span>
-                    <span>Sisa: <span className={b.remaining >= 0 ? "text-block-mint" : "text-error"}>{formatRp(b.remaining)}</span></span>
+                </div>
+
+                <div className="mt-auto">
+                  <div className="flex items-center justify-between text-xs font-mono text-on-surface-variant mb-1">
+                    <span>Penggunaan Anggaran</span>
+                    <span>{pct}%</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-surface-container overflow-hidden mb-4">
                     <div
-                      className="h-full rounded-full bg-primary transition-all"
+                      className="h-full rounded-full bg-primary transition-all duration-300"
                       style={{ width: `${Math.min(pct, 100)}%` }}
                     />
                   </div>
-                </CardContent>
+
+                  <div className="flex gap-2 justify-end">
+                    <Button size="sm" variant="outline" onClick={() => setShowAddTx(b.id)} className="cursor-pointer text-xs">
+                      <Plus className="size-3" /> Transaksi
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setShowSetBudget(b.division_id)} className="cursor-pointer text-xs">
+                      Atur Budget
+                    </Button>
+                  </div>
+                </div>
               </Card>
             );
           })}
         </div>
-      </ColorBlock>
+      </div>
 
-      {/* Budget Requests */}
-      <ColorBlock color="lilac">
-        <p className="eyebrow text-on-surface-variant mb-xs">Pengajuan Dana</p>
-        <h3 className="text-2xl font-semibold tracking-tight mb-md">Daftar Pengajuan</h3>
+      {/* Budget Requests Section */}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <FileText className="size-5 text-[#ba1a1a]" />
+          <h2 className="text-xl font-bold tracking-tight text-on-surface">Daftar Pengajuan Dana</h2>
+        </div>
 
-        <div className="flex flex-col gap-sm">
-          {requests.length === 0 && (
-            <p className="text-on-surface-variant">Belum ada pengajuan dana.</p>
-          )}
-          {requests.map((r) => (
-            <Card key={r.id}>
-              <CardContent className="flex items-center justify-between pt-md">
-                <div>
-                  <div className="flex items-center gap-sm">
-                    <span className="font-semibold">{formatRp(r.amount)}</span>
-                    <Badge variant={statusColors[r.status] ?? "info"}>{r.status}</Badge>
+        <div className="flex flex-col gap-3">
+          {requests.length === 0 ? (
+            <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 text-center">
+              <p className="text-sm font-mono text-on-surface-variant">Belum ada pengajuan dana.</p>
+            </div>
+          ) : (
+            requests.map((r) => (
+              <Card key={r.id} className="bg-white border border-outline-variant/60 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-bold text-lg text-on-surface">{formatRp(r.amount)}</span>
+                    <Badge variant={statusColors[r.status] ?? "info"} className="text-[10px] font-mono uppercase px-2 py-0.5">
+                      {r.status}
+                    </Badge>
                   </div>
-                  <p className="text-sm text-on-surface-variant mt-1">{r.purpose}</p>
-                  <p className="caption text-on-surface-variant mt-1">
-                    {r.division_name} — {r.requester_name}
-                    {r.handler_name && ` → ${r.handler_name}`}
+                  <p className="text-sm text-on-surface-variant font-sans mt-1.5">{r.purpose}</p>
+                  <p className="text-xs text-on-surface-variant font-mono mt-1">
+                    {r.division_name} &middot; Pengaju: {r.requester_name}
+                    {r.handler_name && ` &middot; Reviewer: ${r.handler_name}`}
                   </p>
                 </div>
                 {r.status === "pending" && (
-                  <div className="flex gap-xs">
+                  <div className="flex gap-2 shrink-0 self-start sm:self-center">
                     <form
                       action={async () => {
                         await handleBudgetRequest(r.id, "approved", "");
                       }}
                     >
-                      <Button size="sm" variant="secondary" type="submit">
-                        <CheckCircle className="size-3" /> Setujui
+                      <Button size="sm" variant="primary" type="submit" className="cursor-pointer text-xs">
+                        <CheckCircle className="size-3.5" /> Setujui
                       </Button>
                     </form>
                     <form
@@ -181,29 +225,31 @@ export function FinanceClient({ overview, budgets, requests }: {
                         await handleBudgetRequest(r.id, "rejected", notes ?? undefined);
                       }}
                     >
-                      <Button size="sm" variant="ghost" type="submit" className="text-red-500">
-                        <XCircle className="size-3" /> Tolak
+                      <Button size="sm" variant="outline" type="submit" className="cursor-pointer text-xs text-red-500 border-red-200 hover:bg-red-50">
+                        <XCircle className="size-3.5" /> Tolak
                       </Button>
                     </form>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          ))}
+              </Card>
+            ))
+          )}
         </div>
-      </ColorBlock>
+      </div>
 
       {/* Set Budget Modal */}
       <Modal open={!!showSetBudget} onClose={() => setShowSetBudget(null)} title="Atur Anggaran Divisi">
-        <form action={setBudgetAction} className="flex flex-col gap-md">
+        <form action={setBudgetAction} className="flex flex-col gap-4">
           <input type="hidden" name="division_id" value={showSetBudget ?? ""} />
           <div>
-            <label className="caption block mb-xs text-on-surface-variant">Total Anggaran (Rp)</label>
+            <label className="caption block mb-1 text-on-surface-variant">Total Anggaran (Rp)</label>
             <Input name="amount" type="number" min="0" required placeholder="1000000" />
           </div>
-          <div className="flex gap-sm justify-end">
-            <Button type="button" variant="ghost" onClick={() => setShowSetBudget(null)}>Batal</Button>
-            <Button type="submit" disabled={setBudgetPending}>
+          <div className="flex gap-2 justify-end mt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowSetBudget(null)} className="cursor-pointer">
+              Batal
+            </Button>
+            <Button type="submit" disabled={setBudgetPending} className="cursor-pointer">
               {setBudgetPending ? "Menyimpan..." : "Simpan"}
             </Button>
           </div>
@@ -212,65 +258,60 @@ export function FinanceClient({ overview, budgets, requests }: {
 
       {/* Add Transaction Modal */}
       <Modal open={!!showAddTx} onClose={() => setShowAddTx(null)} title="Tambah Transaksi">
-        <form action={addTxAction} className="flex flex-col gap-md">
+        <form action={addTxAction} className="flex flex-col gap-4">
           <input type="hidden" name="budget_id" value={showAddTx ?? ""} />
           <div>
-            <label className="caption block mb-xs text-on-surface-variant">Tipe</label>
-            <select name="type" className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none" required>
-              <option value="income">Pemasukan</option>
-              <option value="expense">Pengeluaran</option>
+            <label className="caption block mb-1 text-on-surface-variant">Tipe Transaksi</label>
+            <select
+              name="type"
+              className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231d1b1d%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10"
+              required
+            >
+              <option value="income">Pemasukan (Income)</option>
+              <option value="expense">Pengeluaran (Expense)</option>
             </select>
           </div>
           <div>
-            <label className="caption block mb-xs text-on-surface-variant">Jumlah (Rp)</label>
+            <label className="caption block mb-1 text-on-surface-variant">Jumlah (Rp)</label>
             <Input name="amount" type="number" min="1" required />
           </div>
           <div>
-            <label className="caption block mb-xs text-on-surface-variant">Deskripsi</label>
-            <Input name="description" required />
+            <label className="caption block mb-1 text-on-surface-variant">Deskripsi Transaksi</label>
+            <Input name="description" placeholder="Contoh: Konsumsi rapat, Cetak banner" required />
           </div>
-          <div>
-            <label className="caption block mb-xs text-on-surface-variant">Kategori (opsional)</label>
-            <Input name="category" placeholder="contoh: ATK, Konsumsi, Transport" />
-          </div>
-          <div className="flex gap-sm justify-end">
-            <Button type="button" variant="ghost" onClick={() => setShowAddTx(null)}>Batal</Button>
-            <Button type="submit" disabled={addTxPending}>
-              {addTxPending ? "Menyimpan..." : "Tambah Transaksi"}
+          <div className="flex gap-2 justify-end mt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowAddTx(null)} className="cursor-pointer">
+              Batal
+            </Button>
+            <Button type="submit" disabled={addTxPending} className="cursor-pointer">
+              {addTxPending ? "Menyimpan..." : "Tambah"}
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Budget Request Modal */}
-      <Modal open={showRequest} onClose={() => setShowRequest(false)} title="Ajukan Dana">
-        <form action={createReqAction} className="flex flex-col gap-md">
+      {/* Request Budget Modal */}
+      <Modal open={showRequest} onClose={() => setShowRequest(false)} title="Ajukan Anggaran/Dana">
+        <form action={createReqAction} className="flex flex-col gap-4">
           <div>
-            <label className="caption block mb-xs text-on-surface-variant">Divisi</label>
-            <select name="division_id" className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none" required>
-              <option value="">Pilih divisi</option>
-              {[...new Set(budgets.map((b) => b.division_id))].map((id) => {
-                const div = budgets.find((b) => b.division_id === id);
-                return <option key={id} value={id}>{div?.division_name}</option>;
-              })}
-            </select>
+            <label className="caption block mb-1 text-on-surface-variant">Jumlah Pengajuan (Rp)</label>
+            <Input name="amount" type="number" min="1" required placeholder="500000" />
           </div>
           <div>
-            <label className="caption block mb-xs text-on-surface-variant">Jumlah (Rp)</label>
-            <Input name="amount" type="number" min="1" required />
-          </div>
-          <div>
-            <label className="caption block mb-xs text-on-surface-variant">Keperluan</label>
+            <label className="caption block mb-1 text-on-surface-variant">Tujuan Penggunaan Dana</label>
             <textarea
               name="purpose"
-              className="flex min-h-[100px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none"
+              className="flex min-h-[100px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
+              placeholder="Jelaskan secara rinci penggunaan dana..."
               required
             />
           </div>
-          <div className="flex gap-sm justify-end">
-            <Button type="button" variant="ghost" onClick={() => setShowRequest(false)}>Batal</Button>
-            <Button type="submit" disabled={createReqPending}>
-              {createReqPending ? "Mengajukan..." : "Ajukan"}
+          <div className="flex gap-2 justify-end mt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowRequest(false)} className="cursor-pointer">
+              Batal
+            </Button>
+            <Button type="submit" disabled={createReqPending} className="cursor-pointer">
+              {createReqPending ? "Mengirim..." : "Kirim Pengajuan"}
             </Button>
           </div>
         </form>

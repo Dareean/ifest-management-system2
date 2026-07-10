@@ -2,12 +2,11 @@
 
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ColorBlock } from "@/components/blocks/color-block";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { ArrowLeft, Check, Send, RotateCcw, FileText } from "lucide-react";
+import { ArrowLeft, Check, Send, RotateCcw, FileText, ChevronRight } from "lucide-react";
 import { approveLetter, sendLetterFinal, requestRevision } from "@/lib/actions/letter-workflow";
 import { getStatusDisplay } from "@/lib/data/letters";
 import type { LetterDetail } from "@/lib/data/letter-detail";
@@ -39,119 +38,140 @@ export function LetterDetailClient({ letter }: { letter: LetterDetail }) {
   }
 
   return (
-    <div className="max-w-3xl flex flex-col gap-section-gap">
-      <div className="flex items-center gap-md">
-        <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-surface-container transition-colors">
-          <ArrowLeft className="size-5" />
+    <div className="max-w-3xl flex flex-col gap-10">
+      {/* Header */}
+      <div className="flex items-start gap-4">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-full hover:bg-surface-container transition-colors shrink-0 cursor-pointer mt-1"
+        >
+          <ArrowLeft className="size-5 text-on-surface" />
         </button>
-        <div>
-          <div className="flex items-center gap-sm">
-            <h1 className="text-3xl font-semibold tracking-tight">{letter.subject}</h1>
-            <Badge variant={status.variant}>{status.label}</Badge>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-3xl font-extrabold tracking-tight text-on-surface break-words leading-tight">
+              {letter.subject}
+            </h1>
+            <Badge variant={status.variant} className="text-xs font-mono shrink-0">
+              {status.label}
+            </Badge>
           </div>
-          <p className="text-on-surface-variant caption">
-            {letter.letterType} &middot; {letter.division} &middot; {letter.requester}
+          <p className="text-on-surface-variant text-sm mt-1">
+            {letter.letterType.toUpperCase()} &middot; {letter.division} &middot; Pengaju: {letter.requester}
           </p>
         </div>
       </div>
 
       {actionMsg && (
-        <p className="text-red-500 caption">{actionMsg}</p>
+        <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono">
+          {actionMsg}
+        </div>
       )}
 
-      <ColorBlock color="mint">
-        <Card>
-          <CardHeader>
-            <CardTitle>Isi Surat</CardTitle>
-          </CardHeader>
-          <div className="px-lg pb-lg">
-            <p className="whitespace-pre-wrap text-on-surface leading-relaxed">{letter.body}</p>
-          </div>
-        </Card>
-      </ColorBlock>
-
-      {/* Workflow Actions */}
-      <ColorBlock color="lilac">
-        <p className="eyebrow text-on-surface-variant mb-md">Aksi</p>
-        <div className="flex flex-wrap gap-sm">
-          {letter.status === "requested" && (
-            <>
-              <Button onClick={handleApprove}>
-                <Check className="size-4" />
-                Setujui
-              </Button>
-              <Button variant="outline" onClick={() => setShowRevisionModal(true)}>
-                <RotateCcw className="size-4" />
-                Minta Revisi
-              </Button>
-            </>
-          )}
-          {letter.status === "approved" && (
-            <Button onClick={handleSend}>
-              <Send className="size-4" />
-              Tandai Terkirim
-            </Button>
-          )}
-          {letter.status === "in_revision" && (
-            <p className="text-sm text-on-surface-variant">
-              Menunggu revisi dari pengaju.
-            </p>
-          )}
-          {letter.status === "sent" && (
-            <Badge variant="default">Dokumen telah dikirim</Badge>
-          )}
+      {/* Main Letter Content Card */}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <FileText className="size-5 text-[#ba1a1a]" />
+          <h2 className="text-xl font-bold tracking-tight text-on-surface">Isi Surat</h2>
         </div>
-      </ColorBlock>
+        <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
+          <p className="whitespace-pre-wrap text-on-surface leading-relaxed text-base font-sans">
+            {letter.body}
+          </p>
+        </Card>
+      </div>
+
+      {/* Workflow Actions Section */}
+      <div className="flex flex-col gap-4">
+        <h2 className="text-xl font-bold tracking-tight text-on-surface">Aksi Workflow</h2>
+        <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
+          <div className="flex flex-wrap gap-3">
+            {letter.status === "requested" && (
+              <>
+                <Button onClick={handleApprove} className="cursor-pointer">
+                  <Check className="size-4" />
+                  Setujui Surat
+                </Button>
+                <Button variant="outline" onClick={() => setShowRevisionModal(true)} className="cursor-pointer">
+                  <RotateCcw className="size-4" />
+                  Minta Revisi
+                </Button>
+              </>
+            )}
+            {letter.status === "approved" && (
+              <Button onClick={handleSend} className="cursor-pointer">
+                <Send className="size-4" />
+                Tandai Terkirim
+              </Button>
+            )}
+            {letter.status === "in_revision" && (
+              <div className="text-sm text-on-surface-variant font-mono flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+                Menunggu perbaikan/revisi dari pengaju.
+              </div>
+            )}
+            {letter.status === "sent" && (
+              <div className="text-sm text-emerald-600 font-bold flex items-center gap-2">
+                <Check className="size-4" /> Dokumen resmi telah terkirim
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Revision History */}
-      <ColorBlock color="coral">
-        <p className="eyebrow text-on-surface-variant mb-md">
+      <div className="flex flex-col gap-4">
+        <h2 className="text-xl font-bold tracking-tight text-on-surface">
           Riwayat Revisi ({letter.revisions.length})
-        </p>
-        {letter.revisions.length === 0 && (
-          <p className="text-on-surface-variant text-sm">Belum ada revisi.</p>
-        )}
-        <div className="flex flex-col gap-sm">
-          {letter.revisions.map((rev) => (
-            <Card key={rev.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-xs">
-                    <FileText className="size-4 text-on-surface-variant" />
-                    <CardTitle className="text-sm font-medium">Revisi oleh {rev.reviewer}</CardTitle>
+        </h2>
+        
+        {letter.revisions.length === 0 ? (
+          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 text-center">
+            <p className="text-sm font-mono text-on-surface-variant">Belum ada riwayat revisi.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {letter.revisions.map((rev) => (
+              <Card key={rev.id} className="bg-white border border-outline-variant/60 rounded-xl p-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/20 pb-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <RotateCcw className="size-4 text-blue-500" />
+                    <span className="text-sm font-bold text-on-surface">Revisi dari {rev.reviewer}</span>
                   </div>
-                  <CardDescription>
+                  <span className="text-xs font-mono text-on-surface-variant">
                     {new Date(rev.createdAt).toLocaleDateString("id-ID", {
                       day: "numeric", month: "short", year: "numeric",
                       hour: "2-digit", minute: "2-digit",
                     })}
-                  </CardDescription>
+                  </span>
                 </div>
-                <p className="text-sm mt-xs">{rev.note}</p>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </ColorBlock>
+                <p className="text-sm text-on-surface font-sans leading-relaxed">{rev.note}</p>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Revision Modal */}
       <Modal open={showRevisionModal} onClose={() => setShowRevisionModal(false)} title="Minta Revisi">
-        {revisionState?.error && <p className="text-red-500 caption mb-md">{revisionState.error}</p>}
-        <form action={revisionAction} className="flex flex-col gap-md">
+        {revisionState?.error && <p className="text-red-500 caption mb-4">{revisionState.error}</p>}
+        <form action={revisionAction} className="flex flex-col gap-4">
           <input type="hidden" name="id" value={letter.id} />
           <div>
-            <label className="caption block mb-xs text-on-surface-variant">Catatan Revisi</label>
+            <label className="caption block mb-1 text-on-surface-variant">Catatan Revisi</label>
             <textarea
               name="note"
               className="flex min-h-[120px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
-              placeholder="Jelaskan apa yang perlu diperbaiki..."
+              placeholder="Jelaskan detail perbaikan yang diperlukan..."
               required
             />
           </div>
-          <div className="flex gap-sm justify-end">
-            <Button type="button" variant="ghost" onClick={() => setShowRevisionModal(false)}>Batal</Button>
-            <Button type="submit" variant="outline" disabled={revisionPending}>
-              {revisionPending ? "Menyimpan..." : "Kirim Permintaan Revisi"}
+          <div className="flex gap-2 justify-end mt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowRevisionModal(false)} className="cursor-pointer">
+              Batal
+            </Button>
+            <Button type="submit" className="cursor-pointer" disabled={revisionPending}>
+              {revisionPending ? "Mengirim..." : "Kirim Permintaan"}
             </Button>
           </div>
         </form>
