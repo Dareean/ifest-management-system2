@@ -133,26 +133,37 @@ export function LoginForm() {
           <p className="eyebrow" style={{ color: 'rgba(255,255,255,0.65)' }}>HMTI UNIVERSITAS TADULAKO</p>
         </div>
 
-        {/* ── BOTTOM: Heading + copyright ── */}
-        <div className="relative z-10 flex flex-col gap-xs">
-
-          {/* Mascot — centered, larger */}
-          <div className="flex justify-center">
+        {/* ── MASCOT: centered vertically ── */}
+        <div className="relative z-10 flex items-center justify-center py-lg">
+          <div
+            className="rounded-full"
+            style={{
+              width: 220,
+              maxWidth: '90%',
+              aspectRatio: '1 / 1',
+              background: 'radial-gradient(circle, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0) 80%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <img
               src="/assets/Maskot/18 1.png"
               alt="Maskot I-FEST"
               className="pointer-events-none select-none"
               style={{
                 width: 200,
-                maxWidth: '80%',
-                mixBlendMode: 'multiply',
+                maxWidth: '90%',
                 position: 'relative',
                 zIndex: 1,
-                filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.18))',
+                filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.15))',
               }}
             />
           </div>
+        </div>
 
+        {/* ── BOTTOM: Heading + copyright ── */}
+        <div className="relative z-10 flex flex-col gap-xs">
           {/* Glassmorphism card behind the heading */}
           <div
             style={{
