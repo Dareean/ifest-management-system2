@@ -1,8 +1,4 @@
-# Render Blueprint — I-FEST Management System
-# https://render.com/docs/blueprint-spec
-
 services:
-  # ── Main Web App (Next.js — Native Environment) ──
   - type: web
     name: ims-app
     runtime: node
@@ -24,25 +20,3 @@ services:
         sync: false
       - key: YEAR_ID
         value: c2f2a48e-3e58-4559-aaa0-623a3825348b
-
-  # ── Background Worker (Cron — every 5 min) ──
-  - type: cron
-    name: ims-worker
-    runtime: node
-    repo: https://github.com/Dareean/ifest-management-system2
-    branch: main
-    rootDir: worker
-    buildCommand: npm ci
-    startCommand: node index.js
-    schedule: "*/5 * * * *"
-    envVars:
-      - key: SUPABASE_URL
-        value: https://xxmxbyiggrottreetrig.supabase.co
-      - key: SERVICE_ROLE_KEY
-        sync: false
-      - key: BREVO_API_KEY
-        sync: false
-      - key: YEAR_ID
-        value: c2f2a48e-3e58-4559-aaa0-623a3825348b
-      - key: CRON_TASK
-        value: all
