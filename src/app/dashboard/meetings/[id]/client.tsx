@@ -60,7 +60,7 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
   }
 
   return (
-    <div className="max-w-4xl flex flex-col gap-10">
+    <div className="max-w-4xl mx-auto flex flex-col gap-10">
       {/* Header */}
       <div className="flex items-start gap-4">
         <button
@@ -75,7 +75,7 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
               {meeting.title}
             </h1>
             <Badge variant={meeting.meetingType === "adhoc" ? "warning" : "info"} className="text-xs font-mono shrink-0">
-              {meeting.meetingType === "adhoc" ? "Ad-hoc" : "Terjadwal"}
+              {meeting.meetingType === "adhoc" ? "Kondisional" : "Terjadwal"}
             </Badge>
             {meeting.endedAt && <Badge variant="secondary" className="text-xs font-mono shrink-0">Selesai</Badge>}
           </div>
@@ -123,7 +123,7 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
             <p className="text-sm font-mono text-on-surface-variant">Belum ada undangan peserta.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {meeting.invitees.map((inv) => (
               <Card key={inv.id} className="bg-white border border-outline-variant/60 rounded-xl p-4 flex flex-col justify-between">
                 <div className="min-w-0 mb-3">

@@ -74,7 +74,7 @@ export function FinanceClient({ overview, budgets, requests }: {
       </div>
 
       {/* Finance Overview Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         {/* Card 1: Total Anggaran */}
         <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
           <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center gap-1.5">
@@ -122,7 +122,7 @@ export function FinanceClient({ overview, budgets, requests }: {
           <h2 className="text-xl font-bold tracking-tight text-on-surface">Anggaran per Divisi</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {budgets.map((b) => {
             const pct = b.total_budget > 0 ? Math.round((b.used_amount / b.total_budget) * 100) : 0;
             return (

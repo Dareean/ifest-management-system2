@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -19,9 +19,64 @@ import {
   Menu,
   X,
   ChevronRight,
+  Users,
 } from "lucide-react";
 import type { NotificationItem } from "@/lib/data/notifications";
 import type { ProfileData } from "@/lib/data/profile";
+
+const ROLE_MAP: Record<string, { slug: string; level: number }> = {
+  "PIC / Penanggung Jawab": { slug: "pic", level: 100 },
+  "Ketua Panitia": { slug: "ketua-panitia", level: 90 },
+  "Wakil Ketua": { slug: "wakil-ketua", level: 80 },
+  "Sekretaris I": { slug: "sekretaris", level: 75 },
+  "Sekretaris II": { slug: "sekretaris", level: 75 },
+  "Bendahara": { slug: "bendahara", level: 70 },
+  "Koordinator Divisi": { slug: "koordinator", level: 60 },
+  "Wakil Koordinator": { slug: "wakil-koordinator", level: 55 },
+  "PIC / Penanggung Jawab Subdivisi": { slug: "pic-sub", level: 53 },
+  "Anggota": { slug: "anggota", level: 50 },
+};
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+function getRoleLevel(roleName: string | undefined): number {
+  return ROLE_MAP[roleName ?? ""]?.level ?? 0;
+}
+
+function getNavItems(level: number): NavItem[] {
+  const items: NavItem[] = [
+    { href: "/dashboard", label: "OVERVIEW", icon: LayoutDashboard },
+    { href: "/dashboard/kpi", label: "KPI", icon: Target },
+  ];
+
+  if (level >= 60 && level !== 70) {
+    items.push({ href: "/dashboard/letters", label: "SURAT", icon: FileText });
+  }
+
+  if (level !== 70) {
+    items.push({ href: "/dashboard/meetings", label: "RAPAT", icon: Calendar });
+  }
+
+  if (level >= 90 || level === 70) {
+    items.push({ href: "/dashboard/finance", label: "KEUANGAN", icon: DollarSign });
+  }
+
+  if (level >= 55) {
+    items.push({ href: "/dashboard/members", label: "ANGGOTA", icon: Users });
+  }
+
+  items.push({ href: "/dashboard/profile", label: "PROFIL", icon: User });
+
+  if (level >= 80) {
+    items.push({ href: "/admin", label: "ADMIN", icon: Settings });
+  }
+
+  return items;
+}
 
 interface SidebarNavProps {
   profile: ProfileData | null;
@@ -34,31 +89,22 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
   const router = useRouter();
   const supabase = createClient();
 
+  const navItems = useMemo(() => {
+    const level = getRoleLevel(profile?.assignment?.role);
+    return getNavItems(level);
+  }, [profile?.assignment?.role]);
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/");
     router.refresh();
   }
 
-  const navItems = [
-    { href: "/dashboard", label: "OVERVIEW", icon: LayoutDashboard },
-    { href: "/dashboard/kpi", label: "KPI", icon: Target },
-    { href: "/dashboard/letters", label: "SURAT", icon: FileText },
-    { href: "/dashboard/meetings", label: "RAPAT", icon: Calendar },
-    { href: "/dashboard/finance", label: "KEUANGAN", icon: DollarSign },
-    { href: "/dashboard/profile", label: "PROFIL", icon: User },
-    { href: "/admin", label: "ADMIN", icon: Settings },
-  ];
-
-  // Helper to check if item is active
   const isItemActive = (href: string) => {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
-    }
+    if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
   };
 
-  // Profile initial fallback
   const getInitials = (name: string) => {
     if (!name) return "U";
     return name
@@ -171,7 +217,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
         <Home className="size-5 shrink-0" />
         <span className="tracking-wide font-sans">BERANDA</span>
       </Link>
-      
+
       {profile && (
         <button
           onClick={() => {
@@ -189,10 +235,9 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
 
   return (
     <>
-      {/* Mobile Top Header */}
-      <header className="flex md:hidden items-center justify-between px-6 h-16 bg-white border-b border-outline-variant/40 sticky top-0 z-40 w-full shrink-0">
+      <header className="flex lg:hidden items-center justify-between px-6 h-16 bg-white border-b border-outline-variant/40 sticky top-0 z-40 w-full shrink-0">
         <LogoSection />
-        
+
         <div className="flex items-center gap-3">
           <NotificationBell initial={notifications} />
           <button
@@ -204,19 +249,15 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
         </div>
       </header>
 
-      {/* Mobile Drawer (Overlay and Menu Panel) */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
             className="fixed inset-0 bg-black/40 transition-opacity"
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Drawer Panel */}
           <div className="relative flex flex-col w-72 max-w-xs bg-white h-full p-6 justify-between shadow-2xl z-10 animate-in slide-in-from-left duration-250">
             <div>
-              {/* Header inside drawer */}
               <div className="flex items-center justify-between pb-6 border-b border-outline-variant/40">
                 <LogoSection />
                 <button
@@ -227,29 +268,24 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
                 </button>
               </div>
 
-              {/* Profile Card */}
               <div className="mt-6">
                 <ProfileCard />
               </div>
 
-              {/* Navigation list */}
               <div className="mt-2">
                 <NavLinks />
               </div>
             </div>
 
-            {/* Bottom Actions */}
             <BottomActions />
           </div>
         </div>
       )}
 
-      {/* Desktop Sidebar (Permanent) */}
-      <aside className="hidden md:flex flex-col w-72 h-screen sticky top-0 bg-white border-r border-outline-variant/40 p-6 justify-between shrink-0 overflow-y-auto">
+      <aside className="hidden lg:flex flex-col w-72 h-screen sticky top-0 bg-white border-r border-outline-variant/40 p-6 justify-between shrink-0 overflow-y-auto">
         <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <LogoSection />
-            <NotificationBell initial={notifications} />
           </div>
 
           <ProfileCard />

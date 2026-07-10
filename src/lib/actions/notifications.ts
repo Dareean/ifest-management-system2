@@ -39,7 +39,49 @@ export async function markAllNotificationsRead() {
   revalidatePath("/");
 }
 
-// Helper to create notifications (used by other server actions)
+async function sendEmailForNotification(
+  assignmentId: string,
+  type: string,
+  title: string,
+  body?: string,
+) {
+  try {
+    const admin = createAdminClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: userData }: any = await admin
+      .from("committee_assignments")
+      .select("user:profiles!inner(full_name), user_id")
+      .eq("id", assignmentId)
+      .single();
+
+    const fullName = userData?.user?.full_name ?? "";
+    const profileId = userData?.user_id;
+
+    if (!profileId) return;
+
+    // Get email from auth.users via admin API
+    const { data: authUser } = await admin.auth.admin.getUserById(profileId);
+    const email = authUser?.user?.email;
+
+    if (!email) return;
+
+    const { sendEmailNotification } = await import("@/lib/email");
+    let html = `<p>Halo <strong>${fullName}</strong>,</p><p>${body ?? title}</p>`;
+    if (type === "task") {
+      html = `<p>Halo <strong>${fullName}</strong>,</p><p>Ada tugas baru untuk Anda:</p><p><strong>${title}</strong></p>${body ? `<p>${body}</p>` : ""}`;
+    } else if (type === "letter") {
+      html = `<p>Halo <strong>${fullName}</strong>,</p><p>Pembaruan surat:</p><p><strong>${title}</strong></p>${body ? `<p>${body}</p>` : ""}`;
+    } else if (type === "meeting") {
+      html = `<p>Halo <strong>${fullName}</strong>,</p><p>Undangan rapat:</p><p><strong>${title}</strong></p>${body ? `<p>${body}</p>` : ""}`;
+    }
+
+    await sendEmailNotification(email, fullName, `[${type.toUpperCase()}] ${title}`, html);
+  } catch {
+    // Email failure is non-critical
+  }
+}
+
 export async function createNotification(
   assignmentId: string,
   type: string,
@@ -53,9 +95,11 @@ export async function createNotification(
     title,
     body: body ?? null,
   });
+
+  // Send email (fire-and-forget)
+  sendEmailForNotification(assignmentId, type, title, body);
 }
 
-// Create notifications for all members of a division
 export async function notifyDivision(
   divisionId: string,
   type: string,
@@ -80,10 +124,14 @@ export async function notifyDivision(
         body: body ?? null,
       })),
     );
+
+    // Send email to each member
+    for (const m of members) {
+      sendEmailForNotification(m.id, type, title, body);
+    }
   }
 }
 
-// Create notifications for all active committee members
 export async function notifyAllMembers(
   type: string,
   title: string,
@@ -106,5 +154,9 @@ export async function notifyAllMembers(
         body: body ?? null,
       })),
     );
+
+    for (const m of members) {
+      sendEmailForNotification(m.id, type, title, body);
+    }
   }
 }

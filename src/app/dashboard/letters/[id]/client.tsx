@@ -38,7 +38,7 @@ export function LetterDetailClient({ letter }: { letter: LetterDetail }) {
   }
 
   return (
-    <div className="max-w-3xl flex flex-col gap-10">
+    <div className="max-w-4xl mx-auto flex flex-col gap-10">
       {/* Header */}
       <div className="flex items-start gap-4">
         <button

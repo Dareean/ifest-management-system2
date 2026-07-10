@@ -55,14 +55,14 @@ export default async function MeetingsPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {meetings.map((mtg) => (
               <Link href={`/dashboard/meetings/${mtg.id}`} key={mtg.id} className="block group">
                 <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-full hover:border-accent-magenta/50 transition-all">
                   <CardHeader className="p-0">
                     <div className="flex items-center justify-between mb-3">
                       <Badge variant={mtg.meetingType === "adhoc" ? "warning" : "info"} className="text-[10px] font-mono">
-                        {mtg.meetingType === "adhoc" ? "Ad-hoc" : "Terjadwal"}
+                        {mtg.meetingType === "adhoc" ? "Kondisional" : "Terjadwal"}
                       </Badge>
                       {mtg.inviteeCount > 0 && (
                         <span className="text-xs font-mono text-on-surface-variant">

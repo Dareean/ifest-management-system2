@@ -157,7 +157,7 @@ export function KpiClient({ kpis: initialKpis, summaries }: { kpis: KpiWithTasks
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {(activeDiv ? filteredSummaries : summaries).map((s) => {
             const progress = s.totalTasks > 0 ? Math.round((s.doneTasks / s.totalTasks) * 100) : 0;
             return (

@@ -24,7 +24,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
   };
 
   return (
-    <div className="max-w-3xl flex flex-col gap-10">
+    <div className="w-full flex flex-col gap-8">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
@@ -41,134 +41,140 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
         </Button>
       </div>
 
-      {/* Profile Card */}
-      <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-          {profile.avatarUrl ? (
-            <img
-              src={profile.avatarUrl}
-              alt={profile.fullName}
-              className="w-16 h-16 rounded-full object-cover shrink-0 border border-outline-variant"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-block-lilac flex items-center justify-center font-bold text-primary text-2xl shrink-0">
-              {getInitials(profile.fullName)}
+      {/* Main Grid: Profile Info & Kepanitiaan */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Left Column: Profile Card & Account Details Form */}
+        <div className="lg:col-span-2 flex flex-col gap-8">
+          {/* Profile Card */}
+          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.fullName}
+                  className="w-16 h-16 rounded-full object-cover shrink-0 border border-outline-variant"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-block-lilac flex items-center justify-center font-bold text-primary text-2xl shrink-0">
+                  {getInitials(profile.fullName)}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl font-bold text-on-surface truncate">{profile.fullName || "Nama Panitia"}</h2>
+                <p className="text-sm text-on-surface-variant font-mono mt-1">
+                  {profile.assignment
+                    ? `${profile.assignment.role} — ${profile.assignment.division}`
+                    : "Belum terdaftar di kepanitiaan"}
+                </p>
+              </div>
             </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-bold text-on-surface truncate">{profile.fullName || "Nama Panitia"}</h2>
-            <p className="text-sm text-on-surface-variant font-mono mt-1">
-              {profile.assignment
-                ? `${profile.assignment.role} — ${profile.assignment.division}`
-                : "Belum terdaftar di kepanitiaan"}
-            </p>
+          </div>
+
+          {/* Account Details Form Section */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <User className="size-5 text-error" />
+              <h2 className="text-xl font-bold tracking-tight text-on-surface">Detail Akun</h2>
+            </div>
+
+            <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
+              {state?.error && <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono mb-6">{state.error}</div>}
+              {state?.success && <div className="text-sm text-accent-green bg-accent-green/10 border border-accent-green/30 rounded-lg p-4 font-mono mb-6">Profil berhasil diperbarui!</div>}
+
+              <form action={formAction} className="flex flex-col gap-6">
+                <input type="hidden" name="userId" value={profile.userId ?? ""} />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Email (readonly) */}
+                  <div>
+                    <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
+                      <Mail className="size-3.5" /> Email
+                    </label>
+                    <Input value={profile.email ?? ""} disabled className="opacity-60 bg-surface-container/20 cursor-not-allowed" />
+                  </div>
+
+                  {/* NIM */}
+                  <div>
+                    <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
+                      <Hash className="size-3.5" /> NIM
+                    </label>
+                    <Input
+                      name="nim"
+                      defaultValue={profile.nim}
+                      disabled={!editing}
+                      className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
+                      required
+                    />
+                  </div>
+
+                  {/* Full Name */}
+                  <div>
+                    <label className="caption block mb-1.5 text-on-surface-variant font-semibold">Nama Lengkap</label>
+                    <Input
+                      name="fullName"
+                      defaultValue={profile.fullName}
+                      disabled={!editing}
+                      className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
+                      required
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div>
+                    <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
+                      <Phone className="size-3.5" /> No. HP
+                    </label>
+                    <Input
+                      name="phone"
+                      defaultValue={profile.phone ?? ""}
+                      disabled={!editing}
+                      className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
+                      placeholder="Belum diisi"
+                    />
+                  </div>
+                </div>
+
+                {editing && (
+                  <div className="flex justify-end mt-2">
+                    <Button type="submit" disabled={pending} className="cursor-pointer">
+                      {pending ? "Menyimpan..." : "Simpan Perubahan"}
+                    </Button>
+                  </div>
+                )}
+              </form>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Account Details Form Section */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <User className="size-5 text-error" />
-          <h2 className="text-xl font-bold tracking-tight text-on-surface">Detail Akun</h2>
-        </div>
-
-        <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
-          {state?.error && <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono mb-6">{state.error}</div>}
-          {state?.success && <div className="text-sm text-accent-green bg-accent-green/10 border border-accent-green/30 rounded-lg p-4 font-mono mb-6">Profil berhasil diperbarui!</div>}
-
-          <form action={formAction} className="flex flex-col gap-6">
-            <input type="hidden" name="userId" value={profile.userId ?? ""} />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Email (readonly) */}
-              <div>
-                <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
-                  <Mail className="size-3.5" /> Email
-                </label>
-                <Input value={profile.email ?? ""} disabled className="opacity-60 bg-surface-container/20 cursor-not-allowed" />
-              </div>
-
-              {/* NIM */}
-              <div>
-                <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
-                  <Hash className="size-3.5" /> NIM
-                </label>
-                <Input
-                  name="nim"
-                  defaultValue={profile.nim}
-                  disabled={!editing}
-                  className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
-                  required
-                />
-              </div>
-
-              {/* Full Name */}
-              <div>
-                <label className="caption block mb-1.5 text-on-surface-variant font-semibold">Nama Lengkap</label>
-                <Input
-                  name="fullName"
-                  defaultValue={profile.fullName}
-                  disabled={!editing}
-                  className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
-                  required
-                />
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
-                  <Phone className="size-3.5" /> No. HP
-                </label>
-                <Input
-                  name="phone"
-                  defaultValue={profile.phone ?? ""}
-                  disabled={!editing}
-                  className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
-                  placeholder="Belum diisi"
-                />
-              </div>
+        {/* Right Column: Kepanitiaan Info */}
+        {profile.assignment && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Shield className="size-5 text-error" />
+              <h2 className="text-xl font-bold tracking-tight text-on-surface">Kepanitiaan</h2>
             </div>
-
-            {editing && (
-              <div className="flex justify-end mt-2">
-                <Button type="submit" disabled={pending} className="cursor-pointer">
-                  {pending ? "Menyimpan..." : "Simpan Perubahan"}
-                </Button>
+            <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6">
+              <div className="flex items-center justify-between border-b border-outline-variant/10 pb-4 mb-4">
+                <div className="min-w-0">
+                  <p className="text-base font-bold text-on-surface">{profile.assignment.role}</p>
+                  <p className="text-xs text-on-surface-variant font-mono mt-0.5">{profile.assignment.division}</p>
+                </div>
+                <Badge variant={profile.assignment.isActive ? "success" : "secondary"} className="text-xs font-mono px-3 py-1">
+                  {profile.assignment.isActive ? "Aktif" : "Tidak Aktif"}
+                </Badge>
               </div>
-            )}
-          </form>
-        </div>
-      </div>
-
-      {/* Committee Assignment Info */}
-      {profile.assignment && (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <Shield className="size-5 text-error" />
-            <h2 className="text-xl font-bold tracking-tight text-on-surface">Kepanitiaan</h2>
+              <div className="flex items-center gap-1.5 text-xs font-mono text-on-surface-variant">
+                <Calendar className="size-4 text-on-surface-variant" />
+                <span>
+                  Bergabung sejak: {new Date(profile.assignment.assignedAt).toLocaleDateString("id-ID", {
+                    day: "numeric", month: "long", year: "numeric",
+                  })}
+                </span>
+              </div>
+            </Card>
           </div>
-          <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6">
-            <div className="flex items-center justify-between border-b border-outline-variant/10 pb-4 mb-4">
-              <div className="min-w-0">
-                <p className="text-base font-bold text-on-surface">{profile.assignment.role}</p>
-                <p className="text-xs text-on-surface-variant font-mono mt-0.5">{profile.assignment.division}</p>
-              </div>
-              <Badge variant={profile.assignment.isActive ? "success" : "secondary"} className="text-xs font-mono px-3 py-1">
-                {profile.assignment.isActive ? "Aktif" : "Tidak Aktif"}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-mono text-on-surface-variant">
-              <Calendar className="size-4 text-on-surface-variant" />
-              <span>
-                Bergabung sejak: {new Date(profile.assignment.assignedAt).toLocaleDateString("id-ID", {
-                  day: "numeric", month: "long", year: "numeric",
-                })}
-              </span>
-            </div>
-          </Card>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Stats Cards Section */}
       {profile.assignment && (
@@ -178,7 +184,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
             <h2 className="text-xl font-bold tracking-tight text-on-surface">Statistik Personal</h2>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-6">
             {/* Letters */}
             <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-5 hover:border-outline-variant transition-all text-center">
               <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center justify-center gap-1">
