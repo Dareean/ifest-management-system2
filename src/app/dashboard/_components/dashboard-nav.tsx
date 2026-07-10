@@ -14,6 +14,7 @@ import {
   User,
   Settings,
   LogOut,
+  DollarSign,
 } from "lucide-react";
 import type { NotificationItem } from "@/lib/data/notifications";
 
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/dashboard/kpi", label: "KPI", icon: Target },
   { href: "/dashboard/letters", label: "Surat", icon: FileText },
   { href: "/dashboard/meetings", label: "Rapat", icon: Calendar },
+  { href: "/dashboard/finance", label: "Keuangan", icon: DollarSign },
   { href: "/dashboard/profile", label: "Profil", icon: User },
   { href: "/admin", label: "Admin", icon: Settings },
 ];

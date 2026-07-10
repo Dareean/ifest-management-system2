@@ -87,7 +87,7 @@ export async function getAssignments(): Promise<AssignmentData[]> {
     .from("committee_assignments")
     .select(`
       id,
-      user:users(full_name, nim, email),
+      user:profiles(full_name, nim),
       division:divisions(name, slug),
       role:roles(name, slug)
     `)
@@ -100,7 +100,7 @@ export async function getAssignments(): Promise<AssignmentData[]> {
     id: a.id,
     name: a.user?.full_name ?? "",
     nim: a.user?.nim ?? "",
-    email: a.user?.email ?? "",
+    email: "",
     division: a.division?.name ?? "",
     divisionSlug: a.division?.slug ?? "",
     role: a.role?.name ?? "",

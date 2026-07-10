@@ -405,6 +405,155 @@ export interface Database {
           created_at?: string;
         };
       };
+      budgets: {
+        Row: {
+          id: string;
+          committee_year_id: string;
+          division_id: string;
+          total_budget: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          committee_year_id: string;
+          division_id: string;
+          total_budget?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          committee_year_id?: string;
+          division_id?: string;
+          total_budget?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      budget_transactions: {
+        Row: {
+          id: string;
+          budget_id: string;
+          type: string;
+          amount: number;
+          description: string;
+          category: string | null;
+          transaction_date: string;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          budget_id: string;
+          type: string;
+          amount: number;
+          description: string;
+          category?: string | null;
+          transaction_date?: string;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          budget_id?: string;
+          type?: string;
+          amount?: number;
+          description?: string;
+          category?: string | null;
+          transaction_date?: string;
+          created_by?: string;
+          created_at?: string;
+        };
+      };
+      budget_requests: {
+        Row: {
+          id: string;
+          committee_year_id: string;
+          requester_id: string;
+          division_id: string;
+          amount: number;
+          purpose: string;
+          status: string;
+          handler_id: string | null;
+          handled_at: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          committee_year_id: string;
+          requester_id: string;
+          division_id: string;
+          amount: number;
+          purpose: string;
+          status?: string;
+          handler_id?: string | null;
+          handled_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          committee_year_id?: string;
+          requester_id?: string;
+          division_id?: string;
+          amount?: number;
+          purpose?: string;
+          status?: string;
+          handler_id?: string | null;
+          handled_at?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      email_queue: {
+        Row: {
+          id: string;
+          recipient_email: string;
+          recipient_name: string | null;
+          subject: string;
+          html_content: string;
+          priority: number;
+          status: string;
+          error_message: string | null;
+          retry_count: number;
+          max_retries: number;
+          created_at: string;
+          sent_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          recipient_email: string;
+          recipient_name?: string | null;
+          subject: string;
+          html_content: string;
+          priority?: number;
+          status?: string;
+          error_message?: string | null;
+          retry_count?: number;
+          max_retries?: number;
+          created_at?: string;
+          sent_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          recipient_email?: string;
+          recipient_name?: string | null;
+          subject?: string;
+          html_content?: string;
+          priority?: number;
+          status?: string;
+          error_message?: string | null;
+          retry_count?: number;
+          max_retries?: number;
+          created_at?: string;
+          sent_at?: string | null;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

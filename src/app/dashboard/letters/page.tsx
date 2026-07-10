@@ -5,6 +5,8 @@ import { ColorBlock } from "@/components/blocks/color-block";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { getLetters, getStatusDisplay } from "@/lib/data/letters";
+import { exportLettersCSV } from "@/lib/actions/export";
+import { ExportButton } from "@/components/export-button";
 
 export default async function LettersPage() {
   const letters = await getLetters();
@@ -22,6 +24,10 @@ export default async function LettersPage() {
             Ajukan Surat
           </Button>
         </Link>
+      </div>
+
+      <div className="flex justify-end">
+        <ExportButton label="Export CSV" filename="surat" fetchCsv={exportLettersCSV} />
       </div>
 
       <ColorBlock color="mint">

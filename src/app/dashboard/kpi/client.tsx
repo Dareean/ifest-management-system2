@@ -10,6 +10,8 @@ import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, Circle, Plus, Trash2, RotateCcw, Flag } from "lucide-react";
 import { createTask, completeTask, reopenTask, deleteTask } from "@/lib/actions/tasks";
+import { exportKpiCSV } from "@/lib/actions/export";
+import { ExportButton } from "@/components/export-button";
 import type { KpiWithTasks, DivisionKpiSummary } from "@/lib/data/kpi";
 
 const priorityColors: Record<string, string> = {
@@ -90,6 +92,11 @@ export function KpiClient({ kpis: initialKpis, summaries }: { kpis: KpiWithTasks
         <p className="mt-sm text-on-surface-variant">
           Pantau pencapaian KPI dan task setiap divisi.
         </p>
+      </div>
+
+      {/* Export */}
+      <div className="flex justify-end">
+        <ExportButton label="Export CSV" filename="kpi" fetchCsv={exportKpiCSV} />
       </div>
 
       {/* Overview */}

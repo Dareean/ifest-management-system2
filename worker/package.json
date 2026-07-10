@@ -1,0 +1,13 @@
+{
+  "name": "ims-background-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.2",
+    "@getbrevo/brevo": "^6.0.2"
+  }
+}

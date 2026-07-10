@@ -5,6 +5,8 @@ import { ColorBlock } from "@/components/blocks/color-block";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { getMeetings } from "@/lib/data/meetings";
+import { exportMeetingsCSV } from "@/lib/actions/export";
+import { ExportButton } from "@/components/export-button";
 
 export default async function MeetingsPage() {
   const meetings = await getMeetings();
@@ -22,6 +24,10 @@ export default async function MeetingsPage() {
             Buat Rapat
           </Button>
         </Link>
+      </div>
+
+      <div className="flex justify-end">
+        <ExportButton label="Export CSV" filename="rapat" fetchCsv={exportMeetingsCSV} />
       </div>
 
       <ColorBlock color="coral">

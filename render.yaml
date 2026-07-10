@@ -1,0 +1,24 @@
+# Render Blueprint — I-FEST Management System Background Worker
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: cron
+    name: ims-worker
+    runtime: node
+    repo: https://github.com/your-org/ifest-management-system
+    branch: main
+    rootDir: worker
+    buildCommand: npm install
+    startCommand: node index.js
+    schedule: "*/5 * * * *"  # Every 5 minutes
+    envVars:
+      - key: SUPABASE_URL
+        value: https://xxmxbyiggrottreetrig.supabase.co
+      - key: SERVICE_ROLE_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: BREVO_API_KEY
+        sync: false
+      - key: YEAR_ID
+        value: c2f2a48e-3e58-4559-aaa0-623a3825348b
+      - key: CRON_TASK
+        value: all

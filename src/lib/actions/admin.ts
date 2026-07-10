@@ -187,42 +187,62 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
     return { error: "Semua field harus diisi" };
   }
 
-  // Create user profile first
-  const { data: profile, error: profileErr } = await supabase
+  // Check if profile already exists by NIM
+  const { data: existing } = await supabase
     .from("profiles")
-    .insert({ full_name: fullName, nim })
-    .select("id")
-    .single();
+    .select("id, full_name")
+    .eq("nim", nim)
+    .maybeSingle();
 
-  if (profileErr) {
-    // Maybe profile already exists (duplicate NIM?)
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("nim", nim)
-      .single();
+  let profileId: string;
 
-    if (!existing) return { error: profileErr.message };
-
-    // Create assignment with existing profile
-    const { error: assignErr } = await supabase.from("committee_assignments").insert({
-      committee_year_id: YEAR_ID,
-      user_id: existing.id,
-      division_id: divisionId,
-      role_id: roleId,
-    });
-
-    if (assignErr) return { error: assignErr.message };
+  if (existing) {
+    profileId = existing.id;
   } else {
-    const { error: assignErr } = await supabase.from("committee_assignments").insert({
-      committee_year_id: YEAR_ID,
-      user_id: profile.id,
-      division_id: divisionId,
-      role_id: roleId,
+    // Create auth user first (profiles.id REFERENCES auth.users.id)
+    const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
+      email,
+      password: "ifest2026",
+      email_confirm: true,
+      user_metadata: { full_name: fullName, nim },
     });
 
-    if (assignErr) return { error: assignErr.message };
+    if (authErr || !authUser?.user) {
+      return { error: authErr?.message ?? "Gagal membuat akun" };
+    }
+
+    profileId = authUser.user.id;
+    // Auth trigger on_auth_user_created should auto-create profile.
+    // If trigger is not yet set, create profile manually:
+    const { error: profileErr } = await supabase.from("profiles").upsert({
+      id: profileId,
+      full_name: fullName,
+      nim,
+    }).select("id").single();
+
+    if (profileErr) return { error: profileErr.message };
   }
+
+  // Check if already assigned
+  const { data: existingAssignment } = await supabase
+    .from("committee_assignments")
+    .select("id")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("user_id", profileId)
+    .maybeSingle();
+
+  if (existingAssignment) {
+    return { error: "User sudah memiliki assignment di tahun ini" };
+  }
+
+  const { error: assignErr } = await supabase.from("committee_assignments").insert({
+    committee_year_id: YEAR_ID,
+    user_id: profileId,
+    division_id: divisionId,
+    role_id: roleId,
+  });
+
+  if (assignErr) return { error: assignErr.message };
 
   revalidatePath("/admin/assignments");
   return { success: true };

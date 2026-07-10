@@ -1,8 +1,9 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { notifyAllMembers } from "./notifications";
+import { notifyDivision } from "./notifications";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
@@ -10,28 +11,39 @@ type ActionState = { error?: string; success?: boolean } | null;
 
 export async function createLetter(prevState: ActionState, formData: FormData): Promise<ActionState> {
   const supabase = createAdminClient();
+  const authSupabase = await createClient();
+  const { data: authData } = await authSupabase.auth.getUser();
+  const userId = authData?.user?.id;
+
+  if (!userId) return { error: "Silakan login terlebih dahulu" };
 
   const letterType = formData.get("letterType") as string;
   const subject = formData.get("subject") as string;
   const body = formData.get("body") as string;
 
-  const { data: firstAssignment, error: assignErr } = await supabase
+  if (!letterType || !subject || !body) {
+    return { error: "Semua field harus diisi" };
+  }
+
+  const { data: assignment } = await supabase
     .from("committee_assignments")
     .select("id, division_id")
     .eq("committee_year_id", YEAR_ID)
-    .limit(1)
-    .single();
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
 
-  if (assignErr || !firstAssignment) {
-    return { error: "No committee member found. Please assign personel first." };
+  if (!assignment) {
+    return { error: "Anda belum terdaftar sebagai anggota kepanitiaan aktif" };
   }
 
-  const { data: newLetter } = await supabase
+  const { data: newLetter, error: letterErr } = await supabase
     .from("letter_requests")
     .insert({
       committee_year_id: YEAR_ID,
-      requester_id: firstAssignment.id,
-      division_id: firstAssignment.division_id,
+      requester_id: assignment.id,
+      current_handler_id: null,
+      division_id: assignment.division_id,
       letter_type: letterType,
       subject,
       body,
@@ -40,22 +52,19 @@ export async function createLetter(prevState: ActionState, formData: FormData): 
     .select("id")
     .single();
 
-  if (newLetter) {
-    await notifyAllMembers("letter", `Surat baru: ${subject}`, `Jenis: ${letterType}`);
-  }
+  if (letterErr) return { error: letterErr.message };
 
-  // Send email notification
-  try {
-    const { sendEmailNotification } = await import("@/lib/email");
-    await sendEmailNotification(
-      "admin@hmtiuntad.ac.id",
-      "Admin I-FEST",
-      `[Surat Baru] ${subject}`,
-      `<p>Permohonan surat baru telah diajukan:</p>
-       <p><strong>Jenis:</strong> ${letterType}<br>
-       <strong>Perihal:</strong> ${subject}</p>`,
-    );
-  } catch {}
+  // Notify BPH division (sekretaris)
+  const { data: bphDiv } = await supabase
+    .from("divisions")
+    .select("id")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("slug", "bph")
+    .maybeSingle();
+
+  if (bphDiv) {
+    await notifyDivision(bphDiv.id, "letter", `Surat baru: ${subject}`, `Jenis: ${letterType}`);
+  }
 
   revalidatePath("/dashboard/letters");
   return { success: true };
