@@ -7,23 +7,5 @@
     "deploymentEnabled": {
       "main": true
     }
-  },
-  "crons": [
-    {
-      "path": "/api/cron?task=email",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron?task=kpi",
-      "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/cron?task=meeting",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron?task=notes",
-      "schedule": "0 9 * * *"
-    }
-  ]
+  }
 }
