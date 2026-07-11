@@ -1,8 +1,11 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { notifyAllMembers } from "./notifications";
+
+const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
 export async function updateRsvp(inviteeId: string, status: string) {
   const supabase = createAdminClient();
@@ -18,7 +21,25 @@ export async function updateRsvp(inviteeId: string, status: string) {
 }
 
 export async function saveNotes(prevState: unknown, formData: FormData) {
-  const supabase = createAdminClient();
+  const auth = await createClient();
+  const { data: authData } = await auth.auth.getUser();
+  const userId = authData?.user?.id;
+  if (!userId) return { error: "Unauthorized" };
+
+  const admin = createAdminClient();
+
+  const { data: callerAssignment } = await admin
+    .from("committee_assignments")
+    .select("id, role:roles(is_approver)")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!callerAssignment) return { error: "Anda tidak terdaftar sebagai panitia aktif." };
+
+  const callerId = (callerAssignment as any).id;
+  const callerIsApprover = !!(callerAssignment as any).role?.is_approver;
+
   const meetingId = formData.get("meetingId") as string;
   const content = formData.get("content") as string;
   const decisionPointsRaw = formData.get("decisionPoints") as string;
@@ -34,31 +55,30 @@ export async function saveNotes(prevState: unknown, formData: FormData) {
     actionItems = actionItemsRaw ? JSON.parse(actionItemsRaw) : [];
   } catch {}
 
-  const { data: meeting } = await supabase
+  const { data: meeting } = await admin
     .from("meetings")
-    .select("committee_year_id, title")
+    .select("creator_id, scope")
     .eq("id", meetingId)
     .single();
 
   if (!meeting) return { error: "Meeting not found" };
 
-  const { data: firstAssignment } = await supabase
-    .from("committee_assignments")
-    .select("id")
-    .eq("committee_year_id", meeting.committee_year_id)
-    .limit(1)
-    .single();
+  const m = meeting as any;
+  const isCreator = m.creator_id === callerId;
+  const isSekretarisAllMeeting = callerIsApprover && m.scope === "all";
 
-  if (!firstAssignment) return { error: "No committee member found" };
+  if (!isCreator && !isSekretarisAllMeeting) {
+    return { error: "Anda tidak berwenang menulis notulensi rapat ini." };
+  }
 
-  const { data: existing } = await supabase
+  const { data: existing } = await admin
     .from("meeting_notes")
     .select("id")
     .eq("meeting_id", meetingId)
     .maybeSingle();
 
   if (existing) {
-    const { error } = await supabase
+    const { error } = await admin
       .from("meeting_notes")
       .update({
         content,
@@ -69,9 +89,9 @@ export async function saveNotes(prevState: unknown, formData: FormData) {
 
     if (error) return { error: error.message };
   } else {
-    const { error } = await supabase.from("meeting_notes").insert({
+    const { error } = await admin.from("meeting_notes").insert({
       meeting_id: meetingId,
-      writer_id: firstAssignment.id,
+      writer_id: callerId,
       content,
       decision_points: decisionPoints,
       action_items: actionItems,
@@ -85,15 +105,15 @@ export async function saveNotes(prevState: unknown, formData: FormData) {
 }
 
 export async function publishNotes(meetingId: string) {
-  const supabase = createAdminClient();
+  const admin = createAdminClient();
 
-  const { data: meeting } = await supabase
+  const { data: meeting } = await admin
     .from("meetings")
     .select("title")
     .eq("id", meetingId)
     .single();
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("meeting_notes")
     .update({ published_at: new Date().toISOString() })
     .eq("meeting_id", meetingId);
@@ -113,9 +133,9 @@ export async function publishNotes(meetingId: string) {
 }
 
 export async function endMeeting(meetingId: string) {
-  const supabase = createAdminClient();
+  const admin = createAdminClient();
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("meetings")
     .update({ ended_at: new Date().toISOString() })
     .eq("id", meetingId);

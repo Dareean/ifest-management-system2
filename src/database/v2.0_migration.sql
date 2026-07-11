@@ -200,3 +200,11 @@ ALTER TABLE email_queue ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow authenticated all" ON email_queue FOR ALL USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
 
 CREATE INDEX IF NOT EXISTS idx_email_queue_status ON email_queue(status, priority);
+
+-- ============================================================
+-- G. MEETING SCOPE
+-- Add scope column to meetings for notulensi authorization
+-- 'all' = seluruh panitia, 'division' = per divisi, 'individual' = individu tertentu
+-- ============================================================
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS scope VARCHAR(20) DEFAULT 'individual';
+CREATE INDEX IF NOT EXISTS idx_meetings_scope ON meetings(scope);

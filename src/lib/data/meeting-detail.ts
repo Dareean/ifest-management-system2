@@ -11,6 +11,8 @@ export interface MeetingDetail {
   endedAt: string | null;
   createdAt: string;
   creator: string;
+  creatorId: string;
+  scope: string;
   invitees: {
     id: string;
     assignmentId: string;
@@ -26,6 +28,7 @@ export interface MeetingDetail {
     actionItems: any[];
     publishedAt: string | null;
     writer: string;
+    writerId: string;
     createdAt: string;
   } | null;
 }
@@ -38,7 +41,7 @@ export async function getMeetingDetail(id: string): Promise<MeetingDetail | null
       .from("meetings")
       .select(`
         id, title, agenda, meeting_type, meeting_link, location,
-        started_at, ended_at, created_at,
+        started_at, ended_at, created_at, scope, creator_id,
         creator:committee_assignments!creator_id(user:profiles(full_name))
       `)
       .eq("id", id)
@@ -53,7 +56,7 @@ export async function getMeetingDetail(id: string): Promise<MeetingDetail | null
     supabase
       .from("meeting_notes")
       .select(`
-        id, content, decision_points, action_items,
+        id, content, decision_points, action_items, writer_id,
         published_at, created_at,
         writer:committee_assignments(user:profiles(full_name))
       `)
@@ -80,6 +83,8 @@ export async function getMeetingDetail(id: string): Promise<MeetingDetail | null
     endedAt: m.ended_at,
     createdAt: m.created_at,
     creator: m.creator?.user?.full_name ?? "",
+    creatorId: m.creator_id,
+    scope: m.scope ?? "individual",
     invitees: invitees.map((i: any) => ({
       id: i.id,
       assignmentId: i.committee_assignment_id,
@@ -96,6 +101,7 @@ export async function getMeetingDetail(id: string): Promise<MeetingDetail | null
           actionItems: (notes as any).action_items ?? [],
           publishedAt: (notes as any).published_at,
           writer: (notes as any).writer?.user?.full_name ?? "",
+          writerId: (notes as any).writer_id,
           createdAt: (notes as any).created_at,
         }
       : null,

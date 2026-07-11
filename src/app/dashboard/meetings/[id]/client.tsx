@@ -27,7 +27,15 @@ const rsvpIcons: Record<string, React.ReactNode> = {
   declined: <X className="size-3.5" />,
 };
 
-export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
+export function MeetingDetailClient({
+  meeting,
+  currentUserAssignmentId,
+  currentUserIsApprover,
+}: {
+  meeting: MeetingDetail;
+  currentUserAssignmentId: string | null;
+  currentUserIsApprover: boolean;
+}) {
   const router = useRouter();
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
@@ -41,6 +49,18 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
   const formattedTime = startDate.toLocaleTimeString("id-ID", {
     hour: "2-digit", minute: "2-digit",
   });
+
+  const isCreator = meeting.creatorId === currentUserAssignmentId;
+  const isSekretarisAllMeeting = currentUserIsApprover && meeting.scope === "all";
+  const canWriteNotes = isCreator || isSekretarisAllMeeting;
+
+  function getNotesStatus() {
+    const isOngoing = !meeting.endedAt;
+    if (isOngoing) return { label: "Masih sementara rapat, notulensi akan segera diproses", variant: "warning" as const };
+    if (!meeting.notes) return { label: "Tidak ada notulensi", variant: "secondary" as const };
+    if (!meeting.notes.publishedAt) return { label: "Notulensi masih dalam proses", variant: "warning" as const };
+    return null;
+  }
 
   async function handleRsvp(inviteeId: string, status: string) {
     const result = await updateRsvp(inviteeId, status);
@@ -59,6 +79,8 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
     if (result.error) setActionMsg(result.error);
     else router.refresh();
   }
+
+  const notesStatus = getNotesStatus();
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-8 px-4 py-6">
@@ -81,6 +103,16 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
                 Selesai
               </Badge>
             )}
+            <Badge
+              variant="outline"
+              className={`text-[10px] font-mono shrink-0 px-2.5 py-0.5 ${
+                meeting.scope === "all" ? "bg-accent-green/10 text-accent-green border-accent-green/30" :
+                meeting.scope === "division" ? "bg-accent-lilac/10 text-accent-lilac border-accent-lilac/30" :
+                "bg-surface-container text-on-surface-variant border-outline-variant"
+              }`}
+            >
+              {meeting.scope === "all" ? "Seluruh Panitia" : meeting.scope === "division" ? "Divisi" : "Terbatas"}
+            </Badge>
           </div>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-on-surface leading-tight break-words">
@@ -117,8 +149,8 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
             </div>
           )}
 
-          {/* Notula Rapat */}
-          {meeting.notes && (
+          {/* Notula Rapat - Published */}
+          {meeting.notes && meeting.notes.publishedAt && (
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -127,19 +159,7 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
                     Notula Rapat
                   </h2>
                 </div>
-                <div>
-                  {meeting.notes.publishedAt ? (
-                    <Badge variant="success" className="text-xs font-mono px-3 py-1">Published</Badge>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Badge variant="warning" className="text-xs font-mono px-3 py-1">Draft</Badge>
-                      <Button size="sm" variant="outline" onClick={handlePublish} className="cursor-pointer">
-                        <Send className="size-3.5" />
-                        Publikasikan
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                <Badge variant="success" className="text-xs font-mono px-3 py-1">Published</Badge>
               </div>
 
               <div className="bg-white border border-outline-variant/60 rounded-[24px] p-6 sm:p-8">
@@ -190,6 +210,45 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
                     </ul>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Notula Rapat - Status only (not published / not exists) */}
+          {notesStatus && !meeting.notes?.publishedAt && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <FileText className="size-5 text-accent-magenta" />
+                <h2 className="text-lg font-bold tracking-tight text-on-surface uppercase font-mono">
+                  Notula Rapat
+                </h2>
+              </div>
+              <div className={`bg-white border ${
+                notesStatus.variant === "warning"
+                  ? "border-accent-lilac/60"
+                  : "border-outline-variant/60"
+              } rounded-[24px] p-6 sm:p-8 flex items-start gap-4`}>
+                <div className={`size-10 rounded-full flex items-center justify-center shrink-0 ${
+                  notesStatus.variant === "warning"
+                    ? "bg-accent-lilac/10"
+                    : "bg-surface-container"
+                }`}>
+                  <FileText className={`size-5 ${
+                    notesStatus.variant === "warning"
+                      ? "text-accent-lilac"
+                      : "text-on-surface-variant"
+                  }`} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-on-surface mb-0.5">
+                    {notesStatus.label}
+                  </p>
+                  <p className="text-xs text-on-surface-variant font-mono">
+                    {notesStatus.variant === "warning"
+                      ? "Tenang, notulensi akan tersedia begitu rapat selesai diproses."
+                      : "Notulensi rapat ini belum dibuat oleh penyelenggara."}
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -255,8 +314,8 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
             )}
           </div>
 
-          {/* Aksi Moderasi Control Card */}
-          {!meeting.endedAt && (
+          {/* Aksi Moderasi Control Card — only for authorized users */}
+          {canWriteNotes && !meeting.endedAt && (
             <div className="bg-white border border-outline-variant/60 rounded-[24px] p-6 flex flex-col gap-4">
               <h3 className="font-mono text-sm font-bold tracking-wider uppercase text-on-surface-variant border-b border-outline-variant/20 pb-3">
                 Aksi Moderasi
@@ -324,7 +383,7 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
                         </Badge>
 
                         {/* RSVP Action Buttons */}
-                        {!meeting.endedAt && (
+                        {inv.assignmentId === currentUserAssignmentId && !meeting.endedAt && (
                           <div className="flex items-center gap-1.5">
                             {inv.rsvpStatus !== "accepted" && (
                               <button
@@ -358,67 +417,69 @@ export function MeetingDetailClient({ meeting }: { meeting: MeetingDetail }) {
 
       </div>
 
-      {/* Notes Modal */}
-      <Modal open={showNotesModal} onClose={() => setShowNotesModal(false)} title="Notula Rapat">
-        {notesState?.error && <p className="text-red-500 caption mb-4">{notesState.error}</p>}
-        <form action={notesAction} className="flex flex-col gap-4">
-          <input type="hidden" name="meetingId" value={meeting.id} />
-          <input type="hidden" name="decisionPoints" id="decisionPoints" value={JSON.stringify(meeting.notes?.decisionPoints ?? [])} />
-          <input type="hidden" name="actionItems" id="actionItems" value={JSON.stringify(meeting.notes?.actionItems ?? [])} />
+      {/* Notes Modal — only for authorized users */}
+      {canWriteNotes && (
+        <Modal open={showNotesModal} onClose={() => setShowNotesModal(false)} title="Notula Rapat">
+          {notesState?.error && <p className="text-red-500 caption mb-4">{notesState.error}</p>}
+          <form action={notesAction} className="flex flex-col gap-4">
+            <input type="hidden" name="meetingId" value={meeting.id} />
+            <input type="hidden" name="decisionPoints" id="decisionPoints" value={JSON.stringify(meeting.notes?.decisionPoints ?? [])} />
+            <input type="hidden" name="actionItems" id="actionItems" value={JSON.stringify(meeting.notes?.actionItems ?? [])} />
 
-          <div>
-            <label className="caption block mb-1 text-on-surface-variant">Notulensi</label>
-            <textarea
-              name="content"
-              defaultValue={meeting.notes?.content ?? ""}
-              className="flex min-h-[180px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
-              placeholder="Tulis jalannya rapat di sini..."
-              required
-            />
-          </div>
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant">Notulensi</label>
+              <textarea
+                name="content"
+                defaultValue={meeting.notes?.content ?? ""}
+                className="flex min-h-[180px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
+                placeholder="Tulis jalannya rapat di sini..."
+                required
+              />
+            </div>
 
-          <div>
-            <label className="caption block mb-1 text-on-surface-variant">
-              Action Items (pisahkan dengan baris baru)
-            </label>
-            <textarea
-              id="actionItemsTextarea"
-              defaultValue={(meeting.notes?.actionItems ?? []).join("\n")}
-              onChange={(e) => {
-                const items = e.target.value.split("\n").filter(Boolean);
-                (document.getElementById("actionItems") as HTMLInputElement).value = JSON.stringify(items);
-              }}
-              className="flex min-h-[80px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
-              placeholder={`Contoh:\nBuat draft proposal sponsorship\nKirim undangan ke sponsor`}
-            />
-          </div>
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant">
+                Action Items (pisahkan dengan baris baru)
+              </label>
+              <textarea
+                id="actionItemsTextarea"
+                defaultValue={(meeting.notes?.actionItems ?? []).join("\n")}
+                onChange={(e) => {
+                  const items = e.target.value.split("\n").filter(Boolean);
+                  (document.getElementById("actionItems") as HTMLInputElement).value = JSON.stringify(items);
+                }}
+                className="flex min-h-[80px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
+                placeholder={`Contoh:\nBuat draft proposal sponsorship\nKirim undangan ke sponsor`}
+              />
+            </div>
 
-          <div>
-            <label className="caption block mb-1 text-on-surface-variant">
-              Poin Keputusan (pisahkan dengan baris baru)
-            </label>
-            <textarea
-              id="decisionPointsTextarea"
-              defaultValue={(meeting.notes?.decisionPoints ?? []).join("\n")}
-              onChange={(e) => {
-                const items = e.target.value.split("\n").filter(Boolean);
-                (document.getElementById("decisionPoints") as HTMLInputElement).value = JSON.stringify(items);
-              }}
-              className="flex min-h-[80px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
-              placeholder={`Contoh:\nTanggal rapat berikutnya: 20 Juli\nSponsorship disetujui`}
-            />
-          </div>
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant">
+                Poin Keputusan (pisahkan dengan baris baru)
+              </label>
+              <textarea
+                id="decisionPointsTextarea"
+                defaultValue={(meeting.notes?.decisionPoints ?? []).join("\n")}
+                onChange={(e) => {
+                  const items = e.target.value.split("\n").filter(Boolean);
+                  (document.getElementById("decisionPoints") as HTMLInputElement).value = JSON.stringify(items);
+                }}
+                className="flex min-h-[80px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
+                placeholder={`Contoh:\nTanggal rapat berikutnya: 20 Juli\nSponsorship disetujui`}
+              />
+            </div>
 
-          <div className="flex gap-2 justify-end mt-2">
-            <Button type="button" variant="ghost" onClick={() => setShowNotesModal(false)} className="cursor-pointer">
-              Batal
-            </Button>
-            <Button type="submit" disabled={notesPending} className="cursor-pointer">
-              {notesPending ? "Menyimpan..." : "Simpan Notula"}
-            </Button>
-          </div>
-        </form>
-      </Modal>
+            <div className="flex gap-2 justify-end mt-2">
+              <Button type="button" variant="ghost" onClick={() => setShowNotesModal(false)} className="cursor-pointer">
+                Batal
+              </Button>
+              <Button type="submit" disabled={notesPending} className="cursor-pointer">
+                {notesPending ? "Menyimpan..." : "Simpan Notula"}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }

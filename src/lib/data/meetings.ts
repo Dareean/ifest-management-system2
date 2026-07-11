@@ -13,6 +13,8 @@ export interface MeetingData {
   endedAt: string | null;
   creator: string;
   inviteeCount: number;
+  scope: string;
+  notesStatus: "none" | "draft" | "published";
 }
 
 export async function getMeetings(): Promise<MeetingData[]> {
@@ -30,6 +32,7 @@ export async function getMeetings(): Promise<MeetingData[]> {
       started_at,
       ended_at,
       created_at,
+      scope,
       creator:committee_assignments!creator_id(
         user:profiles(full_name)
       )
@@ -39,12 +42,29 @@ export async function getMeetings(): Promise<MeetingData[]> {
 
   if (!data) return [];
 
+  const meetingIds = data.map((m: any) => m.id);
+  let notesMap: Record<string, string | null> = {};
+  if (meetingIds.length > 0) {
+    const { data: notes } = await supabase
+      .from("meeting_notes")
+      .select("meeting_id, published_at")
+      .in("meeting_id", meetingIds);
+    if (notes) {
+      for (const n of notes) {
+        notesMap[(n as any).meeting_id] = (n as any).published_at;
+      }
+    }
+  }
+
   const meetingsWithCounts = await Promise.all(
     data.map(async (m: any) => {
       const { count } = await supabase
         .from("meeting_invitees")
         .select("*", { count: "exact", head: true })
         .eq("meeting_id", m.id);
+
+      const notesPub = notesMap[m.id];
+      const notesStatus: "none" | "draft" | "published" = notesPub === undefined ? "none" : notesPub ? "published" : "draft";
 
       return {
         id: m.id,
@@ -57,6 +77,8 @@ export async function getMeetings(): Promise<MeetingData[]> {
         endedAt: m.ended_at,
         creator: m.creator?.user?.full_name ?? "",
         inviteeCount: count ?? 0,
+        scope: m.scope ?? "individual",
+        notesStatus,
       };
     }),
   );

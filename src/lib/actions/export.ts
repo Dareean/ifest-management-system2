@@ -113,7 +113,7 @@ export async function exportMeetingsCSV() {
   const { data } = await supabase
     .from("meetings")
     .select(`
-      id, title, agenda, meeting_type, meeting_link, location, started_at, ended_at,
+      id, title, agenda, meeting_type, meeting_link, location, started_at, ended_at, scope,
       creator:committee_assignments!creator_id(user:profiles(full_name))
     `)
     .eq("committee_year_id", YEAR_ID)
@@ -138,12 +138,13 @@ export async function exportMeetingsCSV() {
       new Date(m.started_at).toLocaleDateString("id-ID"),
       m.ended_at ? new Date(m.ended_at).toLocaleDateString("id-ID") : "-",
       m.creator?.user?.full_name ?? "",
+      m.scope ?? "individual",
       notes?.published_at ? "Published" : "Draft",
     ]);
   }
 
   return toCSV(
-    ["Judul", "Agenda", "Tipe", "Link", "Lokasi", "Mulai", "Selesai", "Pembuat", "Notulensi"],
+    ["Judul", "Agenda", "Tipe", "Link", "Lokasi", "Mulai", "Selesai", "Pembuat", "Lingkup", "Notulensi"],
     rows,
   );
 }

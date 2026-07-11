@@ -39,6 +39,9 @@ export interface PersonalData {
     startedAt: string;
     meetingType: string;
     rsvpStatus: string;
+    endedAt: string | null;
+    scope: string;
+    notesPublished: string | null;
   }[];
 }
 
@@ -117,19 +120,40 @@ export async function getUserMeetings(assignmentId: string) {
     .from("meeting_invitees")
     .select(`
       id, rsvp_status,
-      meeting:meetings(id, title, started_at, meeting_type)
+      meeting:meetings(id, title, started_at, meeting_type, ended_at, scope)
     `)
     .eq("committee_assignment_id", assignmentId)
     .order("meeting_id", { ascending: false })
     .limit(5);
 
-  return (data ?? []).map((m: any) => ({
-    id: m.meeting?.id ?? "",
-    title: m.meeting?.title ?? "",
-    startedAt: m.meeting?.started_at ?? "",
-    meetingType: m.meeting?.meeting_type ?? "scheduled",
-    rsvpStatus: m.rsvp_status,
-  }));
+  const meetingIds = (data ?? []).map((m: any) => m.meeting?.id).filter(Boolean);
+  let notesMap: Record<string, { publishedAt: string | null }> = {};
+  if (meetingIds.length > 0) {
+    const { data: notes } = await admin
+      .from("meeting_notes")
+      .select("meeting_id, published_at")
+      .in("meeting_id", meetingIds);
+    if (notes) {
+      for (const n of notes) {
+        notesMap[(n as any).meeting_id] = { publishedAt: (n as any).published_at };
+      }
+    }
+  }
+
+  return (data ?? []).map((m: any) => {
+    const mtg = m.meeting ?? {};
+    const note = notesMap[mtg.id];
+    return {
+      id: mtg.id ?? "",
+      title: mtg.title ?? "",
+      startedAt: mtg.started_at ?? "",
+      meetingType: mtg.meeting_type ?? "scheduled",
+      rsvpStatus: m.rsvp_status,
+      endedAt: mtg.ended_at ?? null,
+      scope: mtg.scope ?? "individual",
+      notesPublished: note?.publishedAt ?? null,
+    };
+  });
 }
 
 export async function getUserLetters(assignmentId: string) {
@@ -251,11 +275,25 @@ export async function getPersonalDashboard(): Promise<PersonalData> {
     .select(`
       id,
       rsvp_status,
-      meeting:meetings(id, title, started_at, meeting_type)
+      meeting:meetings(id, title, started_at, meeting_type, ended_at, scope)
     `)
     .eq("committee_assignment_id", assignmentId)
     .order("meeting_id", { ascending: false })
     .limit(5);
+
+  const meetingIds = (meetings ?? []).map((m: any) => m.meeting?.id).filter(Boolean);
+  let notesMap: Record<string, string | null> = {};
+  if (meetingIds.length > 0) {
+    const { data: notes } = await admin
+      .from("meeting_notes")
+      .select("meeting_id, published_at")
+      .in("meeting_id", meetingIds);
+    if (notes) {
+      for (const n of notes) {
+        notesMap[(n as any).meeting_id] = (n as any).published_at;
+      }
+    }
+  }
 
   const personalData: PersonalData = {
     userId,
@@ -273,13 +311,19 @@ export async function getPersonalDashboard(): Promise<PersonalData> {
       status: l.status,
       createdAt: l.created_at,
     })),
-    meetings: (meetings ?? []).map((m: any) => ({
-      id: m.meeting?.id ?? "",
-      title: m.meeting?.title ?? "",
-      startedAt: m.meeting?.started_at ?? "",
-      meetingType: m.meeting?.meeting_type ?? "scheduled",
-      rsvpStatus: m.rsvp_status,
-    })),
+    meetings: (meetings ?? []).map((m: any) => {
+      const mtg = m.meeting ?? {};
+      return {
+        id: mtg.id ?? "",
+        title: mtg.title ?? "",
+        startedAt: mtg.started_at ?? "",
+        meetingType: mtg.meeting_type ?? "scheduled",
+        rsvpStatus: m.rsvp_status,
+        endedAt: mtg.ended_at ?? null,
+        scope: mtg.scope ?? "individual",
+        notesPublished: notesMap[mtg.id] ?? null,
+      };
+    }),
   };
 
   return personalData;

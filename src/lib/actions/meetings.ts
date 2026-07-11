@@ -40,6 +40,26 @@ export async function createMeeting(prevState: ActionState, formData: FormData):
 
   if (!callerAssignment) return { error: "Anda tidak terdaftar sebagai panitia aktif." };
 
+  // Infer meeting scope from invitees
+  const { count: totalActive } = await admin
+    .from("committee_assignments")
+    .select("*", { count: "exact", head: true })
+    .eq("committee_year_id", YEAR_ID)
+    .eq("is_active", true);
+
+  const { data: inviteeDivisions } = await admin
+    .from("committee_assignments")
+    .select("division_id")
+    .in("id", inviteeIds);
+
+  const divisionIds = [...new Set((inviteeDivisions ?? []).map((i: any) => i.division_id))];
+  const scope =
+    inviteeIds.length >= (totalActive ?? 0)
+      ? "all"
+      : divisionIds.length === 1
+        ? "division"
+        : "individual";
+
   const { data: meeting, error } = await admin
     .from("meetings")
     .insert({
@@ -51,6 +71,7 @@ export async function createMeeting(prevState: ActionState, formData: FormData):
       meeting_link: meetingLink || null,
       location: location || null,
       started_at: startedAt,
+      scope,
     })
     .select("id")
     .single();

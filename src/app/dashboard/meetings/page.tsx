@@ -7,6 +7,26 @@ import { getMeetings } from "@/lib/data/meetings";
 import { exportMeetingsCSV } from "@/lib/actions/export";
 import { ExportButton } from "@/components/export-button";
 
+function getNotesBadge(status: string) {
+  if (status === "published") {
+    return <Badge variant="success" className="text-[9px] font-mono px-2 py-0">Notulensi Ada</Badge>;
+  }
+  if (status === "draft") {
+    return <Badge variant="warning" className="text-[9px] font-mono px-2 py-0">Draft</Badge>;
+  }
+  return null;
+}
+
+function getScopeBadge(scope: string) {
+  if (scope === "all") {
+    return <Badge variant="outline" className="text-[9px] font-mono px-2 py-0 bg-accent-green/10 text-accent-green border-accent-green/30">Semua</Badge>;
+  }
+  if (scope === "division") {
+    return <Badge variant="outline" className="text-[9px] font-mono px-2 py-0 bg-accent-lilac/10 text-accent-lilac border-accent-lilac/30">Divisi</Badge>;
+  }
+  return null;
+}
+
 export default async function MeetingsPage() {
   const meetings = await getMeetings();
 
@@ -61,14 +81,20 @@ export default async function MeetingsPage() {
                 <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-full hover:border-accent-magenta/50 transition-all">
                   <CardHeader className="p-0">
                     <div className="flex items-center justify-between mb-3">
-                      <Badge variant={mtg.meetingType === "adhoc" ? "warning" : "info"} className="text-[10px] font-mono">
-                        {mtg.meetingType === "adhoc" ? "Kondisional" : "Terjadwal"}
-                      </Badge>
-                      {mtg.inviteeCount > 0 && (
-                        <span className="text-xs font-mono text-on-surface-variant">
-                          {mtg.inviteeCount} peserta
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant={mtg.meetingType === "adhoc" ? "warning" : "info"} className="text-[10px] font-mono">
+                          {mtg.meetingType === "adhoc" ? "Kondisional" : "Terjadwal"}
+                        </Badge>
+                        {getScopeBadge(mtg.scope)}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {getNotesBadge(mtg.notesStatus)}
+                        {mtg.inviteeCount > 0 && (
+                          <span className="text-xs font-mono text-on-surface-variant">
+                            {mtg.inviteeCount} peserta
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <CardTitle className="text-base font-bold text-on-surface group-hover:text-accent-magenta transition-colors leading-tight mb-2">
                       {mtg.title}
