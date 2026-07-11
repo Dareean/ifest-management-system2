@@ -3,14 +3,74 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { notifyAllMembers } from "./notifications";
+import { notifyAllMembers } from "@/lib/internal-notifications";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
-export async function updateRsvp(inviteeId: string, status: string) {
-  const supabase = createAdminClient();
+async function requireMeetingAuth(meetingId: string) {
+  const auth = await createClient();
+  const { data: authData } = await auth.auth.getUser();
+  const userId = authData?.user?.id;
+  if (!userId) return null;
 
-  const { error } = await supabase
+  const admin = createAdminClient();
+  const { data: caller } = await admin
+    .from("committee_assignments")
+    .select("id, role:roles(is_approver)")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!caller) return null;
+
+  const callerId = (caller as any).id;
+  const callerIsApprover = !!(caller as any).role?.is_approver;
+
+  const { data: meeting } = await admin
+    .from("meetings")
+    .select("creator_id, scope")
+    .eq("id", meetingId)
+    .single();
+  if (!meeting) return null;
+
+  const m = meeting as any;
+  const isCreator = m.creator_id === callerId;
+  const isSekretarisAllMeeting = callerIsApprover && m.scope === "all";
+
+  if (!isCreator && !isSekretarisAllMeeting) return null;
+
+  return { admin, callerId, meeting };
+}
+
+export async function updateRsvp(inviteeId: string, status: string) {
+  const auth = await createClient();
+  const { data: authData } = await auth.auth.getUser();
+  const userId = authData?.user?.id;
+  if (!userId) return { error: "Silakan login terlebih dahulu" };
+
+  const admin = createAdminClient();
+  const { data: caller } = await admin
+    .from("committee_assignments")
+    .select("id")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!caller) return { error: "Anda tidak terdaftar sebagai panitia aktif." };
+
+  const callerId = (caller as any).id;
+
+  // Verify the invitee belongs to the caller
+  const { data: invitee } = await admin
+    .from("meeting_invitees")
+    .select("committee_assignment_id")
+    .eq("id", inviteeId)
+    .single();
+  if (!invitee || (invitee as any).committee_assignment_id !== callerId) {
+    return { error: "Anda hanya bisa mengubah status RSVP Anda sendiri." };
+  }
+
+  const { error } = await admin
     .from("meeting_invitees")
     .update({ rsvp_status: status })
     .eq("id", inviteeId);
@@ -105,7 +165,9 @@ export async function saveNotes(prevState: unknown, formData: FormData) {
 }
 
 export async function publishNotes(meetingId: string) {
-  const admin = createAdminClient();
+  const auth = await requireMeetingAuth(meetingId);
+  if (!auth) return { error: "Anda tidak berwenang mempublikasikan notulensi rapat ini." };
+  const { admin } = auth;
 
   const { data: meeting } = await admin
     .from("meetings")
@@ -133,7 +195,9 @@ export async function publishNotes(meetingId: string) {
 }
 
 export async function endMeeting(meetingId: string) {
-  const admin = createAdminClient();
+  const auth = await requireMeetingAuth(meetingId);
+  if (!auth) return { error: "Anda tidak berwenang mengakhiri rapat ini." };
+  const { admin } = auth;
 
   const { error } = await admin
     .from("meetings")

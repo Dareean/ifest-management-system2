@@ -31,6 +31,9 @@ async function getCurrentAssignment() {
 // ============================================================
 
 export async function setBudget(prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const assignment = await getCurrentAssignment();
+  if (!assignment) return { error: "Silakan login terlebih dahulu" };
+
   const supabase = createAdminClient();
   const divisionId = formData.get("division_id") as string;
   const amount = parseFloat(formData.get("amount") as string);
@@ -87,6 +90,9 @@ export async function addTransaction(prevState: ActionState, formData: FormData)
 }
 
 export async function deleteTransaction(id: string) {
+  const assignment = await getCurrentAssignment();
+  if (!assignment) return { error: "Silakan login terlebih dahulu" };
+
   const supabase = createAdminClient();
   const { error } = await supabase.from("budget_transactions").delete().eq("id", id);
   if (error) return { error: error.message };

@@ -1,15 +1,45 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
+
+async function requireActiveMember() {
+  const auth = await createClient();
+  const { data: authData } = await auth.auth.getUser();
+  const userId = authData?.user?.id;
+  if (!userId) return null;
+
+  const admin = createAdminClient();
+  const { data: assignment } = await admin
+    .from("committee_assignments")
+    .select("id, division_id, role:roles(name, slug, level, is_approver)")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!assignment) return null;
+  return assignment as any;
+}
+
+async function requireAdmin(level: number) {
+  const member = await requireActiveMember();
+  if (!member) return null;
+  if ((member.role?.level ?? 0) < level) return null;
+  return member;
+}
 
 // ============================================================
 // Divisions
 // ============================================================
 
 export async function createDivision(prevState: unknown, formData: FormData) {
+  const caller = await requireAdmin(90);
+  if (!caller) return { error: "Akses ditolak" };
+
   const supabase = createAdminClient();
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
@@ -30,6 +60,9 @@ export async function createDivision(prevState: unknown, formData: FormData) {
 }
 
 export async function updateDivision(prevState: unknown, formData: FormData) {
+  const caller = await requireAdmin(90);
+  if (!caller) return { error: "Akses ditolak" };
+
   const supabase = createAdminClient();
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
@@ -48,6 +81,9 @@ export async function updateDivision(prevState: unknown, formData: FormData) {
 }
 
 export async function deleteDivision(id: string) {
+  const caller = await requireAdmin(90);
+  if (!caller) return { error: "Akses ditolak" };
+
   const supabase = createAdminClient();
   const { error } = await supabase.from("divisions").delete().eq("id", id);
   if (error) return { error: error.message };
@@ -60,6 +96,9 @@ export async function deleteDivision(id: string) {
 // ============================================================
 
 export async function createRole(prevState: unknown, formData: FormData) {
+  const caller = await requireAdmin(90);
+  if (!caller) return { error: "Akses ditolak" };
+
   const supabase = createAdminClient();
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
@@ -82,6 +121,9 @@ export async function createRole(prevState: unknown, formData: FormData) {
 }
 
 export async function updateRole(prevState: unknown, formData: FormData) {
+  const caller = await requireAdmin(90);
+  if (!caller) return { error: "Akses ditolak" };
+
   const supabase = createAdminClient();
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
@@ -101,6 +143,9 @@ export async function updateRole(prevState: unknown, formData: FormData) {
 }
 
 export async function deleteRole(id: string) {
+  const caller = await requireAdmin(90);
+  if (!caller) return { error: "Akses ditolak" };
+
   const supabase = createAdminClient();
   const { error } = await supabase.from("roles").delete().eq("id", id);
   if (error) return { error: error.message };
@@ -113,6 +158,9 @@ export async function deleteRole(id: string) {
 // ============================================================
 
 export async function createYear(prevState: unknown, formData: FormData) {
+  const caller = await requireAdmin(90);
+  if (!caller) return { error: "Akses ditolak" };
+
   const supabase = createAdminClient();
   const label = formData.get("label") as string;
   const startedAt = formData.get("started_at") as string;
@@ -132,7 +180,6 @@ export async function createYear(prevState: unknown, formData: FormData) {
 
   if (error || !newYear) return { error: error?.message ?? "Failed to create year" };
 
-  // Copy divisions and roles from previous year if requested
   if (copyFrom) {
     const [divs, roles] = await Promise.all([
       supabase.from("divisions").select("*").eq("committee_year_id", copyFrom),
@@ -176,6 +223,9 @@ export async function createYear(prevState: unknown, formData: FormData) {
 // ============================================================
 
 export async function createAssignment(prevState: unknown, formData: FormData) {
+  const caller = await requireAdmin(75);
+  if (!caller) return { error: "Akses ditolak" };
+
   const supabase = createAdminClient();
   const divisionId = formData.get("division_id") as string;
   const roleId = formData.get("role_id") as string;
@@ -187,7 +237,6 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
     return { error: "Semua field harus diisi" };
   }
 
-  // Check if profile already exists by NIM
   const { data: existing } = await supabase
     .from("profiles")
     .select("id, full_name")
@@ -199,7 +248,6 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
   if (existing) {
     profileId = existing.id;
   } else {
-    // Create auth user first (profiles.id REFERENCES auth.users.id)
     const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
       email,
       password: "ifest2026",
@@ -212,8 +260,6 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
     }
 
     profileId = authUser.user.id;
-    // Auth trigger on_auth_user_created should auto-create profile.
-    // If trigger is not yet set, create profile manually:
     const { error: profileErr } = await supabase.from("profiles").upsert({
       id: profileId,
       full_name: fullName,
@@ -223,7 +269,6 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
     if (profileErr) return { error: profileErr.message };
   }
 
-  // Check if already assigned
   const { data: existingAssignment } = await supabase
     .from("committee_assignments")
     .select("id")
@@ -249,6 +294,9 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
 }
 
 export async function deleteAssignment(id: string) {
+  const caller = await requireAdmin(75);
+  if (!caller) return { error: "Akses ditolak" };
+
   const supabase = createAdminClient();
   const { error } = await supabase.from("committee_assignments").delete().eq("id", id);
   if (error) return { error: error.message };

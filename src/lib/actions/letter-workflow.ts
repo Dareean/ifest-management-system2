@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
-import { createNotification, notifyDivision } from "./notifications";
+import { createNotification, notifyDivision } from "@/lib/internal-notifications";
 import { requirePermission } from "@/lib/auth/authorize";
 
 export async function approveLetter(id: string) {

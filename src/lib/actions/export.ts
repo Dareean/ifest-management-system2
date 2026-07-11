@@ -1,8 +1,28 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
+
+async function requireActiveMember() {
+  const auth = await createClient();
+  const { data: authData } = await auth.auth.getUser();
+  const userId = authData?.user?.id;
+  if (!userId) return null;
+
+  const admin = createAdminClient();
+  const { data: assignment } = await admin
+    .from("committee_assignments")
+    .select("id")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!assignment) return null;
+  return { id: (assignment as any).id };
+}
 
 function toCSV(headers: string[], rows: string[][]): string {
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
@@ -14,6 +34,8 @@ function toCSV(headers: string[], rows: string[][]): string {
 // ============================================================
 
 export async function exportKpiCSV() {
+  const member = await requireActiveMember();
+  if (!member) return "";
   const supabase = createAdminClient();
 
   const { data: divisions } = await supabase
@@ -68,6 +90,8 @@ export async function exportKpiCSV() {
 // ============================================================
 
 export async function exportLettersCSV() {
+  const member = await requireActiveMember();
+  if (!member) return "";
   const supabase = createAdminClient();
 
   const { data } = await supabase
@@ -108,6 +132,8 @@ export async function exportLettersCSV() {
 // ============================================================
 
 export async function exportMeetingsCSV() {
+  const member = await requireActiveMember();
+  if (!member) return "";
   const supabase = createAdminClient();
 
   const { data } = await supabase
@@ -154,6 +180,8 @@ export async function exportMeetingsCSV() {
 // ============================================================
 
 export async function exportPersonnelCSV() {
+  const member = await requireActiveMember();
+  if (!member) return "";
   const supabase = createAdminClient();
 
   const { data } = await supabase
