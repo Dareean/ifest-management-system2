@@ -125,3 +125,51 @@ export async function createMeeting(prevState: ActionState, formData: FormData):
   revalidatePath("/dashboard/meetings");
   return { success: true, meetingId: meeting.id };
 }
+
+export async function updateMeetingDate(meetingId: string, startedAt: string): Promise<{ error?: string; success?: boolean }> {
+  const auth = await createClient();
+  const { data: authData } = await auth.auth.getUser();
+  const userId = authData?.user?.id;
+
+  if (!userId) return { error: "Unauthorized" };
+
+  const admin = createAdminClient();
+
+  const { data: callerAssignment } = await admin
+    .from("committee_assignments")
+    .select("id, role:roles(is_approver)")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!callerAssignment) return { error: "Anda tidak terdaftar sebagai panitia aktif." };
+
+  const { data: meeting } = await admin
+    .from("meetings")
+    .select("creator_id, title")
+    .eq("id", meetingId)
+    .single();
+
+  if (!meeting) return { error: "Rapat tidak ditemukan." };
+
+  const isCreator = meeting.creator_id === callerAssignment.id;
+  const isApprover = !!(callerAssignment as any).role?.is_approver;
+
+  if (!isCreator && !isApprover) {
+    return { error: "Anda tidak berwenang mengubah jadwal rapat ini." };
+  }
+
+  // Update started_at
+  const { error } = await admin
+    .from("meetings")
+    .update({ started_at: startedAt })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/dashboard/meetings");
+  revalidatePath(`/dashboard/meetings/${meetingId}`);
+  return { success: true };
+}
+
