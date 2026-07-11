@@ -1,25 +1,4 @@
 services:
-  - type: web
-    name: ims-app
-    env: docker
-    repo: https://github.com/Dareean/ifest-management-system2
-    branch: main
-    dockerfilePath: ./Dockerfile
-    healthCheckPath: /
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_PUBLIC_SUPABASE_URL
-        value: https://xxmxbyiggrottreetrig.supabase.co
-      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: BREVO_API_KEY
-        sync: false
-      - key: YEAR_ID
-        value: c2f2a48e-3e58-4559-aaa0-623a3825348b
-
   - type: cron
     name: ims-worker
     env: docker
