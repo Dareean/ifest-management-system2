@@ -3,6 +3,7 @@ import { getLetterDetail } from "@/lib/data/letter-detail";
 import { LetterDetailClient } from "./client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { SECRETARY_SLUGS } from "@/lib/auth/authorize";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
@@ -20,13 +21,15 @@ export default async function LetterDetailPage(props: { params: Promise<{ id: st
   const admin = createAdminClient();
   const { data: assignment } = await admin
     .from("committee_assignments")
-    .select("id, role:roles(is_approver)")
+    .select("id, role:roles(slug)")
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", userId)
     .eq("is_active", true)
     .maybeSingle();
 
-  const isApprover = !!(assignment as any)?.role?.is_approver;
+  const roleSlug = (assignment as any)?.role?.slug ?? "";
+  const isSecretary = SECRETARY_SLUGS.includes(roleSlug);
 
-  return <LetterDetailClient letter={letter} isApprover={isApprover} />;
+  return <LetterDetailClient letter={letter} isApprover={isSecretary} />;
 }
+

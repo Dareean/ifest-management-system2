@@ -3,24 +3,24 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { createNotification, notifyDivision } from "@/lib/internal-notifications";
-import { requirePermission } from "@/lib/auth/authorize";
+import { requirePermission, requireRole, requireSecretary } from "@/lib/auth/authorize";
 
-export async function approveLetter(id: string) {
-  const auth = await requirePermission("is_approver");
+export async function startProcessingLetter(id: string) {
+  const auth = await requireSecretary();
   if (!auth.authorized) return { error: auth.error };
 
   const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("letter_requests")
-    .update({ status: "approved" })
+    .update({ status: "processing" })
     .eq("id", id);
 
   if (error) return { error: error.message };
 
   const { data: letter } = await supabase
     .from("letter_requests")
-    .select("subject, division_id")
+    .select("subject, division_id, requester_id")
     .eq("id", id)
     .single();
 
@@ -28,33 +28,46 @@ export async function approveLetter(id: string) {
     await notifyDivision(
       (letter as any).division_id,
       "letter",
-      `Surat disetujui: ${(letter as any).subject}`,
-      "Surat telah disetujui dan siap dikirim.",
+      `Surat diproses: ${(letter as any).subject}`,
+      "Surat Anda sedang dalam proses pengerjaan oleh sekretaris.",
     );
+    if ((letter as any).requester_id) {
+      await createNotification(
+        (letter as any).requester_id,
+        "letter",
+        `Surat diproses: ${(letter as any).subject}`,
+        "Surat Anda sedang dalam proses pengerjaan oleh sekretaris.",
+      );
+    }
   }
 
-  await sendStatusNotification(id, "approved");
+  await sendStatusNotification(id, "processing");
   revalidatePath(`/dashboard/letters/${id}`);
   revalidatePath("/dashboard/letters");
   return { success: true };
 }
 
-export async function sendLetterFinal(id: string) {
-  const auth = await requirePermission("is_approver");
+export async function completeLetter(id: string, finalDocumentUrl: string) {
+  const auth = await requireSecretary();
   if (!auth.authorized) return { error: auth.error };
+
+  if (!finalDocumentUrl) return { error: "Link Google Drive dokumen final harus diisi." };
 
   const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("letter_requests")
-    .update({ status: "sent" })
+    .update({ 
+      status: "sent",
+      final_document_url: finalDocumentUrl
+    })
     .eq("id", id);
 
   if (error) return { error: error.message };
 
   const { data: letter } = await supabase
     .from("letter_requests")
-    .select("subject, division_id")
+    .select("subject, division_id, requester_id")
     .eq("id", id)
     .single();
 
@@ -62,9 +75,17 @@ export async function sendLetterFinal(id: string) {
     await notifyDivision(
       (letter as any).division_id,
       "letter",
-      `Surat terkirim: ${(letter as any).subject}`,
-      "Surat telah dikirim ke tujuan.",
+      `Surat selesai: ${(letter as any).subject}`,
+      "Surat telah selesai dibuat. Silakan akses link Google Drive di detail pengajuan.",
     );
+    if ((letter as any).requester_id) {
+      await createNotification(
+        (letter as any).requester_id,
+        "letter",
+        `Surat selesai: ${(letter as any).subject}`,
+        "Surat Anda telah selesai. Silakan akses link Google Drive di detail pengajuan.",
+      );
+    }
   }
 
   await sendStatusNotification(id, "sent");
@@ -74,14 +95,16 @@ export async function sendLetterFinal(id: string) {
 }
 
 export async function requestRevision(prevState: unknown, formData: FormData) {
-  const auth = await requirePermission("is_approver");
+  const auth = await requireRole(0);
   if (!auth.authorized) return { error: auth.error };
+  const assignmentId = auth.session.assignmentId;
 
-  const supabase = createAdminClient();
   const id = formData.get("id") as string;
   const note = formData.get("note") as string;
 
   if (!note) return { error: "Catatan revisi harus diisi" };
+
+  const supabase = createAdminClient();
 
   const { data: letter } = await supabase
     .from("letter_requests")
@@ -91,18 +114,15 @@ export async function requestRevision(prevState: unknown, formData: FormData) {
 
   if (!letter) return { error: "Surat tidak ditemukan" };
 
-  const { data: firstAssignment } = await supabase
-    .from("committee_assignments")
-    .select("id")
-    .eq("committee_year_id", letter.committee_year_id)
-    .limit(1)
-    .single();
+  // Verify that the user is the requester of this letter
+  if (letter.requester_id !== assignmentId) {
+    return { error: "Akses ditolak. Hanya pengaju asli surat yang dapat meminta revisi." };
+  }
 
-  if (!firstAssignment) return { error: "No committee member found" };
-
+  // Insert revision note with requester's assignment ID as author (reviewer_id)
   const { error: revisionErr } = await supabase.from("letter_revisions").insert({
     letter_request_id: id,
-    reviewer_id: firstAssignment.id,
+    reviewer_id: assignmentId,
     note,
   });
 
@@ -118,12 +138,18 @@ export async function requestRevision(prevState: unknown, formData: FormData) {
 
   if (updateErr) return { error: updateErr.message };
 
-  // Notify requester
-  if (letter.requester_id) {
-    await createNotification(
-      letter.requester_id,
+  // Notify the BPH / Sekretaris panitia about the revision request
+  const { data: bphDivision } = await supabase
+    .from("divisions")
+    .select("id")
+    .eq("slug", "bph")
+    .maybeSingle();
+
+  if (bphDivision) {
+    await notifyDivision(
+      bphDivision.id,
       "letter",
-      `Revisi surat: ${letter.subject}`,
+      `Permohonan revisi surat: ${letter.subject}`,
       `Catatan: ${note}`,
     );
   }
@@ -153,9 +179,9 @@ async function sendStatusNotification(letterId: string, newStatus: string) {
 
       if (email) {
         const statusLabels: Record<string, string> = {
-          approved: "telah disetujui",
+          processing: "sedang diproses",
           in_revision: "perlu direvisi",
-          sent: "telah dikirim",
+          sent: "telah selesai (Selesai)",
         };
 
         await sendEmailNotification(
@@ -171,3 +197,5 @@ async function sendStatusNotification(letterId: string, newStatus: string) {
     // non-blocking
   }
 }
+
+

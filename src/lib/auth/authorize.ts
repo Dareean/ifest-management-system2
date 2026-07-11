@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
+/** Slug-slug role yang dianggap "Sekretaris Panitia" — satu-satunya yang boleh memproses surat */
+export const SECRETARY_SLUGS = ["sekretaris-1", "sekretaris-2"];
+
 export interface AuthSession {
   userId: string;
   assignmentId: string;
@@ -14,6 +17,7 @@ export interface AuthSession {
   roleLevel: number;
   isApprover: boolean;
   isMeetingCreator: boolean;
+  isSecretary: boolean;
 }
 
 type AuthResult =
@@ -52,6 +56,8 @@ async function getAuthSession(): Promise<AuthResult> {
   const a = assignment as any;
   const role = a.role;
 
+  const roleSlug = role?.slug ?? "";
+
   return {
     authorized: true,
     session: {
@@ -60,10 +66,11 @@ async function getAuthSession(): Promise<AuthResult> {
       divisionId: a.division_id,
       divisionName: a.division?.name ?? "",
       roleName: role?.name ?? "",
-      roleSlug: role?.slug ?? "",
+      roleSlug,
       roleLevel: role?.level ?? 0,
       isApprover: role?.is_approver ?? false,
       isMeetingCreator: role?.is_meeting_creator ?? false,
+      isSecretary: SECRETARY_SLUGS.includes(roleSlug),
     },
   };
 }
@@ -105,6 +112,28 @@ export async function requirePermission(
     return {
       authorized: false,
       error: `Akses ditolak. Anda tidak memiliki izin ${permission === "is_approver" ? "approval" : "membuat rapat"}.`,
+    };
+  }
+
+  return result;
+}
+
+/**
+ * Hanya Sekretaris Panitia (sekretaris-1, sekretaris-2) yang diizinkan.
+ * Digunakan untuk aksi memproses dan menyelesaikan surat.
+ */
+export async function requireSecretary(): Promise<
+  | { authorized: true; session: AuthSession }
+  | { authorized: false; error: string }
+> {
+  const result = await getAuthSession();
+
+  if (!result.authorized) return result;
+
+  if (!result.session.isSecretary) {
+    return {
+      authorized: false,
+      error: "Akses ditolak. Hanya Sekretaris Panitia yang dapat memproses surat.",
     };
   }
 

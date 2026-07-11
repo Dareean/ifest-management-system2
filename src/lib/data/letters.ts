@@ -8,6 +8,7 @@ export interface LetterData {
   subject: string;
   status: string;
   division: string;
+  divisionSlug: string;
   requester: string;
   requesterId: string;
   createdAt: string;
@@ -59,6 +60,7 @@ export async function getLetters(requesterId?: string): Promise<LetterData[]> {
     deadlineAt: l.deadline_at,
     targetInstitution: l.target_institution,
     division: l.division?.name ?? "",
+    divisionSlug: l.division?.slug ?? "",
     requester: l.requester?.user?.full_name ?? "",
     requesterId: l.requester_id,
     createdAt: l.created_at,
@@ -67,19 +69,19 @@ export async function getLetters(requesterId?: string): Promise<LetterData[]> {
 
 const statusLabel: Record<string, string> = {
   requested: "Diajukan",
+  processing: "Diproses",
+  sent: "Selesai",
   in_revision: "Revisi",
-  approved: "Disetujui",
-  sent: "Terkirim",
 };
 
-const statusVariant: Record<string, "warning" | "info" | "success" | "default"> = {
+const statusVariant: Record<string, "warning" | "info" | "success" | "danger" | "default"> = {
   requested: "warning",
-  in_revision: "info",
-  approved: "success",
-  sent: "default",
+  processing: "info",
+  sent: "success",
+  in_revision: "danger",
 };
 
-export function getStatusDisplay(status: string): { label: string; variant: "warning" | "info" | "success" | "default" } {
+export function getStatusDisplay(status: string): { label: string; variant: "warning" | "info" | "success" | "danger" | "default" } {
   return {
     label: statusLabel[status] ?? status,
     variant: statusVariant[status] ?? "default",
