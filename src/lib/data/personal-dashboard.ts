@@ -42,6 +42,114 @@ export interface PersonalData {
   }[];
 }
 
+// ── Lightweight fetchers for granular Suspense streaming ──
+
+export async function getCurrentUserId(): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+  return data?.user?.id ?? null;
+}
+
+export async function getCurrentAssignment(userId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("committee_assignments")
+    .select("id, division_id, role:roles(name, slug, level), division:divisions(id, name)")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!data) return null;
+  const a = data as any;
+  return {
+    id: a.id,
+    divisionId: a.division_id,
+    divisionName: a.division?.name ?? "",
+    roleName: a.role?.name ?? "",
+    roleSlug: a.role?.slug ?? "",
+    roleLevel: a.role?.level ?? 0,
+  };
+}
+
+export async function getUserTasks(assignmentId: string) {
+  const admin = createAdminClient();
+  const { data: userAssignments } = await admin
+    .from("committee_assignments")
+    .select("division_id")
+    .eq("id", assignmentId)
+    .single();
+
+  if (!userAssignments) return [];
+  const divisionId = (userAssignments as any).division_id;
+
+  const { data: kpis } = await admin
+    .from("kpi_items")
+    .select("id, title")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("division_id", divisionId);
+
+  const kpiIds = kpis?.map((k) => k.id) ?? [];
+  if (kpiIds.length === 0) return [];
+
+  const { data: tasks } = await admin
+    .from("tasks")
+    .select("id, title, status, priority, deadline, kpi_item_id")
+    .in("kpi_item_id", kpiIds)
+    .order("created_at");
+
+  return (tasks ?? []).map((t: any) => {
+    const kpi = kpis?.find((k) => k.id === t.kpi_item_id);
+    return {
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      priority: t.priority,
+      deadline: t.deadline,
+      kpi: kpi?.title ?? "",
+    };
+  });
+}
+
+export async function getUserMeetings(assignmentId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("meeting_invitees")
+    .select(`
+      id, rsvp_status,
+      meeting:meetings(id, title, started_at, meeting_type)
+    `)
+    .eq("committee_assignment_id", assignmentId)
+    .order("meeting_id", { ascending: false })
+    .limit(5);
+
+  return (data ?? []).map((m: any) => ({
+    id: m.meeting?.id ?? "",
+    title: m.meeting?.title ?? "",
+    startedAt: m.meeting?.started_at ?? "",
+    meetingType: m.meeting?.meeting_type ?? "scheduled",
+    rsvpStatus: m.rsvp_status,
+  }));
+}
+
+export async function getUserLetters(assignmentId: string) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("letter_requests")
+    .select("id, subject, status, created_at")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("requester_id", assignmentId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  return (data ?? []).map((l: any) => ({
+    id: l.id,
+    subject: l.subject,
+    status: l.status,
+    createdAt: l.created_at,
+  }));
+}
+
 export async function getPersonalDashboard(): Promise<PersonalData> {
   // Try to get the current user from the auth session
   const supabase = await createClient();

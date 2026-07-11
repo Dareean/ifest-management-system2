@@ -1,16 +1,14 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function DashboardLoading() {
+export function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-10">
-      {/* Header */}
       <div className="flex flex-col gap-3">
         <Skeleton className="h-3 w-32" />
         <Skeleton className="h-10 w-72" />
         <Skeleton className="h-5 w-56" />
       </div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col gap-3">
@@ -21,11 +19,8 @@ export default function DashboardLoading() {
         ))}
       </div>
 
-      {/* Section Title */}
       <div className="flex flex-col gap-4">
         <Skeleton className="h-6 w-40" />
-
-        {/* List Cards */}
         {[...Array(4)].map((_, i) => (
           <div key={i} className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1 space-y-2">
