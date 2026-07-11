@@ -196,25 +196,33 @@ function getEmailTemplateHtml({
   `.trim();
 }
 
-async function queueEmail(
+async function sendEmail(
   recipientEmail: string,
   recipientName: string,
   subject: string,
   htmlContent: string,
-  priority = 0,
 ) {
-  const supabase = createAdminClient();
-  const { error } = await supabase.from("email_queue").insert({
-    recipient_email: recipientEmail,
-    recipient_name: recipientName,
-    subject,
-    html_content: htmlContent,
-    priority,
-    status: "pending",
-    retry_count: 0,
-  });
-  if (error) {
-    console.error("[EmailQueue] Insert failed:", error);
+  try {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": process.env.BREVO_API_KEY!,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { email: FROM_EMAIL, name: FROM_NAME },
+        to: [{ email: recipientEmail, name: recipientName }],
+        subject: subject,
+        htmlContent: htmlContent,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[Email] Failed to send:", errorText);
+    }
+  } catch (err) {
+    console.error("[Email] Error:", err);
   }
 }
 
@@ -235,14 +243,14 @@ export async function sendLetterNotification(
 
   const displayStatus = statusLabels[status] ?? status;
   const introText = `Kami informasikan bahwa terdapat pembaruan resmi terkait pengajuan surat di <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
-  
+
   const boxContentHtml = `
     <p style="margin: 4px 0;"><strong>Perihal Surat:</strong> ${letterSubject}</p>
     <p style="margin: 4px 0;"><strong>Jenis Surat:</strong> ${letterType}</p>
     <p style="margin: 4px 0;"><strong>Status Pengajuan:</strong> <span style="font-weight: bold; color: ${status === "approved" ? "#A8D5A2" : status === "requested" ? "#FF3D8B" : "#1d1b1d"}">${displayStatus}</span></p>
   `.trim();
 
-  await queueEmail(
+  await sendEmail(
     recipientEmail,
     recipientName,
     `[Surat] ${letterSubject}`,
@@ -290,7 +298,7 @@ export async function sendMeetingInvite(
     boxContentHtml += `<p style="margin: 8px 0 0 0; padding-top: 8px; border-top: 1px solid #f2ecef;"><strong>Agenda:</strong> ${agenda}</p>`;
   }
 
-  await queueEmail(
+  await sendEmail(
     recipientEmail,
     recipientName,
     `[Rapat] ${meetingTitle}`,
@@ -312,7 +320,7 @@ export async function sendEmailNotification(
 ) {
   const introText = `Kami informasikan bahwa terdapat notifikasi penting dari sistem kepanitiaan <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
 
-  await queueEmail(
+  await sendEmail(
     recipientEmail,
     recipientName,
     subject,
@@ -338,7 +346,7 @@ export async function sendWelcomeEmail(
     <p style="margin: 12px 0 0 0; font-size: 12px; color: #7b757c; font-style: italic;">Silakan ganti password Anda demi keamanan setelah pertama kali masuk.</p>
   `.trim();
 
-  await queueEmail(
+  await sendEmail(
     recipientEmail,
     recipientName,
     "Selamat Datang di I-FEST Management System!",
@@ -350,6 +358,5 @@ export async function sendWelcomeEmail(
       ctaText: "Login ke Dashboard",
       ctaUrl: `${APP_URL}/login`,
     }),
-    1,
   );
 }
