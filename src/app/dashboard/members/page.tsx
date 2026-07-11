@@ -1,14 +1,26 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Users, UserPlus } from "lucide-react";
+import { MembersClient } from "./client";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
 export const dynamic = "force-dynamic";
+
+export interface MemberRow {
+  assignmentId: string;
+  name: string;
+  nim: string;
+  roleName: string;
+  roleLevel: number;
+  divisionName?: string;
+}
+
+export interface DivisionGroup {
+  divisionId: string;
+  divisionName: string;
+  members: MemberRow[];
+}
 
 export default async function MembersPage() {
   const supabase = await createClient();
@@ -32,81 +44,90 @@ export default async function MembersPage() {
     .eq("is_active", true)
     .maybeSingle();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const callerLevel = (assignment as any)?.role?.level ?? 0;
+  const a = assignment as any;
+  const callerLevel = a?.role?.level ?? 0;
 
   if (!assignment || callerLevel < 55) {
     redirect("/dashboard");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const divisionId = (assignment as any).division_id;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const divisionName = (assignment as any).division?.name ?? "";
+  const divisionId = a.division_id;
+  const divisionName = a.division?.name ?? "";
+  const isBPH = callerLevel >= 75;
 
+  if (isBPH) {
+    // BPH: show all members grouped by division
+    const { data: allAssignments } = await admin
+      .from("committee_assignments")
+      .select(`
+        id,
+        division_id,
+        division:divisions(name),
+        role:roles(name, slug, level),
+        user:profiles(full_name, nim)
+      `)
+      .eq("committee_year_id", YEAR_ID)
+      .eq("is_active", true)
+      .order("division_id");
+
+    const grouped: Record<string, DivisionGroup> = {};
+    for (const m of (allAssignments as any[]) ?? []) {
+      const dId = m.division_id;
+      if (!grouped[dId]) {
+        grouped[dId] = {
+          divisionId: dId,
+          divisionName: m.division?.name ?? "",
+          members: [],
+        };
+      }
+      grouped[dId].members.push({
+        assignmentId: m.id,
+        name: m.user?.full_name ?? "",
+        nim: m.user?.nim ?? "",
+        roleName: m.role?.name ?? "",
+        roleLevel: m.role?.level ?? 0,
+      });
+    }
+
+    return (
+      <MembersClient
+        callerLevel={callerLevel}
+        callerDivisionName={divisionName}
+        canInvite
+        isBPH
+        allDivisions={Object.values(grouped)}
+      />
+    );
+  }
+
+  // Koordinator/Wakord: show own division members
   const { data: members } = await admin
     .from("committee_assignments")
     .select(`
       id,
-      user:profiles(full_name, nim),
-      role:roles(name, slug, level)
+      role:roles(name, slug, level),
+      user:profiles(full_name, nim)
     `)
     .eq("committee_year_id", YEAR_ID)
     .eq("division_id", divisionId)
     .eq("is_active", true)
     .order("role_id");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const memberList = (members ?? []) as any[];
-
-  const canInvite = callerLevel >= 55;
+  const memberList: MemberRow[] = ((members as any[]) ?? []).map((m) => ({
+    assignmentId: m.id,
+    name: m.user?.full_name ?? "",
+    nim: m.user?.nim ?? "",
+    roleName: m.role?.name ?? "",
+    roleLevel: m.role?.level ?? 0,
+  }));
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
-            DIVISI {divisionName.toUpperCase()}
-          </p>
-          <h1 className="text-3xl font-extrabold tracking-tight text-on-surface">Anggota</h1>
-          <p className="mt-1 text-base text-on-surface-variant">
-            {memberList.length} orang terdaftar
-          </p>
-        </div>
-        {canInvite && (
-          <Link href="/dashboard/members/invite">
-            <Button variant="primary" className="cursor-pointer font-sans text-sm font-semibold gap-2">
-              <UserPlus className="size-4" />
-              Undang Anggota
-            </Button>
-          </Link>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {memberList.length === 0 && (
-          <div className="bg-white border border-outline-variant/60 rounded-2xl p-8 text-center">
-            <Users className="size-8 text-on-surface-variant/40 mx-auto mb-3" />
-            <p className="text-sm font-mono text-on-surface-variant">Belum ada anggota di divisi ini.</p>
-          </div>
-        )}
-        {memberList.map((m) => (
-          <div key={m.id} className="bg-white border border-outline-variant/60 rounded-xl p-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="size-10 rounded-full bg-block-lilac/30 flex items-center justify-center font-bold text-primary shrink-0 text-sm">
-                {m.user?.full_name?.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase() ?? "?"}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-on-surface truncate">{m.user?.full_name}</p>
-                <p className="text-xs text-on-surface-variant font-mono mt-0.5">{m.user?.nim}</p>
-              </div>
-            </div>
-            <Badge variant="outline" className="text-[10px] font-mono shrink-0">
-              {m.role?.name}
-            </Badge>
-          </div>
-        ))}
-      </div>
-    </div>
+    <MembersClient
+      callerLevel={callerLevel}
+      callerDivisionName={divisionName}
+      canInvite
+      isBPH={false}
+      ownMembers={memberList}
+    />
   );
 }

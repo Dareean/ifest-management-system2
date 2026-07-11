@@ -3,8 +3,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { createNotification, notifyDivision } from "./notifications";
+import { requirePermission } from "@/lib/auth/authorize";
 
 export async function approveLetter(id: string) {
+  const auth = await requirePermission("is_approver");
+  if (!auth.authorized) return { error: auth.error };
+
   const supabase = createAdminClient();
 
   const { error } = await supabase
@@ -36,6 +40,9 @@ export async function approveLetter(id: string) {
 }
 
 export async function sendLetterFinal(id: string) {
+  const auth = await requirePermission("is_approver");
+  if (!auth.authorized) return { error: auth.error };
+
   const supabase = createAdminClient();
 
   const { error } = await supabase
@@ -67,6 +74,9 @@ export async function sendLetterFinal(id: string) {
 }
 
 export async function requestRevision(prevState: unknown, formData: FormData) {
+  const auth = await requirePermission("is_approver");
+  if (!auth.authorized) return { error: auth.error };
+
   const supabase = createAdminClient();
   const id = formData.get("id") as string;
   const note = formData.get("note") as string;

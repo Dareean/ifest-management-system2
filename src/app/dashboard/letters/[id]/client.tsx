@@ -2,11 +2,13 @@
 
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { ArrowLeft, Check, Send, RotateCcw, FileText, ChevronRight } from "lucide-react";
+import {
+  ArrowLeft, Check, Send, RotateCcw, FileText,
+  Clock, Building2, Tag, AlertTriangle, ExternalLink,
+} from "lucide-react";
 import { approveLetter, sendLetterFinal, requestRevision } from "@/lib/actions/letter-workflow";
 import { getStatusDisplay } from "@/lib/data/letters";
 import type { LetterDetail } from "@/lib/data/letter-detail";
@@ -18,7 +20,16 @@ const statusColor: Record<string, string> = {
   sent: "bg-surface-container text-on-surface-variant",
 };
 
-export function LetterDetailClient({ letter }: { letter: LetterDetail }) {
+const categoryLabel: Record<string, string> = {
+  pengantar: "Pengantar",
+  rekomendasi: "Rekomendasi",
+  peminjaman: "Peminjaman",
+  undangan: "Undangan",
+  permohonan: "Permohonan",
+  legalitas: "Legalitas",
+};
+
+export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetail; isApprover: boolean }) {
   const router = useRouter();
   const status = getStatusDisplay(letter.status);
   const [showRevisionModal, setShowRevisionModal] = useState(false);
@@ -68,63 +79,163 @@ export function LetterDetailClient({ letter }: { letter: LetterDetail }) {
         </div>
       )}
 
-      {/* Main Letter Content Card */}
+      {/* Metadata Card */}
+      <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          {letter.deadlineAt && (
+            <div>
+              <p className="text-xs font-mono text-on-surface-variant mb-1">Deadline</p>
+              <p className="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+                <Clock className="size-4 text-accent-coral" />
+                {new Date(letter.deadlineAt).toLocaleDateString("id-ID", {
+                  day: "numeric", month: "long", year: "numeric"
+                })}
+              </p>
+            </div>
+          )}
+          {letter.targetInstitution && (
+            <div>
+              <p className="text-xs font-mono text-on-surface-variant mb-1">Instansi Tujuan</p>
+              <p className="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+                <Building2 className="size-4 text-accent-lilac" />
+                {letter.targetInstitution}
+              </p>
+            </div>
+          )}
+          <div>
+            <p className="text-xs font-mono text-on-surface-variant mb-1">Kategori</p>
+            <p className="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+              <Tag className="size-4 text-accent-magenta" />
+              {letter.category ? categoryLabel[letter.category] ?? letter.category : "-"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-mono text-on-surface-variant mb-1">Prioritas</p>
+            <p className="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+              <AlertTriangle className="size-4 text-accent-coral" />
+              {letter.priority.charAt(0).toUpperCase() + letter.priority.slice(1)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Letter Content */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <FileText className="size-5 text-error" />
-          <h2 className="text-xl font-bold tracking-tight text-on-surface">Isi Surat</h2>
+          <h2 className="text-xl font-bold tracking-tight text-on-surface">Maksud Surat</h2>
         </div>
-        <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
+        <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
           <p className="whitespace-pre-wrap text-on-surface leading-relaxed text-base font-sans">
             {letter.body}
           </p>
-        </Card>
+        </div>
       </div>
 
-      {/* Workflow Actions Section */}
-      <div className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold tracking-tight text-on-surface">Aksi Workflow</h2>
-        <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
-          <div className="flex flex-wrap gap-3">
-            {letter.status === "requested" && (
-              <>
-                <Button onClick={handleApprove} className="cursor-pointer">
-                  <Check className="size-4" />
-                  Setujui Surat
+      {/* Request Options */}
+      {letter.requestOptions && (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-xl font-bold tracking-tight text-on-surface">Permintaan Opsi Surat</h2>
+          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
+            <p className="whitespace-pre-wrap text-on-surface text-sm font-sans leading-relaxed">
+              {letter.requestOptions}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Final Document Link */}
+      {letter.finalDocumentUrl && (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-xl font-bold tracking-tight text-on-surface">Dokumen Final</h2>
+          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
+            <a
+              href={letter.finalDocumentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-accent-magenta hover:underline font-semibold"
+            >
+              <ExternalLink className="size-4" />
+              Akses Dokumen (Google Drive)
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Workflow Actions — only for Sekretaris */}
+      {isApprover && (
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold tracking-tight text-on-surface">Aksi Workflow</h2>
+          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
+            <div className="flex flex-wrap gap-3">
+              {letter.status === "requested" && (
+                <>
+                  <Button onClick={handleApprove} className="cursor-pointer">
+                    <Check className="size-4" />
+                    Setujui Surat
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowRevisionModal(true)} className="cursor-pointer">
+                    <RotateCcw className="size-4" />
+                    Minta Revisi
+                  </Button>
+                </>
+              )}
+              {letter.status === "approved" && (
+                <Button onClick={handleSend} className="cursor-pointer">
+                  <Send className="size-4" />
+                  Tandai Terkirim
                 </Button>
-                <Button variant="outline" onClick={() => setShowRevisionModal(true)} className="cursor-pointer">
-                  <RotateCcw className="size-4" />
-                  Minta Revisi
-                </Button>
-              </>
-            )}
-            {letter.status === "approved" && (
-              <Button onClick={handleSend} className="cursor-pointer">
-                <Send className="size-4" />
-                Tandai Terkirim
-              </Button>
-            )}
-            {letter.status === "in_revision" && (
-              <div className="text-sm text-on-surface-variant font-mono flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
-                Menunggu perbaikan/revisi dari pengaju.
-              </div>
-            )}
-            {letter.status === "sent" && (
-              <div className="text-sm text-accent-green font-bold flex items-center gap-2">
-                <Check className="size-4" /> Dokumen resmi telah terkirim
+              )}
+              {letter.status === "in_revision" && (
+                <div className="text-sm text-on-surface-variant font-mono flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+                  Menunggu perbaikan/revisi dari pengaju.
+                </div>
+              )}
+              {letter.status === "sent" && (
+                <div className="text-sm text-accent-green font-bold flex items-center gap-2">
+                  <Check className="size-4" /> Dokumen resmi telah terkirim
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Timeline for non-approver */}
+      {!isApprover && (
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold tracking-tight text-on-surface">Status Surat</h2>
+          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
+            <div className="flex items-center gap-3">
+              <div className={`w-3 h-3 rounded-full ${statusColor[letter.status]?.split(" ")[0] ?? "bg-surface-container"}`} />
+              <span className="text-sm font-semibold text-on-surface">
+                Status: {status.label}
+              </span>
+            </div>
+            {letter.finalDocumentUrl && (
+              <div className="mt-4 pt-4 border-t border-outline-variant/20">
+                <a
+                  href={letter.finalDocumentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-accent-magenta hover:underline font-semibold text-sm"
+                >
+                  <ExternalLink className="size-4" />
+                  Akses Dokumen Final (Google Drive)
+                </a>
               </div>
             )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Revision History */}
       <div className="flex flex-col gap-4">
         <h2 className="text-xl font-bold tracking-tight text-on-surface">
           Riwayat Revisi ({letter.revisions.length})
         </h2>
-        
+
         {letter.revisions.length === 0 ? (
           <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 text-center">
             <p className="text-sm font-mono text-on-surface-variant">Belum ada riwayat revisi.</p>
@@ -132,7 +243,7 @@ export function LetterDetailClient({ letter }: { letter: LetterDetail }) {
         ) : (
           <div className="flex flex-col gap-4">
             {letter.revisions.map((rev) => (
-              <Card key={rev.id} className="bg-white border border-outline-variant/60 rounded-xl p-5">
+              <div key={rev.id} className="bg-white border border-outline-variant/60 rounded-xl p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/20 pb-3 mb-3">
                   <div className="flex items-center gap-2">
                     <RotateCcw className="size-4 text-blue-500" />
@@ -146,7 +257,7 @@ export function LetterDetailClient({ letter }: { letter: LetterDetail }) {
                   </span>
                 </div>
                 <p className="text-sm text-on-surface font-sans leading-relaxed">{rev.note}</p>
-              </Card>
+              </div>
             ))}
           </div>
         )}

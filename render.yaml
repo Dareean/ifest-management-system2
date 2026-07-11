@@ -1,11 +1,10 @@
 services:
   - type: web
     name: ims-app
-    runtime: node
+    env: docker
     repo: https://github.com/Dareean/ifest-management-system2
     branch: main
-    buildCommand: npm ci && npm run build
-    startCommand: npm start
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
@@ -14,6 +13,23 @@ services:
         value: https://xxmxbyiggrottreetrig.supabase.co
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
         sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: YEAR_ID
+        value: c2f2a48e-3e58-4559-aaa0-623a3825348b
+
+  - type: cron
+    name: ims-worker
+    env: docker
+    repo: https://github.com/Dareean/ifest-management-system2
+    branch: main
+    dockerfilePath: ./worker/Dockerfile
+    schedule: "*/15 * * * *"
+    envVars:
+      - key: SUPABASE_URL
+        value: https://xxmxbyiggrottreetrig.supabase.co
       - key: SERVICE_ROLE_KEY
         sync: false
       - key: BREVO_API_KEY

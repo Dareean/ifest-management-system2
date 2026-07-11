@@ -90,6 +90,11 @@ CREATE TABLE IF NOT EXISTS letter_requests (
     status VARCHAR(20) DEFAULT 'requested',
     revision_count INT DEFAULT 0,
     final_document_url TEXT,
+    deadline_at DATE,
+    target_institution VARCHAR(255),
+    category VARCHAR(50),
+    request_options TEXT,
+    priority VARCHAR(10) DEFAULT 'sedang',
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );

@@ -158,6 +158,11 @@ export interface Database {
           status: string;
           revision_count: number;
           final_document_url: string | null;
+          deadline_at: string | null;
+          target_institution: string | null;
+          category: string | null;
+          request_options: string | null;
+          priority: string;
           created_at: string;
           updated_at: string;
         };
@@ -173,6 +178,11 @@ export interface Database {
           status?: string;
           revision_count?: number;
           final_document_url?: string | null;
+          deadline_at?: string | null;
+          target_institution?: string | null;
+          category?: string | null;
+          request_options?: string | null;
+          priority?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -188,6 +198,11 @@ export interface Database {
           status?: string;
           revision_count?: number;
           final_document_url?: string | null;
+          deadline_at?: string | null;
+          target_institution?: string | null;
+          category?: string | null;
+          request_options?: string | null;
+          priority?: string;
           created_at?: string;
           updated_at?: string;
         };

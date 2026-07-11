@@ -1,0 +1,19 @@
+# ============================================================
+# I-FEST Management System — Development Build
+# - Uses Turbopack for fast HMR
+# - Source mounted as volume at runtime
+# ============================================================
+FROM node:20-alpine AS dev
+WORKDIR /app
+
+RUN apk add --no-cache libc6-compat
+
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+COPY . .
+
+EXPOSE 3000
+ENV NEXT_TELEMETRY_DISABLED=1
+
+CMD ["npm", "run", "dev", "--", "--turbo"]

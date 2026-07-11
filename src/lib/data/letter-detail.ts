@@ -13,6 +13,11 @@ export interface LetterDetail {
   division: string;
   requester: string;
   handler: string | null;
+  deadlineAt: string | null;
+  targetInstitution: string | null;
+  category: string | null;
+  requestOptions: string | null;
+  priority: string;
   revisions: {
     id: string;
     note: string;
@@ -34,6 +39,11 @@ export async function getLetterDetail(id: string): Promise<LetterDetail | null> 
       status,
       revision_count,
       final_document_url,
+      deadline_at,
+      target_institution,
+      category,
+      request_options,
+      priority,
       created_at,
       updated_at,
       division:divisions(name),
@@ -66,6 +76,11 @@ export async function getLetterDetail(id: string): Promise<LetterDetail | null> 
     status: l.status,
     revisionCount: l.revision_count ?? 0,
     finalDocumentUrl: l.final_document_url,
+    deadlineAt: l.deadline_at,
+    targetInstitution: l.target_institution,
+    category: l.category,
+    requestOptions: l.request_options,
+    priority: l.priority ?? "sedang",
     createdAt: l.created_at,
     updatedAt: l.updated_at,
     division: l.division?.name ?? "",

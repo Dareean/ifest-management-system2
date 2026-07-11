@@ -20,9 +20,14 @@ export async function createLetter(prevState: ActionState, formData: FormData): 
   const letterType = formData.get("letterType") as string;
   const subject = formData.get("subject") as string;
   const body = formData.get("body") as string;
+  const deadlineAt = formData.get("deadlineAt") as string;
+  const targetInstitution = formData.get("targetInstitution") as string;
+  const category = formData.get("category") as string;
+  const requestOptions = formData.get("requestOptions") as string;
+  const priority = formData.get("priority") as string;
 
   if (!letterType || !subject || !body) {
-    return { error: "Semua field harus diisi" };
+    return { error: "Nama surat, jenis surat, dan maksud surat harus diisi" };
   }
 
   const { data: assignment } = await supabase
@@ -47,6 +52,11 @@ export async function createLetter(prevState: ActionState, formData: FormData): 
       letter_type: letterType,
       subject,
       body,
+      deadline_at: deadlineAt || null,
+      target_institution: targetInstitution || null,
+      category: category || null,
+      request_options: requestOptions || null,
+      priority: priority || "sedang",
       status: "requested",
     })
     .select("id")

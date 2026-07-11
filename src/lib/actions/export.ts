@@ -73,7 +73,8 @@ export async function exportLettersCSV() {
   const { data } = await supabase
     .from("letter_requests")
     .select(`
-      letter_type, subject, status, revision_count, created_at,
+      letter_type, subject, status, revision_count, priority,
+      category, deadline_at, target_institution, created_at,
       division:divisions(name),
       requester:committee_assignments!requester_id(user:profiles(full_name))
     `)
@@ -86,6 +87,10 @@ export async function exportLettersCSV() {
     r.letter_type,
     r.subject,
     r.status,
+    r.priority ?? "sedang",
+    r.category ?? "",
+    r.deadline_at ?? "",
+    r.target_institution ?? "",
     String(r.revision_count),
     r.division?.name ?? "",
     r.requester?.user?.full_name ?? "",
@@ -93,7 +98,7 @@ export async function exportLettersCSV() {
   ]);
 
   return toCSV(
-    ["Jenis Surat", "Perihal", "Status", "Revisi", "Divisi", "Pengaju", "Tanggal"],
+    ["Jenis Surat", "Perihal", "Status", "Prioritas", "Kategori", "Deadline", "Instansi Tujuan", "Revisi", "Divisi", "Pengaju", "Tanggal"],
     rows,
   );
 }
