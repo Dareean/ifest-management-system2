@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@getbrevo/brevo": "^6.0.2",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.2",
     "@tanstack/react-query": "^5.101.2",

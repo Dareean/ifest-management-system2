@@ -1,4 +1,4 @@
-import { BrevoClient } from "@getbrevo/brevo";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const FROM_EMAIL = "ifest.hmti@gmail.com";
 const FROM_NAME = "I-FEST Management System";
@@ -7,10 +7,6 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ifest-management-sys
 const UNTAD_LOGO_URL = `${APP_URL}/assets/logo_utama/logo_untad.webp`;
 const HMTI_LOGO_URL = `${APP_URL}/assets/logo_utama/HMTI%20LOGO.webp`;
 const IFEST_LOGO_URL = `${APP_URL}/assets/logo_utama/Logo-IFEST-2026.webp`;
-
-function createBrevoClient() {
-  return new BrevoClient({ apiKey: process.env.BREVO_API_KEY! });
-}
 
 interface EmailTemplateParams {
   recipientName: string;
@@ -200,6 +196,28 @@ function getEmailTemplateHtml({
   `.trim();
 }
 
+async function queueEmail(
+  recipientEmail: string,
+  recipientName: string,
+  subject: string,
+  htmlContent: string,
+  priority = 0,
+) {
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("email_queue").insert({
+    recipient_email: recipientEmail,
+    recipient_name: recipientName,
+    subject,
+    html_content: htmlContent,
+    priority,
+    status: "pending",
+    retry_count: 0,
+  });
+  if (error) {
+    console.error("[EmailQueue] Insert failed:", error);
+  }
+}
+
 export async function sendLetterNotification(
   recipientEmail: string,
   recipientName: string,
@@ -208,39 +226,34 @@ export async function sendLetterNotification(
   letterSubject: string,
   status: string,
 ) {
-  try {
-    const client = createBrevoClient();
-    const statusLabels: Record<string, string> = {
-      requested: "diajukan",
-      in_revision: "direvisi",
-      approved: "disetujui",
-      sent: "dikirim",
-    };
+  const statusLabels: Record<string, string> = {
+    requested: "diajukan",
+    in_revision: "direvisi",
+    approved: "disetujui",
+    sent: "dikirim",
+  };
 
-    const displayStatus = statusLabels[status] ?? status;
-    const introText = `Kami informasikan bahwa terdapat pembaruan resmi terkait pengajuan surat di <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
-    
-    const boxContentHtml = `
-      <p style="margin: 4px 0;"><strong>Perihal Surat:</strong> ${letterSubject}</p>
-      <p style="margin: 4px 0;"><strong>Jenis Surat:</strong> ${letterType}</p>
-      <p style="margin: 4px 0;"><strong>Status Pengajuan:</strong> <span style="font-weight: bold; color: ${status === "approved" ? "#A8D5A2" : status === "requested" ? "#FF3D8B" : "#1d1b1d"}">${displayStatus}</span></p>
-    `.trim();
+  const displayStatus = statusLabels[status] ?? status;
+  const introText = `Kami informasikan bahwa terdapat pembaruan resmi terkait pengajuan surat di <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
+  
+  const boxContentHtml = `
+    <p style="margin: 4px 0;"><strong>Perihal Surat:</strong> ${letterSubject}</p>
+    <p style="margin: 4px 0;"><strong>Jenis Surat:</strong> ${letterType}</p>
+    <p style="margin: 4px 0;"><strong>Status Pengajuan:</strong> <span style="font-weight: bold; color: ${status === "approved" ? "#A8D5A2" : status === "requested" ? "#FF3D8B" : "#1d1b1d"}">${displayStatus}</span></p>
+  `.trim();
 
-    await client.transactionalEmails.sendTransacEmail({
-      sender: { email: FROM_EMAIL, name: FROM_NAME },
-      to: [{ email: recipientEmail, name: recipientName }],
-      subject: `[Surat] ${letterSubject}`,
-      htmlContent: getEmailTemplateHtml({
-        recipientName,
-        introText,
-        boxTitle: "Detail Surat",
-        boxContentHtml,
-        ctaUrl: `${APP_URL}/dashboard/letters`,
-      }),
-    });
-  } catch (e) {
-    console.error("Brevo sendLetterNotification failed:", e);
-  }
+  await queueEmail(
+    recipientEmail,
+    recipientName,
+    `[Surat] ${letterSubject}`,
+    getEmailTemplateHtml({
+      recipientName,
+      introText,
+      boxTitle: "Detail Surat",
+      boxContentHtml,
+      ctaUrl: `${APP_URL}/dashboard/letters`,
+    }),
+  );
 }
 
 export async function sendMeetingInvite(
@@ -252,48 +265,43 @@ export async function sendMeetingInvite(
   location: string | null,
   agenda: string | null,
 ) {
-  try {
-    const client = createBrevoClient();
-    const date = new Date(startedAt).toLocaleDateString("id-ID", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const date = new Date(startedAt).toLocaleDateString("id-ID", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
-    const introText = `Kami informasikan bahwa Anda telah diundang untuk menghadiri agenda rapat kepanitiaan di <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
+  const introText = `Kami informasikan bahwa Anda telah diundang untuk menghadiri agenda rapat kepanitiaan di <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
 
-    let boxContentHtml = `
-      <p style="margin: 4px 0;"><strong>Nama Rapat:</strong> ${meetingTitle}</p>
-      <p style="margin: 4px 0;"><strong>Waktu:</strong> ${date}</p>
-    `;
-    if (location) {
-      boxContentHtml += `<p style="margin: 4px 0;"><strong>Lokasi:</strong> ${location}</p>`;
-    }
-    if (meetingLink) {
-      boxContentHtml += `<p style="margin: 4px 0;"><strong>Tautan:</strong> <a href="${meetingLink}" style="color: #FF3D8B; text-decoration: underline;">Hubungi Link Pertemuan</a></p>`;
-    }
-    if (agenda) {
-      boxContentHtml += `<p style="margin: 8px 0 0 0; padding-top: 8px; border-top: 1px solid #f2ecef;"><strong>Agenda:</strong> ${agenda}</p>`;
-    }
-
-    await client.transactionalEmails.sendTransacEmail({
-      sender: { email: FROM_EMAIL, name: FROM_NAME },
-      to: [{ email: recipientEmail, name: recipientName }],
-      subject: `[Rapat] ${meetingTitle}`,
-      htmlContent: getEmailTemplateHtml({
-        recipientName,
-        introText,
-        boxTitle: "Detail Rapat",
-        boxContentHtml,
-        ctaUrl: `${APP_URL}/dashboard/meetings`,
-      }),
-    });
-  } catch (e) {
-    console.error("Brevo sendMeetingInvite failed:", e);
+  let boxContentHtml = `
+    <p style="margin: 4px 0;"><strong>Nama Rapat:</strong> ${meetingTitle}</p>
+    <p style="margin: 4px 0;"><strong>Waktu:</strong> ${date}</p>
+  `;
+  if (location) {
+    boxContentHtml += `<p style="margin: 4px 0;"><strong>Lokasi:</strong> ${location}</p>`;
   }
+  if (meetingLink) {
+    boxContentHtml += `<p style="margin: 4px 0;"><strong>Tautan:</strong> <a href="${meetingLink}" style="color: #FF3D8B; text-decoration: underline;">Hubungi Link Pertemuan</a></p>`;
+  }
+  if (agenda) {
+    boxContentHtml += `<p style="margin: 8px 0 0 0; padding-top: 8px; border-top: 1px solid #f2ecef;"><strong>Agenda:</strong> ${agenda}</p>`;
+  }
+
+  await queueEmail(
+    recipientEmail,
+    recipientName,
+    `[Rapat] ${meetingTitle}`,
+    getEmailTemplateHtml({
+      recipientName,
+      introText,
+      boxTitle: "Detail Rapat",
+      boxContentHtml,
+      ctaUrl: `${APP_URL}/dashboard/meetings`,
+    }),
+  );
 }
 
 export async function sendEmailNotification(
@@ -302,24 +310,19 @@ export async function sendEmailNotification(
   subject: string,
   htmlContent: string,
 ) {
-  try {
-    const client = createBrevoClient();
-    const introText = `Kami informasikan bahwa terdapat notifikasi penting dari sistem kepanitiaan <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
+  const introText = `Kami informasikan bahwa terdapat notifikasi penting dari sistem kepanitiaan <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
 
-    await client.transactionalEmails.sendTransacEmail({
-      sender: { email: FROM_EMAIL, name: FROM_NAME },
-      to: [{ email: recipientEmail, name: recipientName }],
-      subject,
-      htmlContent: getEmailTemplateHtml({
-        recipientName,
-        introText,
-        boxTitle: "Pesan Sistem",
-        boxContentHtml: htmlContent,
-      }),
-    });
-  } catch (e) {
-    console.error("Brevo sendEmailNotification failed:", e);
-  }
+  await queueEmail(
+    recipientEmail,
+    recipientName,
+    subject,
+    getEmailTemplateHtml({
+      recipientName,
+      introText,
+      boxTitle: "Pesan Sistem",
+      boxContentHtml: htmlContent,
+    }),
+  );
 }
 
 export async function sendWelcomeEmail(
@@ -327,30 +330,26 @@ export async function sendWelcomeEmail(
   recipientName: string,
   password: string,
 ) {
-  try {
-    const client = createBrevoClient();
-    const introText = `Selamat! Anda telah terdaftar sebagai panitia pelaksana kegiatan <strong>Informatics Festival (I-FEST) 2026</strong>. Akun Anda telah berhasil dibuat di <strong>I-FEST Management System</strong>.`;
+  const introText = `Selamat! Anda telah terdaftar sebagai panitia pelaksana kegiatan <strong>Informatics Festival (I-FEST) 2026</strong>. Akun Anda telah berhasil dibuat di <strong>I-FEST Management System</strong>.`;
 
-    const boxContentHtml = `
-      <p style="margin: 4px 0;"><strong>Email Login:</strong> ${recipientEmail}</p>
-      <p style="margin: 4px 0;"><strong>Password Sementara:</strong> <code style="background-color: #f2ecef; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${password}</code></p>
-      <p style="margin: 12px 0 0 0; font-size: 12px; color: #7b757c; font-style: italic;">Silakan ganti password Anda demi keamanan setelah pertama kali masuk.</p>
-    `.trim();
+  const boxContentHtml = `
+    <p style="margin: 4px 0;"><strong>Email Login:</strong> ${recipientEmail}</p>
+    <p style="margin: 4px 0;"><strong>Password Sementara:</strong> <code style="background-color: #f2ecef; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${password}</code></p>
+    <p style="margin: 12px 0 0 0; font-size: 12px; color: #7b757c; font-style: italic;">Silakan ganti password Anda demi keamanan setelah pertama kali masuk.</p>
+  `.trim();
 
-    await client.transactionalEmails.sendTransacEmail({
-      sender: { email: FROM_EMAIL, name: FROM_NAME },
-      to: [{ email: recipientEmail, name: recipientName }],
-      subject: "Selamat Datang di I-FEST Management System!",
-      htmlContent: getEmailTemplateHtml({
-        recipientName,
-        introText,
-        boxTitle: "Informasi Login Akun",
-        boxContentHtml,
-        ctaText: "Login ke Dashboard",
-        ctaUrl: `${APP_URL}/login`,
-      }),
-    });
-  } catch (e) {
-    console.error("Brevo sendWelcomeEmail failed:", e);
-  }
+  await queueEmail(
+    recipientEmail,
+    recipientName,
+    "Selamat Datang di I-FEST Management System!",
+    getEmailTemplateHtml({
+      recipientName,
+      introText,
+      boxTitle: "Informasi Login Akun",
+      boxContentHtml,
+      ctaText: "Login ke Dashboard",
+      ctaUrl: `${APP_URL}/login`,
+    }),
+    1,
+  );
 }
