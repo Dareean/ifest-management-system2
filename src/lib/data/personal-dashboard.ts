@@ -328,3 +328,44 @@ export async function getPersonalDashboard(): Promise<PersonalData> {
 
   return personalData;
 }
+
+export async function getLetterStats() {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("letter_requests")
+    .select("status")
+    .eq("committee_year_id", YEAR_ID);
+
+  const all = data ?? [];
+  return {
+    pending: all.filter((l: any) => l.status === "requested").length,
+    approved: all.filter((l: any) => l.status === "approved").length,
+    inRevision: all.filter((l: any) => l.status === "in_revision").length,
+    sent: all.filter((l: any) => l.status === "sent").length,
+  };
+}
+
+export async function getAllLetters(limit = 5) {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("letter_requests")
+    .select(`
+      id, letter_type, subject, status, priority, created_at,
+      requester_id,
+      division:divisions(name),
+      requester:committee_assignments!requester_id(user:profiles(full_name))
+    `)
+    .eq("committee_year_id", YEAR_ID)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return (data ?? []).map((l: any) => ({
+    id: l.id,
+    subject: l.subject,
+    status: l.status,
+    priority: l.priority ?? "sedang",
+    createdAt: l.created_at,
+    division: l.division?.name ?? "",
+    requester: l.requester?.user?.full_name ?? "",
+  }));
+}

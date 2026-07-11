@@ -13,6 +13,7 @@ import {
   CheckCircle, FileText, Calendar, TrendingUp,
 } from "lucide-react";
 import { PersonalStats } from "./sections/personal-stats";
+import { SekretarisStats } from "./sections/sekretaris-stats";
 import { PersonalTasks } from "./sections/personal-tasks";
 import { PersonalMeetings } from "./sections/personal-meetings";
 import { PersonalLetters } from "./sections/personal-letters";
@@ -156,15 +157,20 @@ function WakilKetuaView({ assignmentId, greeting, profile }: { assignmentId: str
 function SekretarisView({ assignmentId, greeting, profile }: { assignmentId: string; greeting: string; profile: any }) {
   return (
     <div className="flex flex-col gap-10">
-      <HeaderSection title="DASHBOARD SEKRETARIS" greeting={greeting} subtitle="Pantau surat dan administrasi." />
+      <HeaderSection title="DASHBOARD SEKRETARIS" greeting={greeting} subtitle="Kelola surat-menyurat dan administrasi kepanitiaan." />
       <Suspense fallback={<StatCardsSkeleton count={3} />}>
-        <PersonalStats assignmentId={assignmentId} />
+        <SekretarisStats />
       </Suspense>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div>
-          <SectionTitle icon={FileText} title="Surat Terbaru" />
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <SectionTitle icon={FileText} title="Semua Surat" />
+            <Link href="/dashboard/letters" className="text-xs font-mono text-accent-magenta hover:underline">
+              Lihat Semua
+            </Link>
+          </div>
           <Suspense fallback={<LettersSkeleton />}>
-            <PersonalLetters assignmentId={assignmentId} />
+            <PersonalLetters showAll />
           </Suspense>
         </div>
         <div>
@@ -174,9 +180,6 @@ function SekretarisView({ assignmentId, greeting, profile }: { assignmentId: str
           </Suspense>
         </div>
       </div>
-      <Suspense fallback={<TasksSkeleton />}>
-        <PersonalTasks assignmentId={assignmentId} />
-      </Suspense>
     </div>
   );
 }
