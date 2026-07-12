@@ -179,3 +179,103 @@
     line-height: 1;
   }
 }
+
+/* ── Rich Text: Tiptap display & editor prose styles ─────────────── */
+
+.rich-text-display,
+.prose-editor {
+  color: var(--color-on-surface);
+  font-family: var(--font-geist-sans, sans-serif);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.rich-text-display > * + *,
+.prose-editor > * + * {
+  margin-top: 0.75em;
+}
+
+/* Headings */
+.rich-text-display h1, .prose-editor h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-top: 1.4em;
+  margin-bottom: 0.4em;
+  color: var(--color-on-surface);
+}
+
+.rich-text-display h2, .prose-editor h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin-top: 1.2em;
+  margin-bottom: 0.3em;
+  color: var(--color-on-surface);
+}
+
+.rich-text-display h3, .prose-editor h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 1em;
+  margin-bottom: 0.3em;
+  color: var(--color-on-surface);
+}
+
+/* Paragraph */
+.rich-text-display p, .prose-editor p {
+  margin: 0;
+}
+
+/* Bold & Italic */
+.rich-text-display strong, .prose-editor strong { font-weight: 700; }
+.rich-text-display em, .prose-editor em { font-style: italic; }
+.rich-text-display u, .prose-editor u { text-decoration: underline; }
+
+/* Bullet List */
+.rich-text-display ul, .prose-editor ul {
+  list-style-type: disc;
+  padding-left: 1.4em;
+  margin: 0.5em 0;
+}
+
+/* Ordered List */
+.rich-text-display ol, .prose-editor ol {
+  list-style-type: decimal;
+  padding-left: 1.4em;
+  margin: 0.5em 0;
+}
+
+.rich-text-display li, .prose-editor li {
+  margin: 0.2em 0;
+  padding-left: 0.2em;
+}
+
+/* Blockquote */
+.rich-text-display blockquote, .prose-editor blockquote {
+  border-left: 3px solid var(--color-accent-magenta, #9c27b0);
+  padding: 0.5em 0 0.5em 1em;
+  margin: 0.8em 0;
+  color: var(--color-on-surface-variant);
+  font-style: italic;
+  background: var(--color-surface-container-low, #f8f2f4);
+  border-radius: 0 8px 8px 0;
+}
+
+/* Horizontal rule */
+.rich-text-display hr, .prose-editor hr {
+  border: none;
+  border-top: 1px solid var(--color-outline-variant, #ccc4cc);
+  margin: 1.2em 0;
+}
+
+/* Empty editor placeholder spacing */
+.prose-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-on-surface-variant);
+  pointer-events: none;
+}
+

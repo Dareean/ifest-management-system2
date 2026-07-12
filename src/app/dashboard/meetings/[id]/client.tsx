@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { RichTextDisplay } from "@/components/ui/rich-text-display";
 import {
   ArrowLeft, ExternalLink, MapPin, Clock,
   Check, X, HelpCircle, Users, FileText, Send, StopCircle,
@@ -39,6 +41,7 @@ export function MeetingDetailClient({
   const router = useRouter();
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [notesContent, setNotesContent] = useState(meeting.notes?.content ?? "");
 
   const [notesState, notesAction, notesPending] = useActionState(saveNotes, null);
 
@@ -173,9 +176,7 @@ export function MeetingDetailClient({
                   </span>
                 </div>
 
-                <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed text-on-surface font-sans mb-6">
-                  {meeting.notes.content}
-                </p>
+                <RichTextDisplay html={meeting.notes.content} className="mb-6" />
 
                 {meeting.notes.decisionPoints.length > 0 && (
                   <div className="border-t border-outline-variant/20 pt-4 mb-6">
@@ -419,21 +420,20 @@ export function MeetingDetailClient({
 
       {/* Notes Modal — only for authorized users */}
       {canWriteNotes && (
-        <Modal open={showNotesModal} onClose={() => setShowNotesModal(false)} title="Notula Rapat">
+        <Modal open={showNotesModal} onClose={() => setShowNotesModal(false)} title="Notula Rapat" size="lg">
           {notesState?.error && <p className="text-red-500 caption mb-4">{notesState.error}</p>}
           <form action={notesAction} className="flex flex-col gap-4">
             <input type="hidden" name="meetingId" value={meeting.id} />
+            <input type="hidden" name="content" value={notesContent} />
             <input type="hidden" name="decisionPoints" id="decisionPoints" value={JSON.stringify(meeting.notes?.decisionPoints ?? [])} />
             <input type="hidden" name="actionItems" id="actionItems" value={JSON.stringify(meeting.notes?.actionItems ?? [])} />
 
             <div>
-              <label className="caption block mb-1 text-on-surface-variant">Notulensi</label>
-              <textarea
-                name="content"
-                defaultValue={meeting.notes?.content ?? ""}
-                className="flex min-h-[180px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
+              <label className="caption block mb-2 text-on-surface-variant font-semibold">Notulensi</label>
+              <RichTextEditor
+                content={meeting.notes?.content ?? ""}
+                onChange={setNotesContent}
                 placeholder="Tulis jalannya rapat di sini..."
-                required
               />
             </div>
 
@@ -473,7 +473,7 @@ export function MeetingDetailClient({
               <Button type="button" variant="ghost" onClick={() => setShowNotesModal(false)} className="cursor-pointer">
                 Batal
               </Button>
-              <Button type="submit" disabled={notesPending} className="cursor-pointer">
+              <Button type="submit" disabled={notesPending || !notesContent || notesContent === '<p></p>'} className="cursor-pointer">
                 {notesPending ? "Menyimpan..." : "Simpan Notula"}
               </Button>
             </div>

@@ -8,9 +8,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  size?: "sm" | "lg" | "xl";
 }
 
-export function Modal({ open, onClose, title, children }: ModalProps) {
+export function Modal({ open, onClose, title, children, size = "sm" }: ModalProps) {
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -22,17 +23,24 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
 
   if (!open) return null;
 
+  const maxW =
+    size === "xl" ? "max-w-4xl" :
+    size === "lg" ? "max-w-2xl" :
+    "max-w-lg";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg mx-4 rounded-xl bg-surface-bright p-xl shadow-xl border border-outline-variant">
-        <div className="flex items-center justify-between mb-lg">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-surface-container transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative z-10 w-full ${maxW} rounded-2xl bg-surface-bright shadow-2xl border border-outline-variant max-h-[90vh] overflow-y-auto`}>
+        <div className="sticky top-0 bg-surface-bright/95 backdrop-blur-sm border-b border-outline-variant/20 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-on-surface">{title}</h2>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-surface-container transition-colors cursor-pointer">
             <X className="size-5" />
           </button>
         </div>
-        {children}
+        <div className="p-6">
+          {children}
+        </div>
       </div>
     </div>
   );
