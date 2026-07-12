@@ -42,7 +42,7 @@ async function requireMeetingAuth(meetingId: string) {
   return { admin, callerId, meeting };
 }
 
-export async function updateRsvp(inviteeId: string, status: string) {
+export async function updateRsvp(inviteeId: string, status: string, absenceReason?: string) {
   const auth = await createClient();
   const { data: authData } = await auth.auth.getUser();
   const userId = authData?.user?.id;
@@ -70,12 +70,20 @@ export async function updateRsvp(inviteeId: string, status: string) {
     return { error: "Anda hanya bisa mengubah status RSVP Anda sendiri." };
   }
 
+  const updatePayload: Record<string, unknown> = { rsvp_status: status };
+  if (status === "declined" && absenceReason) {
+    updatePayload.absence_reason = absenceReason;
+  } else if (status === "accepted") {
+    updatePayload.absence_reason = null;
+  }
+
   const { error } = await admin
     .from("meeting_invitees")
-    .update({ rsvp_status: status })
+    .update(updatePayload)
     .eq("id", inviteeId);
 
   if (error) return { error: error.message };
+  revalidatePath("/dashboard");
   revalidatePath("/dashboard/meetings");
   return { success: true };
 }

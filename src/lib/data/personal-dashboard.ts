@@ -119,7 +119,7 @@ export async function getUserMeetings(assignmentId: string) {
   const { data } = await admin
     .from("meeting_invitees")
     .select(`
-      id, rsvp_status,
+      id, rsvp_status, absence_reason,
       meeting:meetings(id, title, started_at, meeting_type, ended_at, scope)
     `)
     .eq("committee_assignment_id", assignmentId)
@@ -145,10 +145,12 @@ export async function getUserMeetings(assignmentId: string) {
     const note = notesMap[mtg.id];
     return {
       id: mtg.id ?? "",
+      inviteeId: m.id,
       title: mtg.title ?? "",
       startedAt: mtg.started_at ?? "",
       meetingType: mtg.meeting_type ?? "scheduled",
       rsvpStatus: m.rsvp_status,
+      absenceReason: m.absence_reason ?? null,
       endedAt: mtg.ended_at ?? null,
       scope: mtg.scope ?? "individual",
       notesPublished: note?.publishedAt ?? null,
