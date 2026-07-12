@@ -13,7 +13,7 @@ import {
   CalendarDays, BookOpen, ListChecks, Lightbulb,
   ChevronDown, ChevronUp, PenLine,
 } from "lucide-react";
-import { updateRsvp, saveNotes, publishNotes, endMeeting } from "@/lib/actions/meeting-workflow";
+import { updateRsvp, saveNotes, publishNotes, endMeeting, markAttendance } from "@/lib/actions/meeting-workflow";
 import type { MeetingDetail } from "@/lib/data/meeting-detail";
 import { cn } from "@/lib/utils";
 
@@ -94,6 +94,7 @@ export function MeetingDetailClient({
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [notesContent, setNotesContent] = useState(meeting.notes?.content ?? "");
   const [showAllInvitees, setShowAllInvitees] = useState(false);
+  const [attendanceLoading, setAttendanceLoading] = useState<string | null>(null);
 
   const [notesState, notesAction, notesPending] = useActionState(saveNotes, null);
 
@@ -128,6 +129,20 @@ export function MeetingDetailClient({
 
   async function handleEnd() {
     const result = await endMeeting(meeting.id);
+    if (result.error) setActionMsg(result.error);
+    else router.refresh();
+  }
+
+  async function handleMarkAttendance(
+    inviteeId: string,
+    currentStatus: string,
+  ) {
+    const nextStatus =
+      currentStatus === "accepted" ? "declined" :
+      currentStatus === "declined" ? "pending" : "accepted";
+    setAttendanceLoading(inviteeId);
+    const result = await markAttendance(meeting.id, inviteeId, nextStatus as "accepted" | "declined" | "pending");
+    setAttendanceLoading(null);
     if (result.error) setActionMsg(result.error);
     else router.refresh();
   }
@@ -604,7 +619,7 @@ export function MeetingDetailClient({
                         {rsvpLabel[inv.rsvpStatus] ?? "Pending"}
                       </Badge>
 
-                      {/* RSVP Action — only for current user, only when meeting ongoing */}
+                      {/* RSVP Action — only for current user (self RSVP) */}
                       {isMe && !meetingEnded && (
                         <div className="flex items-center gap-1.5">
                           {inv.rsvpStatus !== "accepted" && (
@@ -626,6 +641,37 @@ export function MeetingDetailClient({
                             </button>
                           )}
                         </div>
+                      )}
+
+                      {/* Attendance override — hanya untuk creator, untuk anggota lain */}
+                      {isCreator && !isMe && (
+                        <button
+                          onClick={() => handleMarkAttendance(inv.id, inv.rsvpStatus)}
+                          disabled={attendanceLoading === inv.id}
+                          title={
+                            inv.rsvpStatus === "accepted"
+                              ? "Tandai Tidak Hadir"
+                              : inv.rsvpStatus === "declined"
+                              ? "Reset ke Pending"
+                              : "Tandai Hadir"
+                          }
+                          className={cn(
+                            "p-1.5 rounded-full border transition-all cursor-pointer disabled:opacity-40",
+                            attendanceLoading === inv.id
+                              ? "bg-surface-container border-outline-variant"
+                              : inv.rsvpStatus === "accepted"
+                              ? "bg-white hover:bg-error-container border-accent-green/40 hover:border-error/50 text-error"
+                              : "bg-white hover:bg-accent-green/20 border-outline-variant hover:border-accent-green/50 text-accent-green"
+                          )}
+                        >
+                          {attendanceLoading === inv.id ? (
+                            <span className="size-3 block rounded-full border-2 border-current border-t-transparent animate-spin" />
+                          ) : inv.rsvpStatus === "accepted" ? (
+                            <X className="size-3" />
+                          ) : (
+                            <Check className="size-3" />
+                          )}
+                        </button>
                       )}
                     </div>
                   </div>

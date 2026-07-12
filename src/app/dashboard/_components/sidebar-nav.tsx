@@ -57,9 +57,7 @@ function getNavItems(level: number): NavItem[] {
     items.push({ href: "/dashboard/letters", label: "SURAT", icon: FileText });
   }
 
-  if (level !== 70) {
-    items.push({ href: "/dashboard/meetings", label: "RAPAT", icon: Calendar });
-  }
+  items.push({ href: "/dashboard/meetings", label: "RAPAT", icon: Calendar });
 
   if (level >= 90 || level === 70) {
     items.push({ href: "/dashboard/finance", label: "KEUANGAN", icon: DollarSign });

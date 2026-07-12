@@ -88,6 +88,72 @@ export async function updateRsvp(inviteeId: string, status: string, absenceReaso
   return { success: true };
 }
 
+/**
+ * Digunakan oleh penyelenggara rapat (creator / approver) untuk
+ * menandai kehadiran anggota tertentu secara manual.
+ */
+export async function markAttendance(
+  meetingId: string,
+  inviteeId: string,
+  status: "accepted" | "declined" | "pending",
+): Promise<{ error?: string; success?: boolean }> {
+  const auth = await createClient();
+  const { data: authData } = await auth.auth.getUser();
+  const userId = authData?.user?.id;
+  if (!userId) return { error: "Silakan login terlebih dahulu" };
+
+  const admin = createAdminClient();
+
+  // Cek caller adalah panitia aktif
+  const { data: caller } = await admin
+    .from("committee_assignments")
+    .select("id, role:roles(is_approver)")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!caller) return { error: "Anda tidak terdaftar sebagai panitia aktif." };
+
+  const callerId = (caller as any).id;
+  const callerIsApprover = !!(caller as any).role?.is_approver;
+
+  // Cek meeting & otorisasi
+  const { data: meeting } = await admin
+    .from("meetings")
+    .select("creator_id, scope, ended_at")
+    .eq("id", meetingId)
+    .single();
+  if (!meeting) return { error: "Rapat tidak ditemukan." };
+
+  const m = meeting as any;
+  const isCreator = m.creator_id === callerId;
+  const isSekretarisAllMeeting = callerIsApprover && m.scope === "all";
+
+  if (!isCreator && !isSekretarisAllMeeting) {
+    return { error: "Anda tidak berwenang mengelola kehadiran rapat ini." };
+  }
+
+  // Pastikan invitee memang ada di rapat ini
+  const { data: invitee } = await admin
+    .from("meeting_invitees")
+    .select("id")
+    .eq("id", inviteeId)
+    .eq("meeting_id", meetingId)
+    .single();
+  if (!invitee) return { error: "Peserta tidak ditemukan di rapat ini." };
+
+  const { error } = await admin
+    .from("meeting_invitees")
+    .update({ rsvp_status: status })
+    .eq("id", inviteeId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/dashboard/meetings/${meetingId}`);
+  return { success: true };
+}
+
+
 export async function saveNotes(prevState: unknown, formData: FormData) {
   const auth = await createClient();
   const { data: authData } = await auth.auth.getUser();
