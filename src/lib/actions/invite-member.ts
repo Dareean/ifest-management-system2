@@ -142,7 +142,7 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
   // Check if already assigned this year
   const { data: existingAssignment } = await admin
     .from("committee_assignments")
-    .select("id")
+    .select("id, is_active")
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", profileId)
     .maybeSingle();
@@ -150,6 +150,29 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
   console.log("[Invite Member] Existing assignment:", existingAssignment);
 
   if (existingAssignment) {
+    if (!existingAssignment.is_active) {
+      // Reactivate the inactive assignment!
+      const { error: reactivateErr } = await admin
+        .from("committee_assignments")
+        .update({
+          is_active: true,
+          division_id: callerDivisionId,
+          role_id: roleId,
+        })
+        .eq("id", existingAssignment.id);
+
+      if (reactivateErr) return { error: reactivateErr.message };
+
+      // Send welcome email (fire-and-forget — don't block on failure)
+      try {
+        const { sendWelcomeEmail } = await import("@/lib/email");
+        await sendWelcomeEmail(email, fullName, "ifest2026");
+      } catch {}
+
+      revalidatePath("/dashboard/members");
+      return { success: true };
+    }
+
     const { data: profile } = await admin
       .from("profiles")
       .select("full_name, nim")
