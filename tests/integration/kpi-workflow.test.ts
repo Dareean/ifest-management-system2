@@ -94,7 +94,9 @@ describe('KPI Workflow Integration', () => {
       .from('tasks')
       .insert({
         kpi_item_id: kpi!.id,
-        assigned_to: assignment!.id,
+        assignee_id: assignment!.id,
+        committee_year_id: YEAR_ID,
+        division_id: division!.id,
         title: 'Test Task',
         description: 'Test task description',
         status: 'pending',
@@ -146,7 +148,9 @@ describe('KPI Workflow Integration', () => {
       .from('tasks')
       .insert({
         kpi_item_id: kpi!.id,
-        assigned_to: assignment!.id,
+        assignee_id: assignment!.id,
+        committee_year_id: YEAR_ID,
+        division_id: division!.id,
         title: 'Test Task Status Update',
         status: 'pending',
         priority: 'medium',
@@ -209,7 +213,9 @@ describe('KPI Workflow Integration', () => {
       .from('tasks')
       .insert({
         kpi_item_id: kpi!.id,
-        assigned_to: assignment!.id,
+        assignee_id: assignment!.id,
+        committee_year_id: YEAR_ID,
+        division_id: division!.id,
         title: 'Test Task Completion',
         status: 'in_progress',
         priority: 'medium',
@@ -282,7 +288,9 @@ describe('KPI Workflow Integration', () => {
         .from('tasks')
         .insert({
           kpi_item_id: kpi!.id,
-          assigned_to: assignment!.id,
+          assignee_id: assignment!.id,
+          committee_year_id: YEAR_ID,
+          division_id: division!.id,
           title: taskData.title,
           status: taskData.status,
           priority: 'medium',

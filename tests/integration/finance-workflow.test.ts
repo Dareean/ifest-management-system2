@@ -53,11 +53,13 @@ describe('Finance Workflow Integration', () => {
       .select()
       .single();
 
+    if (budget) {
+      testBudgetIds.push(budget.id);
+    }
+
     expect(error).toBeNull();
     expect(budget).toBeTruthy();
-    expect(budget!.total_budget).toBe('5000000');
-
-    testBudgetIds.push(budget!.id);
+    expect(Number(budget!.total_budget)).toBe(5000000);
   });
 
   it('should create budget request', async () => {
