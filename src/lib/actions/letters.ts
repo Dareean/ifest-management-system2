@@ -73,7 +73,7 @@ export async function createLetter(prevState: ActionState, formData: FormData): 
     .maybeSingle();
 
   if (bphDiv) {
-    await notifyDivision(bphDiv.id, "letter", `Surat baru: ${subject}`, `Jenis: ${letterType}`);
+    await notifyDivision(bphDiv.id, "letter", `Surat baru: ${subject}`, `Jenis: ${letterType}`, true);
   }
 
   revalidatePath("/dashboard/letters");

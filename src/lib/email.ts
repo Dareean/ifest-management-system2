@@ -288,11 +288,12 @@ export async function sendMeetingInvite(
     <p style="margin: 4px 0;"><strong>Nama Rapat:</strong> ${meetingTitle}</p>
     <p style="margin: 4px 0;"><strong>Waktu:</strong> ${date}</p>
   `;
+  // Prioritas offline: tampilkan lokasi dulu, baru link online
   if (location) {
     boxContentHtml += `<p style="margin: 4px 0;"><strong>Lokasi:</strong> ${location}</p>`;
   }
   if (meetingLink) {
-    boxContentHtml += `<p style="margin: 4px 0;"><strong>Tautan:</strong> <a href="${meetingLink}" style="color: #FF3D8B; text-decoration: underline;">Hubungi Link Pertemuan</a></p>`;
+    boxContentHtml += `<p style="margin: 4px 0;"><strong>Tautan Online:</strong> <a href="${meetingLink}" style="color: #FF3D8B; text-decoration: underline;">Klik di sini</a></p>`;
   }
   if (agenda) {
     boxContentHtml += `<p style="margin: 8px 0 0 0; padding-top: 8px; border-top: 1px solid #f2ecef;"><strong>Agenda:</strong> ${agenda}</p>`;

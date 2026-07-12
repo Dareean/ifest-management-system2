@@ -30,6 +30,7 @@ export async function startProcessingLetter(id: string) {
       "letter",
       `Surat diproses: ${(letter as any).subject}`,
       "Surat Anda sedang dalam proses pengerjaan oleh sekretaris.",
+      true, // urgent: send email
     );
     if ((letter as any).requester_id) {
       await createNotification(
@@ -37,6 +38,7 @@ export async function startProcessingLetter(id: string) {
         "letter",
         `Surat diproses: ${(letter as any).subject}`,
         "Surat Anda sedang dalam proses pengerjaan oleh sekretaris.",
+        true, // urgent: send email
       );
     }
   }
@@ -77,6 +79,7 @@ export async function completeLetter(id: string, finalDocumentUrl: string) {
       "letter",
       `Surat selesai: ${(letter as any).subject}`,
       "Surat telah selesai dibuat. Silakan akses link Google Drive di detail pengajuan.",
+      true, // urgent: send email
     );
     if ((letter as any).requester_id) {
       await createNotification(
@@ -84,6 +87,7 @@ export async function completeLetter(id: string, finalDocumentUrl: string) {
         "letter",
         `Surat selesai: ${(letter as any).subject}`,
         "Surat Anda telah selesai. Silakan akses link Google Drive di detail pengajuan.",
+        true, // urgent: send email
       );
     }
   }
@@ -151,6 +155,7 @@ export async function requestRevision(prevState: unknown, formData: FormData) {
       "letter",
       `Permohonan revisi surat: ${letter.subject}`,
       `Catatan: ${note}`,
+      true, // urgent: send email
     );
   }
 

@@ -187,6 +187,7 @@ export async function publishNotes(meetingId: string) {
       "meeting",
       `Notula rapat diterbitkan: ${(meeting as any).title}`,
       "Notula rapat sudah bisa diakses oleh semua anggota.",
+      true, // urgent: send email
     );
   }
 

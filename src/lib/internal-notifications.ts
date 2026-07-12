@@ -150,6 +150,7 @@ export async function createNotification(
   type: string,
   title: string,
   body?: string,
+  urgent: boolean = false,
 ) {
   const admin = createAdminClient();
   await admin.from("notifications").insert({
@@ -159,8 +160,12 @@ export async function createNotification(
     body: body ?? null,
   });
 
-  // Send via email and WhatsApp (fire and forget)
-  sendEmailForNotification(assignmentId, type, title, body);
+  // Send email only if urgent (letter, meeting, deadlines)
+  if (urgent) {
+    sendEmailForNotification(assignmentId, type, title, body);
+  }
+
+  // WhatsApp always sent (fire and forget)
   sendWhatsAppForNotification(assignmentId, type, title, body);
 }
 
@@ -169,6 +174,7 @@ export async function notifyDivision(
   type: string,
   title: string,
   body?: string,
+  urgent: boolean = false,
 ) {
   const admin = createAdminClient();
 
@@ -200,9 +206,11 @@ export async function notifyDivision(
       })),
     );
 
-    // Send email to each member
-    for (const m of members) {
-      sendEmailForNotification(m.id, type, title, body);
+    // Send email only if urgent
+    if (urgent) {
+      for (const m of members) {
+        sendEmailForNotification(m.id, type, title, body);
+      }
     }
 
     // WhatsApp: If group_id exists, send ONE message to group
@@ -221,6 +229,7 @@ export async function notifyAllMembers(
   type: string,
   title: string,
   body?: string,
+  urgent: boolean = false,
 ) {
   const admin = createAdminClient();
 
@@ -242,9 +251,11 @@ export async function notifyAllMembers(
       })),
     );
 
-    // Send email to each member
-    for (const m of members) {
-      sendEmailForNotification(m.id, type, title, body);
+    // Send email only if urgent
+    if (urgent) {
+      for (const m of members) {
+        sendEmailForNotification(m.id, type, title, body);
+      }
     }
 
     // WhatsApp: Get all divisions with group_id and send to each group
