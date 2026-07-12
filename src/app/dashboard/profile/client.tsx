@@ -6,12 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pencil, Mail, Hash, Phone, Calendar, Shield, FileText, CalendarDays, CheckCircle, Circle, User, TrendingUp } from "lucide-react";
-import { updateProfile } from "@/lib/actions/profile";
+import { updateProfile, changePassword } from "@/lib/actions/profile";
 import type { ProfileData } from "@/lib/data/profile";
 
 export function ProfileClient({ profile }: { profile: ProfileData }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(updateProfile, null);
+  const [pwState, pwAction, pwPending] = useActionState(changePassword, null);
 
   const getInitials = (name: string) => {
     if (!name) return "U";
@@ -141,6 +142,55 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
                     </Button>
                   </div>
                 )}
+              </form>
+            </div>
+          </div>
+
+          {/* Change Password Form Section */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <Shield className="size-5 text-error" />
+              <h2 className="text-xl font-bold tracking-tight text-on-surface">Ganti Password</h2>
+            </div>
+
+            <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
+              {pwState?.error && <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono mb-6">{pwState.error}</div>}
+              {pwState?.success && <div className="text-sm text-accent-green bg-accent-green/10 border border-accent-green/30 rounded-lg p-4 font-mono mb-6">Password berhasil diperbarui!</div>}
+
+              <form action={pwAction} className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* New Password */}
+                  <div>
+                    <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+                      Password Baru
+                    </label>
+                    <Input
+                      type="password"
+                      name="password"
+                      required
+                      placeholder="Minimal 6 karakter"
+                    />
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div>
+                    <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+                      Konfirmasi Password
+                    </label>
+                    <Input
+                      type="password"
+                      name="confirmPassword"
+                      required
+                      placeholder="Ulangi password baru"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end mt-2">
+                  <Button type="submit" disabled={pwPending} className="cursor-pointer">
+                    {pwPending ? "Memproses..." : "Perbarui Password"}
+                  </Button>
+                </div>
               </form>
             </div>
           </div>
