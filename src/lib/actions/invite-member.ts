@@ -75,26 +75,46 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
   if (existingProfile) {
     profileId = existingProfile.id;
   } else {
-    const { data: authUser, error: authErr } = await admin.auth.admin.createUser({
-      email,
-      password: "ifest2026",
-      email_confirm: true,
-      user_metadata: { full_name: fullName, nim },
-    });
-
-    if (authErr || !authUser?.user) {
-      return { error: authErr?.message ?? "Gagal membuat akun." };
+    // Check if email already exists in auth.users
+    let existingAuthUser = null;
+    try {
+      const { data: listRes } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      existingAuthUser = listRes?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase()) || null;
+    } catch (err) {
+      console.error("Error listing users:", err);
     }
 
-    profileId = authUser.user.id;
+    if (existingAuthUser) {
+      profileId = existingAuthUser.id;
+      // Upsert profile in case it doesn't exist for this user ID
+      const { error: profileErr } = await admin.from("profiles").upsert({
+        id: profileId,
+        full_name: fullName,
+        nim,
+      });
+      if (profileErr) return { error: profileErr.message };
+    } else {
+      const { data: authUser, error: authErr } = await admin.auth.admin.createUser({
+        email,
+        password: "ifest2026",
+        email_confirm: true,
+        user_metadata: { full_name: fullName, nim },
+      });
 
-    const { error: profileErr } = await admin.from("profiles").upsert({
-      id: profileId,
-      full_name: fullName,
-      nim,
-    }).select("id").single();
+      if (authErr || !authUser?.user) {
+        return { error: authErr?.message ?? "Gagal membuat akun." };
+      }
 
-    if (profileErr) return { error: profileErr.message };
+      profileId = authUser.user.id;
+
+      const { error: profileErr } = await admin.from("profiles").upsert({
+        id: profileId,
+        full_name: fullName,
+        nim,
+      }).select("id").single();
+
+      if (profileErr) return { error: profileErr.message };
+    }
   }
 
   // Check if already assigned this year
