@@ -333,88 +333,88 @@ export function MeetingDetailClient({
             </div>
           )}
 
-          {/* Undangan Rapat Participants Card */}
-          <div className="bg-white border border-outline-variant/60 rounded-[24px] p-6 flex flex-col gap-4">
-            <h3 className="font-mono text-sm font-bold tracking-wider uppercase text-on-surface-variant border-b border-outline-variant/20 pb-3">
-              Undangan Rapat ({meeting.invitees.length})
-            </h3>
-            {meeting.invitees.length === 0 ? (
-              <p className="text-xs font-mono text-on-surface-variant text-center py-4">
-                Belum ada undangan peserta.
-              </p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {meeting.invitees.map((inv) => {
-                  const initials = inv.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2);
-                  const avatarColors = [
-                    "bg-block-lime",
-                    "bg-block-lilac",
-                    "bg-block-mint",
-                    "bg-block-coral",
-                    "bg-block-pink",
-                  ];
-                  const colorIdx = inv.name.charCodeAt(0) % avatarColors.length;
-                  const avatarBg = avatarColors[colorIdx];
-
-                  return (
-                    <div key={inv.id} className="flex flex-col gap-2.5 p-3 bg-surface rounded-xl border border-outline-variant/30">
-                      <div className="flex items-center gap-3">
-                        <div className={cn("size-8 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0", avatarBg)}>
-                          {initials}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-bold text-on-surface truncate leading-tight">{inv.name}</p>
-                          <p className="text-[10px] text-on-surface-variant font-mono truncate mt-0.5">{inv.email}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-outline-variant/20 pt-2 mt-0.5">
-                        <Badge
-                          variant="outline"
-                          className={cn("flex items-center gap-1 text-[9px] font-mono px-2 py-0.5", rsvpColors[inv.rsvpStatus] ?? "")}
-                        >
-                          {rsvpIcons[inv.rsvpStatus]}
-                          {inv.rsvpStatus === "accepted" ? "Hadir" : inv.rsvpStatus === "declined" ? "Tidak Hadir" : "Pending"}
-                        </Badge>
-
-                        {/* RSVP Action Buttons */}
-                        {inv.assignmentId === currentUserAssignmentId && !meeting.endedAt && (
-                          <div className="flex items-center gap-1.5">
-                            {inv.rsvpStatus !== "accepted" && (
-                              <button
-                                onClick={() => handleRsvp(inv.id, "accepted")}
-                                className="p-1 rounded-full bg-white hover:bg-accent-green/20 border border-outline-variant hover:border-accent-green/50 text-accent-green transition-all cursor-pointer flex items-center justify-center"
-                                title="Konfirmasi hadir"
-                              >
-                                <Check className="size-3.5" />
-                              </button>
-                            )}
-                            {inv.rsvpStatus !== "declined" && (
-                              <button
-                                onClick={() => handleRsvp(inv.id, "declined")}
-                                className="p-1 rounded-full bg-white hover:bg-error-container border border-outline-variant hover:border-error/50 text-error transition-all cursor-pointer flex items-center justify-center"
-                                title="Konfirmasi tidak hadir"
-                              >
-                                <X className="size-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
         </div>
 
+      </div>
+
+      {/* Undangan Rapat Participants Card */}
+      <div className="bg-white border border-outline-variant/60 rounded-[24px] p-6 flex flex-col gap-4 mt-8">
+        <h3 className="font-mono text-sm font-bold tracking-wider uppercase text-on-surface-variant border-b border-outline-variant/20 pb-3">
+          Undangan Rapat ({meeting.invitees.length})
+        </h3>
+        {meeting.invitees.length === 0 ? (
+          <p className="text-xs font-mono text-on-surface-variant text-center py-4">
+            Belum ada undangan peserta.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            {meeting.invitees.map((inv) => {
+              const initials = inv.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2);
+              const avatarColors = [
+                "bg-block-lime",
+                "bg-block-lilac",
+                "bg-block-mint",
+                "bg-block-coral",
+                "bg-block-pink",
+              ];
+              const colorIdx = inv.name.charCodeAt(0) % avatarColors.length;
+              const avatarBg = avatarColors[colorIdx];
+
+              return (
+                <div key={inv.id} className="flex flex-col gap-2.5 p-3 bg-surface rounded-xl border border-outline-variant/30 justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("size-8 rounded-full flex items-center justify-center text-xs font-bold text-primary shrink-0", avatarBg)}>
+                      {initials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-on-surface truncate leading-tight">{inv.name}</p>
+                      <p className="text-[10px] text-on-surface-variant font-mono truncate mt-0.5">{inv.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-outline-variant/20 pt-2 mt-0.5">
+                    <Badge
+                      variant="outline"
+                      className={cn("flex items-center gap-1 text-[9px] font-mono px-2 py-0.5", rsvpColors[inv.rsvpStatus] ?? "")}
+                    >
+                      {rsvpIcons[inv.rsvpStatus]}
+                      {inv.rsvpStatus === "accepted" ? "Hadir" : inv.rsvpStatus === "declined" ? "Tidak Hadir" : "Pending"}
+                    </Badge>
+
+                    {/* RSVP Action Buttons */}
+                    {inv.assignmentId === currentUserAssignmentId && !meeting.endedAt && (
+                      <div className="flex items-center gap-1.5">
+                        {inv.rsvpStatus !== "accepted" && (
+                          <button
+                            onClick={() => handleRsvp(inv.id, "accepted")}
+                            className="p-1 rounded-full bg-white hover:bg-accent-green/20 border border-outline-variant hover:border-accent-green/50 text-accent-green transition-all cursor-pointer flex items-center justify-center"
+                            title="Konfirmasi hadir"
+                          >
+                            <Check className="size-3.5" />
+                          </button>
+                        )}
+                        {inv.rsvpStatus !== "declined" && (
+                          <button
+                            onClick={() => handleRsvp(inv.id, "declined")}
+                            className="p-1 rounded-full bg-white hover:bg-error-container border border-outline-variant hover:border-error/50 text-error transition-all cursor-pointer flex items-center justify-center"
+                            title="Konfirmasi tidak hadir"
+                          >
+                            <X className="size-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Notes Modal — only for authorized users */}
