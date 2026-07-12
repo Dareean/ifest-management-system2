@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Calendar, Building2, Shield, UserPlus, Home, Settings } from "lucide-react";
+import { Calendar, Building2, Shield, UserPlus, Home, Settings, Mail } from "lucide-react";
 
 const adminNavItems = [
   { href: "/admin", label: "Overview", icon: Settings },
@@ -11,10 +11,18 @@ const adminNavItems = [
   { href: "/admin/divisions", label: "Divisi", icon: Building2 },
   { href: "/admin/roles", label: "Role & Jabatan", icon: Shield },
   { href: "/admin/assignments", label: "Assign Personel", icon: UserPlus },
+  { href: "/admin/broadcast", label: "Broadcast Email", icon: Mail },
 ];
 
-export function AdminNav() {
+export function AdminNav({ roleLevel = 0 }: { roleLevel?: number }) {
   const pathname = usePathname();
+
+  const visibleItems = adminNavItems.filter((item) => {
+    if (item.href === "/admin/broadcast" && roleLevel < 100) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -39,7 +47,7 @@ export function AdminNav() {
 
       {/* Tabs */}
       <nav className="flex flex-wrap gap-2.5 pb-4 border-b border-outline-variant/20">
-        {adminNavItems.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
           return (

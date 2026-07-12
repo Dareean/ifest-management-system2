@@ -361,3 +361,25 @@ export async function sendWelcomeEmail(
     }),
   );
 }
+
+export async function sendBroadcastEmail(
+  recipientEmail: string,
+  recipientName: string,
+  subject: string,
+  boxTitle: string,
+  bodyHtml: string,
+) {
+  const introText = `Berikut adalah pengumuman resmi dari PIC / Penanggung Jawab untuk seluruh panitia pelaksana I-FEST 2026.`;
+  await sendEmail(
+    recipientEmail,
+    recipientName,
+    subject,
+    getEmailTemplateHtml({
+      recipientName,
+      introText,
+      boxTitle: boxTitle || "PENGUMUMAN PANITIA",
+      boxContentHtml: bodyHtml.replace(/\n/g, "<br>"), // support simple newlines
+    }),
+  );
+}
+

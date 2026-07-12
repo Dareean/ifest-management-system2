@@ -31,7 +31,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <SidebarNav profile={profile} notifications={{ items: notifications, unread }} />
       <div className="flex-1 flex flex-col min-h-screen min-w-0">
         <main className="flex-1 w-full max-w-[1280px] mx-auto px-6 py-8 md:px-10 md:py-12">
-          <AdminNav />
+          <AdminNav roleLevel={roleLevel} />
           {children}
         </main>
       </div>
