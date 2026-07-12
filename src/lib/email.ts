@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 const FROM_EMAIL = "ifest.hmti@gmail.com";
 const FROM_NAME = "I-FEST Management System";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ifest-management-system.onrender.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ifest-ms.vercel.app";
 const UNTAD_LOGO_URL = `${APP_URL}/assets/logo_utama/logo_untad.webp`;
 const HMTI_LOGO_URL = `${APP_URL}/assets/logo_utama/HMTI%20LOGO.webp`;
 const IFEST_LOGO_URL = `${APP_URL}/assets/logo_utama/Logo-IFEST-2026.webp`;
@@ -23,7 +23,7 @@ function getEmailTemplateHtml({
   boxTitle,
   boxContentHtml,
   ctaText = "Buka Dashboard",
-  ctaUrl = `${APP_URL}/dashboard`,
+  ctaUrl = `${APP_URL}/login`,
 }: EmailTemplateParams): string {
   return `
 <!DOCTYPE html>
@@ -259,7 +259,7 @@ export async function sendLetterNotification(
       introText,
       boxTitle: "Detail Surat",
       boxContentHtml,
-      ctaUrl: `${APP_URL}/dashboard/letters`,
+      ctaUrl: `${APP_URL}/login`,
     }),
   );
 }
@@ -308,7 +308,7 @@ export async function sendMeetingInvite(
       introText,
       boxTitle: "Detail Rapat",
       boxContentHtml,
-      ctaUrl: `${APP_URL}/dashboard/meetings`,
+      ctaUrl: `${APP_URL}/login`,
     }),
   );
 }
