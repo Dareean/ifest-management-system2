@@ -136,6 +136,9 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
     }
   }
 
+  console.log("[Invite Member] Form Submission:", { fullName, nim, email, roleId });
+  console.log("[Invite Member] Resolved profileId:", profileId);
+
   // Check if already assigned this year
   const { data: existingAssignment } = await admin
     .from("committee_assignments")
@@ -144,8 +147,21 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
     .eq("user_id", profileId)
     .maybeSingle();
 
+  console.log("[Invite Member] Existing assignment:", existingAssignment);
+
   if (existingAssignment) {
-    return { error: "Anggota sudah terdaftar di kepanitiaan tahun ini." };
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("full_name, nim")
+      .eq("id", profileId)
+      .maybeSingle();
+
+    const { data: authUser } = await admin.auth.admin.getUserById(profileId);
+    const matchedEmail = authUser?.user?.email ?? email;
+
+    return { 
+      error: `Anggota ini sudah terdaftar di kepanitiaan tahun ini atas nama "${profile?.full_name || "Tidak diketahui"}" (NIM: ${profile?.nim || nim}, Email: ${matchedEmail}).` 
+    };
   }
 
   const { error: assignErr } = await admin.from("committee_assignments").insert({
