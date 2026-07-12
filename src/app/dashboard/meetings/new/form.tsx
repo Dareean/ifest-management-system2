@@ -25,6 +25,7 @@ export function NewMeetingForm({
   const [state, formAction, pending] = useActionState(createMeeting, null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+  const [format, setFormat] = useState<"offline" | "online" | "hybrid">("offline");
 
   const isBPH = creatorRoleLevel >= 75;
 
@@ -146,18 +147,37 @@ export function NewMeetingForm({
 
           <div>
             <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
-              Tautan Pertemuan (Online - Zoom/GMeet)
+              Format Pertemuan
             </label>
-            <Input name="meetingLink" placeholder="https://meet.google.com/..." />
+            <select
+              value={format}
+              onChange={(e) => setFormat(e.target.value as any)}
+              className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231d1b1d%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10"
+            >
+              <option value="offline">Offline (Tatap Muka)</option>
+              <option value="online">Online (Daring)</option>
+              <option value="hybrid">Hybrid (Kombinasi)</option>
+            </select>
           </div>
         </div>
 
-        <div>
-          <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
-            Lokasi / Ruangan (Offline - opsional)
-          </label>
-          <Input name="location" placeholder="Contoh: Sekretariat HMTI / Ruang Rapat Teknik" />
-        </div>
+        {format !== "offline" && (
+          <div>
+            <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+              Tautan Pertemuan (Online - Zoom/GMeet)
+            </label>
+            <Input name="meetingLink" placeholder="https://meet.google.com/... (opsional)" />
+          </div>
+        )}
+
+        {format !== "online" && (
+          <div>
+            <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+              Lokasi / Ruangan (Offline - opsional)
+            </label>
+            <Input name="location" placeholder="Contoh: Sekretariat HMTI / Ruang Rapat Teknik" />
+          </div>
+        )}
 
         <div>
           <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
