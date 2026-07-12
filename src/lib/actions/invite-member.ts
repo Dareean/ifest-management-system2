@@ -74,6 +74,13 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
 
   if (existingProfile) {
     profileId = existingProfile.id;
+    // Check if the auth email of this NIM matches the email in the form
+    const { data: authUser } = await admin.auth.admin.getUserById(profileId);
+    const existingEmail = authUser?.user?.email;
+
+    if (existingEmail && existingEmail.toLowerCase() !== email.toLowerCase()) {
+      return { error: `NIM ${nim} sudah terdaftar dengan email yang berbeda (${existingEmail}).` };
+    }
   } else {
     // Check if email already exists in auth.users
     let existingAuthUser = null;
@@ -86,6 +93,18 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
 
     if (existingAuthUser) {
       profileId = existingAuthUser.id;
+
+      // Check if this existing user already has a profile with a different NIM
+      const { data: userProfile } = await admin
+        .from("profiles")
+        .select("nim")
+        .eq("id", profileId)
+        .maybeSingle();
+
+      if (userProfile && userProfile.nim !== nim) {
+        return { error: `Email ${email} sudah terdaftar dengan NIM yang berbeda (${userProfile.nim}).` };
+      }
+
       // Upsert profile in case it doesn't exist for this user ID
       const { error: profileErr } = await admin.from("profiles").upsert({
         id: profileId,
