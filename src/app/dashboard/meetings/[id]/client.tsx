@@ -11,11 +11,12 @@ import {
   ArrowLeft, ExternalLink, MapPin, Clock,
   Check, X, HelpCircle, Users, FileText, StopCircle,
   CalendarDays, BookOpen, ListChecks, Lightbulb,
-  ChevronDown, ChevronUp, PenLine,
+  ChevronDown, ChevronUp, PenLine, CalendarPlus,
 } from "lucide-react";
 import { updateRsvp, saveNotes, publishNotes, endMeeting, markAttendance } from "@/lib/actions/meeting-workflow";
 import type { MeetingDetail } from "@/lib/data/meeting-detail";
 import { cn } from "@/lib/utils";
+import { generateGoogleCalendarUrl } from "@/lib/utils/calendar";
 
 /* ─── RSVP helpers ─────────────────────────────────────────────── */
 
@@ -498,6 +499,22 @@ export function MeetingDetailClient({
                 Gabung Link Meeting
               </a>
             )}
+
+            <a
+              href={generateGoogleCalendarUrl({
+                title: meeting.title,
+                description: meeting.agenda,
+                location: meeting.location ?? meeting.meetingLink ?? undefined,
+                startedAt: meeting.startedAt,
+                endedAt: meeting.endedAt,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 bg-surface-container hover:bg-surface-container-high text-on-surface font-mono text-xs font-bold py-3 px-4 rounded-full transition-colors border border-outline-variant/60 cursor-pointer"
+            >
+              <CalendarPlus className="size-4" />
+              Tambah ke Google Calendar
+            </a>
           </div>
 
           {/* ── RSVP Summary ────────────────────────── */}

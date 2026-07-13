@@ -15,6 +15,7 @@ interface EmailTemplateParams {
   boxContentHtml: string;
   ctaText?: string;
   ctaUrl?: string;
+  ctaExtraHtml?: string;   /* rendered after the main CTA button */
 }
 
 function getEmailTemplateHtml({
@@ -24,6 +25,7 @@ function getEmailTemplateHtml({
   boxContentHtml,
   ctaText = "Buka Dashboard",
   ctaUrl = `${APP_URL}/login`,
+  ctaExtraHtml = "",
 }: EmailTemplateParams): string {
   return `
 <!DOCTYPE html>
@@ -101,6 +103,9 @@ function getEmailTemplateHtml({
         border-radius: 8px;
         letter-spacing: 0.02em;
       }
+      .cta-extra {
+        margin-top: 16px;
+      }
       .footer {
         margin-top: 32px;
         border-top: 1px solid #f2ecef;
@@ -154,29 +159,32 @@ function getEmailTemplateHtml({
         <div class="intro">
           ${introText}
         </div>
-        
+
         <div class="highlight-box">
           <div class="box-title">${boxTitle}</div>
           <div class="box-content">
             ${boxContentHtml}
           </div>
         </div>
-        
+
         <div class="intro">
           Silakan buka dashboard akun Anda untuk melihat rincian selengkapnya atau melakukan tindakan lebih lanjut.
         </div>
-        
+
         <div class="cta-container">
           <a href="${ctaUrl}" class="cta-button" target="_blank">${ctaText}</a>
+          <div class="cta-extra">
+            ${ctaExtraHtml}
+          </div>
         </div>
-        
+
         <div class="footer">
           <div class="signature-label">Hormat kami,</div>
           <div class="signature-name">Panitia Pelaksana I-FEST 2026</div>
           <div class="signature-sub">HMTI — Universitas Tadulako</div>
         </div>
       </div>
-      
+
       <div class="bottom-bar">
         <div class="logos">
           <img src="${UNTAD_LOGO_URL}" alt="UNTAD Logo" class="logo-img" style="height: 24px;">
@@ -284,6 +292,14 @@ export async function sendMeetingInvite(
 
   const introText = `Kami informasikan bahwa Anda telah diundang untuk menghadiri agenda rapat kepanitiaan di <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
 
+  // Generate Google Calendar link
+  const gcalUrl = generateGoogleCalendarUrl({
+    title: meetingTitle,
+    description: agenda,
+    location: location ?? meetingLink ?? undefined,
+    startedAt,
+  });
+
   let boxContentHtml = `
     <p style="margin: 4px 0;"><strong>Nama Rapat:</strong> ${meetingTitle}</p>
     <p style="margin: 4px 0;"><strong>Waktu:</strong> ${date}</p>
@@ -299,6 +315,17 @@ export async function sendMeetingInvite(
     boxContentHtml += `<p style="margin: 8px 0 0 0; padding-top: 8px; border-top: 1px solid #f2ecef;"><strong>Agenda:</strong> ${agenda}</p>`;
   }
 
+  // CTA — dashboard + Google Calendar
+  const ctaHtml = `
+    <div style="text-align: center; margin-top: 32px; margin-bottom: 32px;">
+      <a href="${APP_URL}/login" style="display: inline-block; background-color: #000000; color: #ffffff !important; text-decoration: none; font-size: 14px; font-weight: bold; padding: 14px 28px; border-radius: 8px; letter-spacing: 0.02em;">Buka Dashboard</a>
+      <br><br>
+      <a href="${gcalUrl}" target="_blank" style="display: inline-block; background-color: #ffffff; color: #1d1b1d !important; text-decoration: none; font-size: 13px; font-weight: bold; padding: 12px 24px; border-radius: 8px; border: 1px solid #d0c9cd; letter-spacing: 0.02em;">
+        &#x1F4C5; Simpan ke Google Calendar
+      </a>
+    </div>
+  `;
+
   await sendEmail(
     recipientEmail,
     recipientName,
@@ -308,8 +335,12 @@ export async function sendMeetingInvite(
       introText,
       boxTitle: "Detail Rapat",
       boxContentHtml,
-      ctaUrl: `${APP_URL}/login`,
-    }),
+      ctaText: "",       // we override the entire CTA section below
+      ctaUrl: "",
+    }).replace(
+      /<div class="cta-container">[\s\S]*?<\/div>/,
+      ctaHtml,
+    ),
   );
 }
 
