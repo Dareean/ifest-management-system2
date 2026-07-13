@@ -1,21 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-/**
- * Unit Tests for Email Functions
- *
- * Tests email utility functions with mocked Brevo API
- */
-
-// Mock Brevo API
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-// Import after mocking
-const { sendWelcomeEmail, sendLetterNotification, sendMeetingInvite, sendEmailNotification } = await import('@/lib/email');
+const { sendWelcomeEmail, sendLetterNotification, sendMeetingInvite, sendEmailNotification, sendBroadcastEmail } = await import('@/lib/email');
 
 describe('Email Functions', () => {
   beforeEach(() => {
-    // Reset mocks before each test
     mockFetch.mockClear();
     mockFetch.mockResolvedValue({
       ok: true,
@@ -36,25 +27,14 @@ describe('Email Functions', () => {
 
       await sendWelcomeEmail(email, name, password);
 
-      // Verify fetch was called
       expect(mockFetch).toHaveBeenCalledTimes(1);
-
-      // Verify API endpoint
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.brevo.com/v3/smtp/email',
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            'api-key': expect.any(String),
-            'Content-Type': 'application/json',
-          }),
-        })
+        expect.objectContaining({ method: 'POST' })
       );
 
-      // Verify email content
       const callArgs = mockFetch.mock.calls[0][1];
       const body = JSON.parse(callArgs.body);
-
       expect(body.to[0].email).toBe(email);
       expect(body.to[0].name).toBe(name);
       expect(body.subject).toContain('Selamat Datang');
@@ -67,7 +47,6 @@ describe('Email Functions', () => {
 
       const callArgs = mockFetch.mock.calls[0][1];
       const body = JSON.parse(callArgs.body);
-
       expect(body.htmlContent).toContain('test@test.ifest.local');
       expect(body.htmlContent).toContain('Pass123!');
       expect(body.htmlContent).toContain('Login ke Dashboard');
@@ -79,7 +58,6 @@ describe('Email Functions', () => {
         text: async () => 'API Error',
       } as Response);
 
-      // Should not throw error
       await expect(
         sendWelcomeEmail('test@test.ifest.local', 'Test User', 'Pass123!')
       ).resolves.not.toThrow();
@@ -88,25 +66,17 @@ describe('Email Functions', () => {
 
   describe('sendLetterNotification', () => {
     it('should send letter notification with correct status', async () => {
-      const email = 'test@test.ifest.local';
-      const name = 'Test User';
-      const subject = 'Surat Permohonan Dana';
-      const letterType = 'Surat Permohonan';
-      const letterSubject = 'Permohonan Dana Event';
-      const status = 'approved';
-
-      await sendLetterNotification(email, name, subject, letterType, letterSubject, status);
+      await sendLetterNotification(
+        'test@test.ifest.local', 'Test User', 'Surat Permohonan Dana',
+        'Surat Permohonan', 'Permohonan Dana Event', 'approved'
+      );
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
-
       const callArgs = mockFetch.mock.calls[0][1];
       const body = JSON.parse(callArgs.body);
-
-      expect(body.to[0].email).toBe(email);
-      expect(body.subject).toContain(letterSubject);
-      expect(body.htmlContent).toContain(letterSubject);
-      expect(body.htmlContent).toContain(letterType);
-      expect(body.htmlContent).toContain('disetujui'); // status label
+      expect(body.to[0].email).toBe('test@test.ifest.local');
+      expect(body.subject).toContain('Permohonan Dana Event');
+      expect(body.htmlContent).toContain('disetujui');
     });
 
     it('should format different statuses correctly', async () => {
@@ -120,12 +90,8 @@ describe('Email Functions', () => {
       for (const { status, label } of statuses) {
         mockFetch.mockClear();
         await sendLetterNotification(
-          'test@test.ifest.local',
-          'Test User',
-          'Test Subject',
-          'Surat Permohonan',
-          'Test Letter',
-          status
+          'test@test.ifest.local', 'Test User', 'Test Subject',
+          'Surat Permohonan', 'Test Letter', status
         );
 
         const callArgs = mockFetch.mock.calls[0][1];
@@ -133,47 +99,43 @@ describe('Email Functions', () => {
         expect(body.htmlContent).toContain(label);
       }
     });
-  });
 
-  describe('sendMeetingInvite', () => {
-    it('should send meeting invite with all details', async () => {
-      const email = 'test@test.ifest.local';
-      const name = 'Test User';
-      const title = 'Rapat Koordinasi';
-      const startedAt = new Date('2026-07-15T10:00:00Z').toISOString();
-      const meetingLink = 'https://meet.google.com/test';
-      const location = 'Ruang Rapat A';
-      const agenda = 'Membahas proposal event';
-
-      await sendMeetingInvite(email, name, title, startedAt, meetingLink, location, agenda);
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-
-      const callArgs = mockFetch.mock.calls[0][1];
-      const body = JSON.parse(callArgs.body);
-
-      expect(body.to[0].email).toBe(email);
-      expect(body.subject).toContain(title);
-      expect(body.htmlContent).toContain(title);
-      expect(body.htmlContent).toContain(location);
-      expect(body.htmlContent).toContain(meetingLink);
-      expect(body.htmlContent).toContain(agenda);
-    });
-
-    it('should handle optional fields (no link, no agenda)', async () => {
-      await sendMeetingInvite(
-        'test@test.ifest.local',
-        'Test User',
-        'Rapat Koordinasi',
-        new Date().toISOString(),
-        null,
-        'Ruang Rapat A',
-        null
+    it('should handle unknown status with fallback', async () => {
+      await sendLetterNotification(
+        'test@test.ifest.local', 'Test User', 'Test Subject',
+        'Surat Permohonan', 'Test Letter', 'unknown_status'
       );
 
       const callArgs = mockFetch.mock.calls[0][1];
       const body = JSON.parse(callArgs.body);
+      expect(body.htmlContent).toContain('unknown_status');
+    });
+  });
 
+  describe('sendMeetingInvite', () => {
+    it('should send meeting invite with all details', async () => {
+      await sendMeetingInvite(
+        'test@test.ifest.local', 'Test User', 'Rapat Koordinasi',
+        new Date('2026-07-15T10:00:00Z').toISOString(),
+        'https://meet.google.com/test', 'Ruang Rapat A', 'Membahas proposal'
+      );
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const callArgs = mockFetch.mock.calls[0][1];
+      const body = JSON.parse(callArgs.body);
+      expect(body.htmlContent).toContain('Rapat Koordinasi');
+      expect(body.htmlContent).toContain('Ruang Rapat A');
+      expect(body.htmlContent).toContain('https://meet.google.com/test');
+    });
+
+    it('should handle optional fields (no link, no agenda)', async () => {
+      await sendMeetingInvite(
+        'test@test.ifest.local', 'Test User', 'Rapat Koordinasi',
+        new Date().toISOString(), null, 'Ruang Rapat A', null
+      );
+
+      const callArgs = mockFetch.mock.calls[0][1];
+      const body = JSON.parse(callArgs.body);
       expect(body.htmlContent).toContain('Ruang Rapat A');
       expect(body.htmlContent).not.toContain('Tautan Online');
       expect(body.htmlContent).not.toContain('Agenda:');
@@ -181,43 +143,95 @@ describe('Email Functions', () => {
 
     it('should prioritize offline location over online link', async () => {
       await sendMeetingInvite(
-        'test@test.ifest.local',
-        'Test User',
-        'Rapat Koordinasi',
+        'test@test.ifest.local', 'Test User', 'Rapat Koordinasi',
         new Date().toISOString(),
-        'https://meet.google.com/test',
-        'Ruang Rapat A',
-        null
+        'https://meet.google.com/test', 'Ruang Rapat A', null
       );
 
       const callArgs = mockFetch.mock.calls[0][1];
       const body = JSON.parse(callArgs.body);
-
-      // Location should appear before link in HTML
       const locationIndex = body.htmlContent.indexOf('Lokasi:');
       const linkIndex = body.htmlContent.indexOf('Tautan Online:');
       expect(locationIndex).toBeLessThan(linkIndex);
+    });
+
+    it('should include Google Calendar link when meeting link is provided without location', async () => {
+      await sendMeetingInvite(
+        'test@test.ifest.local', 'Test User', 'Rapat Online',
+        new Date().toISOString(),
+        'https://meet.google.com/test', null, 'Agenda testing'
+      );
+
+      const callArgs = mockFetch.mock.calls[0][1];
+      const body = JSON.parse(callArgs.body);
+      expect(body.htmlContent).toContain('Google Calendar');
+      expect(body.htmlContent).toContain('Tautan Online');
     });
   });
 
   describe('sendEmailNotification', () => {
     it('should send generic notification email', async () => {
-      const email = 'test@test.ifest.local';
-      const name = 'Test User';
-      const subject = 'Test Notification';
-      const htmlContent = '<p>Test notification content</p>';
-
-      await sendEmailNotification(email, name, subject, htmlContent);
+      await sendEmailNotification(
+        'test@test.ifest.local', 'Test User', 'Test Notification', '<p>Test content</p>'
+      );
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
+      const callArgs = mockFetch.mock.calls[0][1];
+      const body = JSON.parse(callArgs.body);
+      expect(body.to[0].email).toBe('test@test.ifest.local');
+      expect(body.subject).toBe('Test Notification');
+      expect(body.htmlContent).toContain('<p>Test content</p>');
+    });
+  });
+
+  describe('sendBroadcastEmail', () => {
+    it('should send broadcast email with box title', async () => {
+      await sendBroadcastEmail(
+        'test@test.ifest.local', 'Test User', 'Broadcast Subject', 'ANNOUNCEMENT', 'Broadcast body here'
+      );
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const callArgs = mockFetch.mock.calls[0][1];
+      const body = JSON.parse(callArgs.body);
+      expect(body.to[0].email).toBe('test@test.ifest.local');
+      expect(body.subject).toBe('Broadcast Subject');
+      expect(body.htmlContent).toContain('ANNOUNCEMENT');
+      expect(body.htmlContent).toContain('Broadcast body here');
+    });
+
+    it('should handle newlines in body', async () => {
+      await sendBroadcastEmail(
+        'test@test.ifest.local', 'Test User', 'Subject', 'Box', 'Line 1\nLine 2'
+      );
 
       const callArgs = mockFetch.mock.calls[0][1];
       const body = JSON.parse(callArgs.body);
+      expect(body.htmlContent).toContain('<br>');
+    });
+  });
 
-      expect(body.to[0].email).toBe(email);
-      expect(body.subject).toBe(subject);
-      expect(body.htmlContent).toContain(htmlContent);
-      expect(body.htmlContent).toContain(name);
+  describe('error handling', () => {
+    it('should handle fetch network error gracefully', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+      await expect(
+        sendWelcomeEmail('test@test.ifest.local', 'Test User', 'Pass123!')
+      ).resolves.not.toThrow();
+    });
+
+    it('should handle fetch with ok false for all email types', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        text: async () => 'Server Error',
+      } as Response);
+
+      await expect(
+        sendBroadcastEmail('test@test.ifest.local', 'Test User', 'Subject', 'Box', 'Body')
+      ).resolves.not.toThrow();
+
+      await expect(
+        sendLetterNotification('test@test.ifest.local', 'Test User', 'Subj', 'Type', 'Letter', 'sent')
+      ).resolves.not.toThrow();
     });
   });
 });

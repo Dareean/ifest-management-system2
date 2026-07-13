@@ -97,7 +97,7 @@ test.describe('Authentication', () => {
 
     // Should be able to access
     await expect(page).toHaveURL('/admin');
-    await expect(page.locator('text=/admin/i')).toBeVisible();
+    await expect(page.locator('text="ADMIN PANEL"').first()).toBeVisible();
   });
 
   test('member should NOT access admin routes', async ({ page }) => {

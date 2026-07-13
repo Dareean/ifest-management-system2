@@ -94,7 +94,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push("/");
+    router.push("/login");
     router.refresh();
   }
 
@@ -218,6 +218,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
 
       {profile && (
         <button
+          data-testid="logout-button"
           onClick={() => {
             setIsOpen(false);
             handleLogout();
