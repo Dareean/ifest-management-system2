@@ -257,6 +257,7 @@ export function LoginForm() {
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-on-surface-variant pointer-events-none" />
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="nama@ifest.com"
                     value={email}
@@ -275,6 +276,7 @@ export function LoginForm() {
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-on-surface-variant pointer-events-none" />
                   <Input
                     id="password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
