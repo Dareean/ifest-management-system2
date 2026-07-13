@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { generateGoogleCalendarUrl } from "@/lib/utils/calendar";
 
 const FROM_EMAIL = "ifest.hmti@gmail.com";
 const FROM_NAME = "I-FEST Management System";

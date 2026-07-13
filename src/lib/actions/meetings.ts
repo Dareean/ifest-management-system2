@@ -70,7 +70,8 @@ export async function createMeeting(prevState: ActionState, formData: FormData):
       meeting_type: meetingType || "scheduled",
       meeting_link: meetingLink || null,
       location: location || null,
-      started_at: startedAt,
+      // Input datetime-local adalah WITA (UTC+8). Tambah offset agar Postgres menyimpan UTC.
+      started_at: new Date(startedAt + "+08:00").toISOString(),
       scope,
     })
     .select("id")
