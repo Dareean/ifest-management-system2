@@ -79,6 +79,92 @@ describe('Broadcast Server Action', () => {
     expect(result).toEqual({ error: 'Isi pesan email harus diisi' });
   });
 
+  it('should return error if assignment fetch fails', async () => {
+    mockRequireRole.mockResolvedValue({ authorized: true, session: { roleLevel: 100 } });
+    mockFrom.mockImplementation((table) => {
+      if (table === 'committee_assignments') {
+        return createMockSupabase({ data: null, error: { message: 'DB error' } });
+      }
+      return createMockSupabase({ data: [], error: null });
+    });
+    const { sendBroadcastEmailAction } = await import('@/lib/actions/broadcast');
+    const formData = new FormData();
+    formData.append('subject', 'Test'); formData.append('body', 'Body');
+    const result = await sendBroadcastEmailAction(null, formData);
+    expect(result).toEqual({ error: expect.stringContaining('Gagal memuat panitia') });
+  });
+
+  it('should return error if no active assignments found', async () => {
+    mockRequireRole.mockResolvedValue({ authorized: true, session: { roleLevel: 100 } });
+    mockFrom.mockImplementation((table) => {
+      if (table === 'committee_assignments') {
+        return createMockSupabase({ data: [], error: null });
+      }
+      return createMockSupabase({ data: [], error: null });
+    });
+    const { sendBroadcastEmailAction } = await import('@/lib/actions/broadcast');
+    const formData = new FormData();
+    formData.append('subject', 'Test'); formData.append('body', 'Body');
+    const result = await sendBroadcastEmailAction(null, formData);
+    expect(result).toEqual({ error: 'Tidak ada panitia aktif yang ditemukan.' });
+  });
+
+  it('should return error if profile fetch fails', async () => {
+    mockRequireRole.mockResolvedValue({ authorized: true, session: { roleLevel: 100 } });
+    mockFrom.mockImplementation((table) => {
+      if (table === 'committee_assignments') {
+        return createMockSupabase({ data: [{ user_id: 'user-1' }], error: null });
+      }
+      if (table === 'profiles') {
+        return createMockSupabase({ data: null, error: { message: 'Profile error' } });
+      }
+      return createMockSupabase({ data: [], error: null });
+    });
+    const { sendBroadcastEmailAction } = await import('@/lib/actions/broadcast');
+    const formData = new FormData();
+    formData.append('subject', 'Test'); formData.append('body', 'Body');
+    const result = await sendBroadcastEmailAction(null, formData);
+    expect(result).toEqual({ error: expect.stringContaining('Gagal memuat profil') });
+  });
+
+  it('should return error if auth users fetch fails', async () => {
+    mockRequireRole.mockResolvedValue({ authorized: true, session: { roleLevel: 100 } });
+    mockFrom.mockImplementation((table) => {
+      if (table === 'committee_assignments') {
+        return createMockSupabase({ data: [{ user_id: 'user-1' }], error: null });
+      }
+      if (table === 'profiles') {
+        return createMockSupabase({ data: [{ id: 'user-1', full_name: 'Member' }], error: null });
+      }
+      return createMockSupabase({ data: [], error: null });
+    });
+    mockListUsers.mockResolvedValue({ data: null, error: { message: 'Auth error' } });
+    const { sendBroadcastEmailAction } = await import('@/lib/actions/broadcast');
+    const formData = new FormData();
+    formData.append('subject', 'Test'); formData.append('body', 'Body');
+    const result = await sendBroadcastEmailAction(null, formData);
+    expect(result).toEqual({ error: expect.stringContaining('Gagal memuat email') });
+  });
+
+  it('should return error if no valid emails found', async () => {
+    mockRequireRole.mockResolvedValue({ authorized: true, session: { roleLevel: 100 } });
+    mockFrom.mockImplementation((table) => {
+      if (table === 'committee_assignments') {
+        return createMockSupabase({ data: [{ user_id: 'user-1' }], error: null });
+      }
+      if (table === 'profiles') {
+        return createMockSupabase({ data: [{ id: 'user-1', full_name: 'Member' }], error: null });
+      }
+      return createMockSupabase({ data: [], error: null });
+    });
+    mockListUsers.mockResolvedValue({ data: { users: [{ id: 'user-1', email: null }] }, error: null });
+    const { sendBroadcastEmailAction } = await import('@/lib/actions/broadcast');
+    const formData = new FormData();
+    formData.append('subject', 'Test'); formData.append('body', 'Body');
+    const result = await sendBroadcastEmailAction(null, formData);
+    expect(result).toEqual({ error: 'Tidak ada email panitia valid yang ditemukan.' });
+  });
+
   it('should fetch members and broadcast emails successfully', async () => {
     mockRequireRole.mockResolvedValue({ authorized: true, session: { roleLevel: 100 } });
 
