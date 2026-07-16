@@ -209,7 +209,7 @@ describe('Broadcast Server Action', () => {
     formData.append('body', 'Hello panitia!');
 
     const result = await sendBroadcastEmailAction(null, formData);
-    expect(result).toEqual({ success: true, count: 2 });
+    expect(result).toEqual({ success: true, count: 2, failed: 0 });
 
     expect(mockSendBroadcastEmail).toHaveBeenCalledTimes(2);
     expect(mockSendBroadcastEmail).toHaveBeenNthCalledWith(

@@ -80,14 +80,19 @@ export async function sendBroadcastEmailAction(prevState: unknown, formData: For
     }
 
     // 7. Send emails to all recipients concurrently
-    await Promise.all(
+    const results = await Promise.all(
       recipients.map((r) =>
         sendBroadcastEmail(r.email, r.name, subject, boxTitle, body)
       )
     );
 
+    const failedCount = results.filter(Boolean).length;
+    if (failedCount > 0) {
+      console.error(`[Broadcast] ${failedCount} of ${recipients.length} emails failed`);
+    }
+
     revalidatePath("/admin/broadcast");
-    return { success: true, count: recipients.length };
+    return { success: true, count: recipients.length, failed: failedCount };
   } catch (err: any) {
     return { error: `Terjadi kesalahan sistem: ${err.message || err}` };
   }

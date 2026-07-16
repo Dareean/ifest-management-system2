@@ -38,9 +38,10 @@ async function sendEmailForNotification(
       html = `<p>Halo <strong>${fullName}</strong>,</p><p>Undangan rapat:</p><p><strong>${title}</strong></p>${body ? `<p>${body}</p>` : ""}`;
     }
 
-    await sendEmailNotification(email, fullName, `[${type.toUpperCase()}] ${title}`, html);
-  } catch {
-    // Email failure is non-critical
+    const emailErr = await sendEmailNotification(email, fullName, `[${type.toUpperCase()}] ${title}`, html);
+    if (emailErr) console.error("[Notification] Email error:", emailErr);
+  } catch (e) {
+    console.error("[Notification] Unexpected email error:", e);
   }
 }
 

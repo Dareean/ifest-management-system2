@@ -166,8 +166,11 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
       // Send welcome email (fire-and-forget — don't block on failure)
       try {
         const { sendWelcomeEmail } = await import("@/lib/email");
-        await sendWelcomeEmail(email, fullName, "ifest2026");
-      } catch {}
+        const emailErr = await sendWelcomeEmail(email, fullName, "ifest2026");
+        if (emailErr) console.error("[Invite] Email error (reactivate):", emailErr);
+      } catch (e) {
+        console.error("[Invite] Unexpected email error (reactivate):", e);
+      }
 
       revalidatePath("/dashboard/members");
       return { success: true };
@@ -199,9 +202,10 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
   // Send welcome email (fire-and-forget — don't block on failure)
   try {
     const { sendWelcomeEmail } = await import("@/lib/email");
-    await sendWelcomeEmail(email, fullName, "ifest2026");
-  } catch {
-    // Email failure is non-critical
+    const emailErr = await sendWelcomeEmail(email, fullName, "ifest2026");
+    if (emailErr) console.error("[Invite] Email error:", emailErr);
+  } catch (e) {
+    console.error("[Invite] Unexpected email error:", e);
   }
 
   revalidatePath("/dashboard/members");

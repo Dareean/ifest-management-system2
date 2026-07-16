@@ -1,8 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateGoogleCalendarUrl } from "@/lib/utils/calendar";
 
-const FROM_EMAIL = "ifest.hmti@gmail.com";
-const FROM_NAME = "I-FEST Management System";
+const FROM_EMAIL = process.env.EMAIL_FROM || "ifest.hmti@gmail.com";
+const FROM_NAME = process.env.EMAIL_FROM_NAME || "I-FEST Management System";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ifest-ms.vercel.app";
 const UNTAD_LOGO_URL = `${APP_URL}/assets/logo_utama/logo_untad.webp`;
@@ -210,7 +210,7 @@ async function sendEmail(
   recipientName: string,
   subject: string,
   htmlContent: string,
-) {
+): Promise<string | null> {
   try {
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -229,9 +229,13 @@ async function sendEmail(
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[Email] Failed to send:", errorText);
+      return `Gagal mengirim email: ${errorText}`;
     }
+
+    return null;
   } catch (err) {
     console.error("[Email] Error:", err);
+    return `Gagal mengirim email: ${err instanceof Error ? err.message : String(err)}`;
   }
 }
 
@@ -242,7 +246,7 @@ export async function sendLetterNotification(
   letterType: string,
   letterSubject: string,
   status: string,
-) {
+): Promise<string | null> {
   const statusLabels: Record<string, string> = {
     requested: "diajukan",
     in_revision: "direvisi",
@@ -259,7 +263,7 @@ export async function sendLetterNotification(
     <p style="margin: 4px 0;"><strong>Status Pengajuan:</strong> <span style="font-weight: bold; color: ${status === "approved" ? "#A8D5A2" : status === "requested" ? "#FF3D8B" : "#1d1b1d"}">${displayStatus}</span></p>
   `.trim();
 
-  await sendEmail(
+  return await sendEmail(
     recipientEmail,
     recipientName,
     `[Surat] ${letterSubject}`,
@@ -281,7 +285,7 @@ export async function sendMeetingInvite(
   meetingLink: string | null,
   location: string | null,
   agenda: string | null,
-) {
+): Promise<string | null> {
   const date = new Date(startedAt).toLocaleDateString("id-ID", {
     weekday: "long",
     year: "numeric",
@@ -327,7 +331,7 @@ export async function sendMeetingInvite(
     </div>
   `;
 
-  await sendEmail(
+  return await sendEmail(
     recipientEmail,
     recipientName,
     `[Rapat] ${meetingTitle}`,
@@ -350,10 +354,10 @@ export async function sendEmailNotification(
   recipientName: string,
   subject: string,
   htmlContent: string,
-) {
+): Promise<string | null> {
   const introText = `Kami informasikan bahwa terdapat notifikasi penting dari sistem kepanitiaan <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
 
-  await sendEmail(
+  return await sendEmail(
     recipientEmail,
     recipientName,
     subject,
@@ -370,7 +374,7 @@ export async function sendWelcomeEmail(
   recipientEmail: string,
   recipientName: string,
   password: string,
-) {
+): Promise<string | null> {
   const introText = `Selamat! Anda telah terdaftar sebagai panitia pelaksana kegiatan <strong>Informatics Festival (I-FEST) 2026</strong>. Akun Anda telah berhasil dibuat di <strong>I-FEST Management System</strong>.`;
 
   const boxContentHtml = `
@@ -379,7 +383,7 @@ export async function sendWelcomeEmail(
     <p style="margin: 12px 0 0 0; font-size: 12px; color: #7b757c; font-style: italic;">Silakan ganti password Anda demi keamanan setelah pertama kali masuk.</p>
   `.trim();
 
-  await sendEmail(
+  return await sendEmail(
     recipientEmail,
     recipientName,
     "Selamat Datang di I-FEST Management System!",
@@ -400,9 +404,9 @@ export async function sendBroadcastEmail(
   subject: string,
   boxTitle: string,
   bodyHtml: string,
-) {
+): Promise<string | null> {
   const introText = `Berikut adalah pengumuman resmi dari PIC / Penanggung Jawab untuk seluruh panitia pelaksana I-FEST 2026.`;
-  await sendEmail(
+  return await sendEmail(
     recipientEmail,
     recipientName,
     subject,
