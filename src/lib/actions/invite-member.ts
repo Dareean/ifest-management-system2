@@ -63,6 +63,25 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
     return { error: "Role yang dipilih tidak valid untuk level Anda." };
   }
 
+  // Determine target division
+  // Top-level roles (level >= 80) can assign to any division
+  let targetDivisionId = callerDivisionId;
+  if (callerLevel >= 80) {
+    const divisionId = formData.get("division_id") as string;
+    if (divisionId) {
+      const { data: division } = await admin
+        .from("divisions")
+        .select("id")
+        .eq("id", divisionId)
+        .eq("committee_year_id", YEAR_ID)
+        .maybeSingle();
+      if (!division) {
+        return { error: "Divisi yang dipilih tidak valid." };
+      }
+      targetDivisionId = divisionId;
+    }
+  }
+
   // Check if profile already exists by NIM
   const { data: existingProfile } = await admin
     .from("profiles")
@@ -156,7 +175,7 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
         .from("committee_assignments")
         .update({
           is_active: true,
-          division_id: callerDivisionId,
+          division_id: targetDivisionId,
           role_id: roleId,
         })
         .eq("id", existingAssignment.id);
@@ -193,7 +212,7 @@ export async function inviteMember(prevState: unknown, formData: FormData) {
   const { error: assignErr } = await admin.from("committee_assignments").insert({
     committee_year_id: YEAR_ID,
     user_id: profileId,
-    division_id: callerDivisionId,
+    division_id: targetDivisionId,
     role_id: roleId,
   });
 

@@ -50,6 +50,17 @@ export default async function InvitePage() {
     ["anggota", "wakil-koordinator", "pic-sub"].includes(r.slug)
   );
 
+  // Top-level roles (PIC, Ketua, Wakil Ketua) can assign to any division
+  let divisions: { id: string; name: string }[] | undefined;
+  if (callerLevel >= 80) {
+    const { data: allDivisions } = await admin
+      .from("divisions")
+      .select("id, name")
+      .eq("committee_year_id", YEAR_ID)
+      .order("sort_order");
+    divisions = allDivisions ?? undefined;
+  }
+
   return (
     <div className="flex flex-col gap-8 max-w-3xl mx-auto">
       <div>
@@ -62,7 +73,7 @@ export default async function InvitePage() {
         </p>
       </div>
 
-      <InviteForm roles={availableRoles} />
+      <InviteForm roles={availableRoles} divisions={divisions} />
     </div>
   );
 }

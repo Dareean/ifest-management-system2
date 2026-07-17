@@ -12,7 +12,7 @@ interface RoleOption {
   level: number;
 }
 
-export function InviteForm({ roles }: { roles: RoleOption[] }) {
+export function InviteForm({ roles, divisions }: { roles: RoleOption[]; divisions?: { id: string; name: string }[] }) {
   const [state, formAction, pending] = useActionState(inviteMember, null);
 
   return (
@@ -91,6 +91,26 @@ export function InviteForm({ roles }: { roles: RoleOption[] }) {
             ))}
           </select>
         </div>
+
+        {divisions && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="division_id" className="text-sm font-bold text-on-surface font-sans">
+              Divisi
+            </label>
+            <select
+              id="division_id"
+              name="division_id"
+              className="px-4 py-3 rounded-xl border border-outline-variant/60 bg-white text-on-surface text-sm font-sans outline-none focus:border-primary transition-colors"
+            >
+              <option value="">Divisi sendiri (default)</option>
+              {divisions.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3 pt-2">
