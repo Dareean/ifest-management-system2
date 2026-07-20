@@ -172,13 +172,13 @@ export function LoginForm() {
               WebkitBackdropFilter: 'blur(18px)',
               border: '1px solid rgba(255,255,255,0.35)',
               borderRadius: '20px',
-              padding: '28px 24px 18px',
+              padding: '14px 24px',
               position: 'relative',
               zIndex: 0,
             }}
           >
             <h1
-              className="font-display font-extrabold tracking-tight leading-[0.95]"
+              className="font-display font-extrabold tracking-tight leading-[0.95] text-center"
               style={{ fontSize: 'clamp(2.5rem, 3.5vw, 3.8rem)', color: '#fdf8fa' }}
             >
               Sint<span style={{ color: '#FF3D8B' }}>uwu</span>

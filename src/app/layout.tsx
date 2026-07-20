@@ -20,7 +20,7 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  title: "Sintuwu",
+  title: "Sintuwu | I-FEST UNTAD",
   description: "Sistem Manajemen Kepanitiaan I-FEST HMTI UNTAD",
 };
 
