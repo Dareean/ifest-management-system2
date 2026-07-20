@@ -221,9 +221,9 @@ export async function sendBulkWhatsApp(params: SendBulkWhatsAppParams): Promise<
  * formatWhatsAppMessage({
  *   title: "Meeting Reminder",
  *   body: "Jangan lupa meeting hari ini jam 14:00",
- *   footer: "I-FEST Management System"
+ *   footer: "Sintuwu"
  * });
- * // Returns: "*Meeting Reminder*\n\nJangan lupa meeting hari ini jam 14:00\n\n_I-FEST Management System_"
+ * // Returns: "*Meeting Reminder*\n\nJangan lupa meeting hari ini jam 14:00\n\n_Sintuwu_"
  * ```
  */
 export function formatWhatsAppMessage(params: {

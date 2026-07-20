@@ -179,13 +179,9 @@ export function LoginForm() {
           >
             <h1
               className="font-display font-extrabold tracking-tight leading-[0.95]"
-              style={{ fontSize: 'clamp(2rem, 3vw, 2.8rem)', color: '#fdf8fa' }}
+              style={{ fontSize: 'clamp(2.5rem, 3.5vw, 3.8rem)', color: '#fdf8fa' }}
             >
-              I-FEST
-              <br />
-              <span style={{ color: '#FF3D8B' }}>Management</span>
-              <br />
-              System
+              Sint<span style={{ color: '#FF3D8B' }}>uwu</span>
             </h1>
           </div>
 
@@ -219,8 +215,7 @@ export function LoginForm() {
           />
         </div>
         <h1 className="font-display font-extrabold tracking-tight leading-snug text-2xl" style={{ color: '#1d1b1d' }}>
-          I-FEST
-          <span style={{ color: '#FF3D8B' }}> Management System</span>
+          Sint<span style={{ color: '#FF3D8B' }}>uwu</span>
         </h1>
       </div>
 

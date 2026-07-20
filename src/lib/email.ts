@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { generateGoogleCalendarUrl } from "@/lib/utils/calendar";
 
 const FROM_EMAIL = process.env.EMAIL_FROM || "ifest.hmti@gmail.com";
-const FROM_NAME = process.env.EMAIL_FROM_NAME || "I-FEST Management System";
+const FROM_NAME = process.env.EMAIL_FROM_NAME || "Sintuwu";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://ifest-ms.vercel.app";
 const UNTAD_LOGO_URL = `${APP_URL}/assets/logo_utama/logo_untad.webp`;
@@ -193,7 +193,7 @@ function getEmailTemplateHtml({
           <img src="${IFEST_LOGO_URL}" alt="IFEST Logo" class="logo-img" style="height: 28px;">
         </div>
         <div class="disclaimer">
-          Email ini dikirim secara otomatis oleh sistem I-FEST 2026. Mohon tidak membalas email ini.
+          Email ini dikirim secara otomatis oleh sistem Sintuwu. Mohon tidak membalas email ini.
         </div>
         <div class="copyright">
           © 2026 HMTI — Universitas Tadulako. All rights reserved.
@@ -255,7 +255,7 @@ export async function sendLetterNotification(
   };
 
   const displayStatus = statusLabels[status] ?? status;
-  const introText = `Kami informasikan bahwa terdapat pembaruan resmi terkait pengajuan surat di <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
+  const introText = `Kami informasikan bahwa terdapat pembaruan resmi terkait pengajuan surat di <strong>Sintuwu</strong> HMTI Universitas Tadulako.`;
 
   const boxContentHtml = `
     <p style="margin: 4px 0;"><strong>Perihal Surat:</strong> ${letterSubject}</p>
@@ -295,7 +295,7 @@ export async function sendMeetingInvite(
     minute: "2-digit",
   });
 
-  const introText = `Kami informasikan bahwa Anda telah diundang untuk menghadiri agenda rapat kepanitiaan di <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
+  const introText = `Kami informasikan bahwa Anda telah diundang untuk menghadiri agenda rapat kepanitiaan di <strong>Sintuwu</strong> HMTI Universitas Tadulako.`;
 
   // Generate Google Calendar link
   const gcalUrl = generateGoogleCalendarUrl({
@@ -355,7 +355,7 @@ export async function sendEmailNotification(
   subject: string,
   htmlContent: string,
 ): Promise<string | null> {
-  const introText = `Kami informasikan bahwa terdapat notifikasi penting dari sistem kepanitiaan <strong>I-FEST Management System</strong> HMTI Universitas Tadulako.`;
+  const introText = `Kami informasikan bahwa terdapat notifikasi penting dari sistem kepanitiaan <strong>Sintuwu</strong> HMTI Universitas Tadulako.`;
 
   return await sendEmail(
     recipientEmail,
@@ -375,7 +375,7 @@ export async function sendWelcomeEmail(
   recipientName: string,
   password: string,
 ): Promise<string | null> {
-  const introText = `Selamat! Anda telah terdaftar sebagai panitia pelaksana kegiatan <strong>Informatics Festival (I-FEST) 2026</strong>. Akun Anda telah berhasil dibuat di <strong>I-FEST Management System</strong>.`;
+  const introText = `Selamat! Anda telah terdaftar sebagai panitia pelaksana kegiatan <strong>Informatics Festival (I-FEST) 2026</strong>. Akun Anda telah berhasil dibuat di <strong>Sintuwu</strong>.`;
 
   const boxContentHtml = `
     <p style="margin: 4px 0;"><strong>Email Login:</strong> ${recipientEmail}</p>
@@ -386,7 +386,7 @@ export async function sendWelcomeEmail(
   return await sendEmail(
     recipientEmail,
     recipientName,
-    "Selamat Datang di I-FEST Management System!",
+    "Selamat Datang di Sintuwu!",
     getEmailTemplateHtml({
       recipientName,
       introText,

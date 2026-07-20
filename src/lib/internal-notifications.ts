@@ -74,25 +74,25 @@ async function sendWhatsAppForNotification(
       message = formatWhatsAppMessage({
         title: "📋 Tugas Baru",
         body: `Halo ${fullName},\n\nAnda memiliki tugas baru:\n*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "I-FEST Management System",
+        footer: "Sintuwu",
       });
     } else if (type === "letter") {
       message = formatWhatsAppMessage({
         title: "📄 Pembaruan Surat",
         body: `Halo ${fullName},\n\n*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "I-FEST Management System",
+        footer: "Sintuwu",
       });
     } else if (type === "meeting") {
       message = formatWhatsAppMessage({
         title: "📅 Undangan Rapat",
         body: `Halo ${fullName},\n\n*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "I-FEST Management System",
+        footer: "Sintuwu",
       });
     } else {
       message = formatWhatsAppMessage({
         title: title,
         body: `Halo ${fullName},\n\n${body ?? title}`,
-        footer: "I-FEST Management System",
+        footer: "Sintuwu",
       });
     }
 
@@ -117,25 +117,25 @@ async function sendWhatsAppToGroup(
       message = formatWhatsAppMessage({
         title: "📋 Tugas Baru",
         body: `*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "I-FEST Management System",
+        footer: "Sintuwu",
       });
     } else if (type === "letter") {
       message = formatWhatsAppMessage({
         title: "📄 Pembaruan Surat",
         body: `*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "I-FEST Management System",
+        footer: "Sintuwu",
       });
     } else if (type === "meeting") {
       message = formatWhatsAppMessage({
         title: "📅 Undangan Rapat",
         body: `*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "I-FEST Management System",
+        footer: "Sintuwu",
       });
     } else {
       message = formatWhatsAppMessage({
         title: title,
         body: body ?? title,
-        footer: "I-FEST Management System",
+        footer: "Sintuwu",
       });
     }
 

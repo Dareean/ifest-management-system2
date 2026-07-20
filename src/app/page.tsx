@@ -7,12 +7,8 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="flex-1 flex flex-col items-center justify-center px-4 sm:px-md text-center">
         <p className="eyebrow text-on-surface-variant mb-xs">HMTI UNTAD</p>
-        <h1 className="max-w-4xl break-words text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-semibold tracking-tight leading-none">
-          I-FEST
-          <br />
-          <span className="text-accent-magenta">Management</span>
-          <br />
-          System
+        <h1 className="max-w-4xl break-words text-5xl sm:text-7xl lg:text-8xl xl:text-9xl font-semibold tracking-tight leading-none">
+          Sint<span className="text-accent-magenta">uwu</span>
         </h1>
         <p className="mt-md text-xl text-on-surface-variant max-w-lg">
           Sistem manajemen terpadu untuk kepanitiaan I-FEST —
