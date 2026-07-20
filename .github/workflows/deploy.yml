@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Build with OpenNext
-        run: npx @opennextjs/cloudflare
+        run: npm run cf:build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
