@@ -53,37 +53,48 @@ export async function getAllKpisWithTasks(): Promise<KpiWithTasks[]> {
 
   if (!kpis) return [];
 
-  const kpisWithTasks = await Promise.all(
-    kpis.map(async (kpi: any) => {
-      const { data: tasks } = await supabase
-        .from("tasks")
-        .select("id, title, description, status, priority, deadline, completed_at")
-        .eq("kpi_item_id", kpi.id)
-        .order("created_at");
+  // Batch fetch all tasks
+  const kpiIds = kpis.map((k: any) => k.id);
+  let tasksByKpiId: Record<string, any[]> = {};
+  if (kpiIds.length > 0) {
+    const { data: allTasks } = await supabase
+      .from("tasks")
+      .select("id, title, description, status, priority, deadline, completed_at, kpi_item_id")
+      .in("kpi_item_id", kpiIds)
+      .order("created_at");
+    if (allTasks) {
+      for (const task of allTasks) {
+        const kid = (task as any).kpi_item_id;
+        if (!tasksByKpiId[kid]) tasksByKpiId[kid] = [];
+        tasksByKpiId[kid].push(task);
+      }
+    }
+  }
 
-      return {
-        id: kpi.id,
-        title: kpi.title,
-        target: kpi.target,
-        deadline: kpi.deadline,
-        isMilestone: kpi.is_milestone,
-        divisionId: kpi.division_id,
-        divisionName: kpi.division?.name ?? "",
-        divisionSlug: kpi.division?.slug ?? "",
-        totalTasks: tasks?.length ?? 0,
-        doneTasks: tasks?.filter((t) => t.status === "done").length ?? 0,
-        tasks: (tasks ?? []).map((t) => ({
-          id: t.id,
-          title: t.title,
-          description: t.description,
-          status: t.status,
-          priority: t.priority,
-          deadline: t.deadline,
-          completedAt: t.completed_at,
-        })),
-      };
-    }),
-  );
+  const kpisWithTasks = kpis.map((kpi: any) => {
+    const tasks = tasksByKpiId[kpi.id] ?? [];
+    return {
+      id: kpi.id,
+      title: kpi.title,
+      target: kpi.target,
+      deadline: kpi.deadline,
+      isMilestone: kpi.is_milestone,
+      divisionId: kpi.division_id,
+      divisionName: kpi.division?.name ?? "",
+      divisionSlug: kpi.division?.slug ?? "",
+      totalTasks: tasks.length,
+      doneTasks: tasks.filter((t: any) => t.status === "done").length,
+      tasks: tasks.map((t: any) => ({
+        id: t.id,
+        title: t.title,
+        description: t.description,
+        status: t.status,
+        priority: t.priority,
+        deadline: t.deadline,
+        completedAt: t.completed_at,
+      })),
+    };
+  });
 
   return kpisWithTasks;
 }
@@ -99,34 +110,55 @@ export async function getDivisionKpiSummaries(): Promise<DivisionKpiSummary[]> {
 
   if (!divisions) return [];
 
-  const summaries = await Promise.all(
-    divisions.map(async (div) => {
-      const { data: kpis } = await supabase
-        .from("kpi_items")
-        .select("id, is_milestone")
-        .eq("committee_year_id", YEAR_ID)
-        .eq("division_id", div.id);
+  // Batch fetch all KPIs
+  const { data: allKpis } = await supabase
+    .from("kpi_items")
+    .select("id, is_milestone, division_id")
+    .eq("committee_year_id", YEAR_ID);
 
-      const kpiIds = kpis?.map((k) => k.id) ?? [];
+  const kpisByDivision: Record<string, any[]> = {};
+  for (const kpi of allKpis ?? []) {
+    const did = (kpi as any).division_id;
+    if (!kpisByDivision[did]) kpisByDivision[did] = [];
+    kpisByDivision[did].push(kpi);
+  }
 
-      const { data: tasks } = kpiIds.length > 0
-        ? await supabase
-            .from("tasks")
-            .select("status")
-            .in("kpi_item_id", kpiIds)
-        : { data: [] };
+  // Batch fetch all tasks
+  let tasksByDivision: Record<string, any[]> = {};
+  const allKpiIds = allKpis?.map((k: any) => k.id) ?? [];
+  if (allKpiIds.length > 0) {
+    const { data: allTasks } = await supabase
+      .from("tasks")
+      .select("status, kpi_item_id")
+      .in("kpi_item_id", allKpiIds);
+    if (allTasks) {
+      const kpiToDivision: Record<string, string> = {};
+      for (const kpi of allKpis ?? []) {
+        kpiToDivision[(kpi as any).id] = (kpi as any).division_id;
+      }
+      for (const task of allTasks) {
+        const did = kpiToDivision[(task as any).kpi_item_id];
+        if (did) {
+          if (!tasksByDivision[did]) tasksByDivision[did] = [];
+          tasksByDivision[did].push(task);
+        }
+      }
+    }
+  }
 
-      return {
-        divisionId: div.id,
-        divisionName: div.name,
-        divisionSlug: div.slug,
-        totalKpis: kpis?.length ?? 0,
-        milestoneKpis: kpis?.filter((k) => k.is_milestone).length ?? 0,
-        totalTasks: tasks?.length ?? 0,
-        doneTasks: tasks?.filter((t) => t.status === "done").length ?? 0,
-      };
-    }),
-  );
+  const summaries = divisions.map((div) => {
+    const kpis = kpisByDivision[div.id] ?? [];
+    const tasks = tasksByDivision[div.id] ?? [];
+    return {
+      divisionId: div.id,
+      divisionName: div.name,
+      divisionSlug: div.slug,
+      totalKpis: kpis.length,
+      milestoneKpis: kpis.filter((k: any) => k.is_milestone).length,
+      totalTasks: tasks.length,
+      doneTasks: tasks.filter((t: any) => t.status === "done").length,
+    };
+  });
 
   return summaries;
 }

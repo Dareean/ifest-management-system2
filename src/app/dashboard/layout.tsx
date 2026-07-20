@@ -3,8 +3,6 @@ import { SidebarSection } from "./_components/sidebar-wrapper";
 import { BellSection } from "@/components/notifications/bell-wrapper";
 import { HeaderClock } from "@/components/header-clock";
 
-export const dynamic = "force-dynamic";
-
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-surface">

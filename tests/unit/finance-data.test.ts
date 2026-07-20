@@ -112,16 +112,16 @@ describe('Finance Data Functions', () => {
         }
         if (table === 'budgets') {
           return createMockSupabase({
-            data: { id: 'budget-1', total_budget: 5000000 },
+            data: [{ id: 'budget-1', total_budget: 5000000, division_id: 'div-1' }],
             error: null,
           });
         }
         if (table === 'budget_transactions') {
           return createMockSupabase({
             data: [
-              { amount: 1000000, type: 'expense' },
-              { amount: 500000, type: 'expense' },
-              { amount: 2000000, type: 'income' },
+              { amount: 1000000, type: 'expense', budget_id: 'budget-1' },
+              { amount: 500000, type: 'expense', budget_id: 'budget-1' },
+              { amount: 2000000, type: 'income', budget_id: 'budget-1' },
             ],
             error: null,
           });
@@ -197,7 +197,7 @@ describe('Finance Data Functions', () => {
         }
         if (table === 'committee_assignments') {
           return createMockSupabase({
-            data: { user: { full_name: 'Test User' } },
+            data: [{ id: 'assign-1', user: { full_name: 'Test User' } }],
             error: null,
           });
         }

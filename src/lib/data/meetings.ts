@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
@@ -17,7 +18,7 @@ export interface MeetingData {
   notesStatus: "none" | "draft" | "published";
 }
 
-export async function getMeetings(): Promise<MeetingData[]> {
+export const getMeetings = cache(async (): Promise<MeetingData[]> => {
   const supabase = createAdminClient();
 
   const { data } = await supabase
@@ -56,32 +57,41 @@ export async function getMeetings(): Promise<MeetingData[]> {
     }
   }
 
-  const meetingsWithCounts = await Promise.all(
-    data.map(async (m: any) => {
-      const { count } = await supabase
-        .from("meeting_invitees")
-        .select("*", { count: "exact", head: true })
-        .eq("meeting_id", m.id);
+  // Batch fetch invitee counts
+  let inviteeCountMap: Record<string, number> = {};
+  if (meetingIds.length > 0) {
+    const { data: invitees } = await supabase
+      .from("meeting_invitees")
+      .select("meeting_id")
+      .in("meeting_id", meetingIds);
+    if (invitees) {
+      for (const inv of invitees) {
+        const mid = (inv as any).meeting_id;
+        inviteeCountMap[mid] = (inviteeCountMap[mid] ?? 0) + 1;
+      }
+    }
+  }
 
-      const notesPub = notesMap[m.id];
-      const notesStatus: "none" | "draft" | "published" = notesPub === undefined ? "none" : notesPub ? "published" : "draft";
+  const meetingsWithCounts = data.map((m: any) => {
+    const inviteeCount = inviteeCountMap[m.id] ?? 0;
+    const notesPub = notesMap[m.id];
+    const notesStatus: "none" | "draft" | "published" = notesPub === undefined ? "none" : notesPub ? "published" : "draft";
 
-      return {
-        id: m.id,
-        title: m.title,
-        agenda: m.agenda,
-        meetingType: m.meeting_type,
-        meetingLink: m.meeting_link,
-        location: m.location,
-        startedAt: m.started_at,
-        endedAt: m.ended_at,
-        creator: m.creator?.user?.full_name ?? "",
-        inviteeCount: count ?? 0,
-        scope: m.scope ?? "individual",
-        notesStatus,
-      };
-    }),
-  );
+    return {
+      id: m.id,
+      title: m.title,
+      agenda: m.agenda,
+      meetingType: m.meeting_type,
+      meetingLink: m.meeting_link,
+      location: m.location,
+      startedAt: m.started_at,
+      endedAt: m.ended_at,
+      creator: m.creator?.user?.full_name ?? "",
+      inviteeCount,
+      scope: m.scope ?? "individual",
+      notesStatus,
+    };
+  });
 
   return meetingsWithCounts;
-}
+});

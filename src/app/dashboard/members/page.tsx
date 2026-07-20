@@ -5,8 +5,6 @@ import { MembersClient } from "./client";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
-export const dynamic = "force-dynamic";
-
 export interface MemberRow {
   assignmentId: string;
   name: string;

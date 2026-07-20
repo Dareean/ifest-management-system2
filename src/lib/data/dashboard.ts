@@ -61,32 +61,27 @@ export async function getDivisionsWithProgress(committeeYearId: string): Promise
 
   if (!divisions) return [];
 
-  const kpiCounts = await Promise.all(
-    divisions.map(async (div) => {
-      const { data: divisionKpis } = await supabase
-        .from("kpi_items")
-        .select("id, is_milestone")
-        .eq("committee_year_id", committeeYearId)
-        .eq("division_id", div.id);
+  // Batch fetch all KPIs
+  const divisionIds = divisions.map((d) => d.id);
+  const { data: allDivisionKpis } = await supabase
+    .from("kpi_items")
+    .select("id, is_milestone, division_id")
+    .eq("committee_year_id", committeeYearId)
+    .in("division_id", divisionIds);
 
-      return {
-        divisionId: div.id,
-        totalKpis: divisionKpis?.length ?? 0,
-        milestones: divisionKpis?.filter((k) => k.is_milestone).length ?? 0,
-      };
-    }),
-  );
-
-  const kpiMap = Object.fromEntries(
-    kpiCounts.map((k) => [k.divisionId, k]),
-  );
+  const kpiByDivision: Record<string, any[]> = {};
+  for (const kpi of allDivisionKpis ?? []) {
+    const did = (kpi as any).division_id;
+    if (!kpiByDivision[did]) kpiByDivision[did] = [];
+    kpiByDivision[did].push(kpi);
+  }
 
   return divisions.map((div) => ({
     id: div.id,
     name: div.name,
     slug: div.slug,
     sort_order: div.sort_order,
-    totalKpis: kpiMap[div.id]?.totalKpis ?? 0,
-    milestones: kpiMap[div.id]?.milestones ?? 0,
+    totalKpis: kpiByDivision[div.id]?.length ?? 0,
+    milestones: kpiByDivision[div.id]?.filter((k: any) => k.is_milestone).length ?? 0,
   }));
 }

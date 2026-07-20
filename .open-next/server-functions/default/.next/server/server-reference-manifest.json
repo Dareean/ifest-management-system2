@@ -1,0 +1,816 @@
+{
+  "node": {
+    "403784381c991314707b0faf7a44c5227134e882d6": {
+      "workers": {
+        "app/admin/assignments/page": {
+          "moduleId": 61189,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/broadcast/page": {
+          "moduleId": 64384,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/divisions/page": {
+          "moduleId": 1728,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/page": {
+          "moduleId": 97634,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/roles/page": {
+          "moduleId": 95250,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/years/page": {
+          "moduleId": 87244,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/finance/page": {
+          "moduleId": 39727,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/kpi/page": {
+          "moduleId": 81053,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/letters/[id]/page": {
+          "moduleId": 13034,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/letters/new/page": {
+          "moduleId": 37695,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/letters/page": {
+          "moduleId": 88173,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/meetings/[id]/page": {
+          "moduleId": 27882,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/meetings/new/page": {
+          "moduleId": 25957,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/meetings/page": {
+          "moduleId": 56267,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/members/invite/page": {
+          "moduleId": 8725,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/members/page": {
+          "moduleId": 65848,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 60889,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/profile/page": {
+          "moduleId": 5964,
+          "async": false,
+          "exportedName": "markNotificationRead",
+          "filename": "src/lib/actions/notifications.ts"
+        }
+      },
+      "filename": "src/lib/actions/notifications.ts",
+      "exportedName": "markNotificationRead"
+    },
+    "003884b5d2d06816e85018ec741ccf1f11eb109d9f": {
+      "workers": {
+        "app/admin/assignments/page": {
+          "moduleId": 61189,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/broadcast/page": {
+          "moduleId": 64384,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/divisions/page": {
+          "moduleId": 1728,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/page": {
+          "moduleId": 97634,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/roles/page": {
+          "moduleId": 95250,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/admin/years/page": {
+          "moduleId": 87244,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/finance/page": {
+          "moduleId": 39727,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/kpi/page": {
+          "moduleId": 81053,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/letters/[id]/page": {
+          "moduleId": 13034,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/letters/new/page": {
+          "moduleId": 37695,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/letters/page": {
+          "moduleId": 88173,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/meetings/[id]/page": {
+          "moduleId": 27882,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/meetings/new/page": {
+          "moduleId": 25957,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/meetings/page": {
+          "moduleId": 56267,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/members/invite/page": {
+          "moduleId": 8725,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/members/page": {
+          "moduleId": 65848,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 60889,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        },
+        "app/dashboard/profile/page": {
+          "moduleId": 5964,
+          "async": false,
+          "exportedName": "markAllNotificationsRead",
+          "filename": "src/lib/actions/notifications.ts"
+        }
+      },
+      "filename": "src/lib/actions/notifications.ts",
+      "exportedName": "markAllNotificationsRead"
+    },
+    "6066aff90852d15987df99448f4aeffe6654def704": {
+      "workers": {
+        "app/admin/assignments/page": {
+          "moduleId": 61189,
+          "async": false,
+          "exportedName": "createDivision",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/divisions/page": {
+          "moduleId": 1728,
+          "async": false,
+          "exportedName": "createDivision",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/roles/page": {
+          "moduleId": 95250,
+          "async": false,
+          "exportedName": "createDivision",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/years/page": {
+          "moduleId": 87244,
+          "async": false,
+          "exportedName": "createDivision",
+          "filename": "src/lib/actions/admin.ts"
+        }
+      },
+      "filename": "src/lib/actions/admin.ts",
+      "exportedName": "createDivision"
+    },
+    "60063b8c872faea0bcff1aa464e1fa406fdfdd3870": {
+      "workers": {
+        "app/admin/assignments/page": {
+          "moduleId": 61189,
+          "async": false,
+          "exportedName": "updateDivision",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/divisions/page": {
+          "moduleId": 1728,
+          "async": false,
+          "exportedName": "updateDivision",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/roles/page": {
+          "moduleId": 95250,
+          "async": false,
+          "exportedName": "updateDivision",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/years/page": {
+          "moduleId": 87244,
+          "async": false,
+          "exportedName": "updateDivision",
+          "filename": "src/lib/actions/admin.ts"
+        }
+      },
+      "filename": "src/lib/actions/admin.ts",
+      "exportedName": "updateDivision"
+    },
+    "6073db81063cb0e41e26aa1f07291fe5582b79fd80": {
+      "workers": {
+        "app/admin/assignments/page": {
+          "moduleId": 61189,
+          "async": false,
+          "exportedName": "createRole",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/divisions/page": {
+          "moduleId": 1728,
+          "async": false,
+          "exportedName": "createRole",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/roles/page": {
+          "moduleId": 95250,
+          "async": false,
+          "exportedName": "createRole",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/years/page": {
+          "moduleId": 87244,
+          "async": false,
+          "exportedName": "createRole",
+          "filename": "src/lib/actions/admin.ts"
+        }
+      },
+      "filename": "src/lib/actions/admin.ts",
+      "exportedName": "createRole"
+    },
+    "602f268c4ed8e72e5421bb999db126d4f024fca39b": {
+      "workers": {
+        "app/admin/assignments/page": {
+          "moduleId": 61189,
+          "async": false,
+          "exportedName": "updateRole",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/divisions/page": {
+          "moduleId": 1728,
+          "async": false,
+          "exportedName": "updateRole",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/roles/page": {
+          "moduleId": 95250,
+          "async": false,
+          "exportedName": "updateRole",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/years/page": {
+          "moduleId": 87244,
+          "async": false,
+          "exportedName": "updateRole",
+          "filename": "src/lib/actions/admin.ts"
+        }
+      },
+      "filename": "src/lib/actions/admin.ts",
+      "exportedName": "updateRole"
+    },
+    "60b57f520894a02ea272dff057e507eca05fc07671": {
+      "workers": {
+        "app/admin/assignments/page": {
+          "moduleId": 61189,
+          "async": false,
+          "exportedName": "createYear",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/divisions/page": {
+          "moduleId": 1728,
+          "async": false,
+          "exportedName": "createYear",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/roles/page": {
+          "moduleId": 95250,
+          "async": false,
+          "exportedName": "createYear",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/years/page": {
+          "moduleId": 87244,
+          "async": false,
+          "exportedName": "createYear",
+          "filename": "src/lib/actions/admin.ts"
+        }
+      },
+      "filename": "src/lib/actions/admin.ts",
+      "exportedName": "createYear"
+    },
+    "6064065a543031b9e8ea63644f565c51a55f3fcd30": {
+      "workers": {
+        "app/admin/assignments/page": {
+          "moduleId": 61189,
+          "async": false,
+          "exportedName": "createAssignment",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/divisions/page": {
+          "moduleId": 1728,
+          "async": false,
+          "exportedName": "createAssignment",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/roles/page": {
+          "moduleId": 95250,
+          "async": false,
+          "exportedName": "createAssignment",
+          "filename": "src/lib/actions/admin.ts"
+        },
+        "app/admin/years/page": {
+          "moduleId": 87244,
+          "async": false,
+          "exportedName": "createAssignment",
+          "filename": "src/lib/actions/admin.ts"
+        }
+      },
+      "filename": "src/lib/actions/admin.ts",
+      "exportedName": "createAssignment"
+    },
+    "4050324c8742d31faf934e3a1d5c0ea40fd4a28d2b": {
+      "workers": {
+        "app/admin/assignments/page": {
+          "moduleId": 61189,
+          "async": false,
+          "exportedName": "deleteAssignment",
+          "filename": "src/lib/actions/admin.ts"
+        }
+      },
+      "filename": "src/lib/actions/admin.ts",
+      "exportedName": "deleteAssignment"
+    },
+    "604250db9264d7e9a6d9718689f2763904bcbe88b3": {
+      "workers": {
+        "app/admin/broadcast/page": {
+          "moduleId": 64384,
+          "async": false,
+          "exportedName": "sendBroadcastEmailAction",
+          "filename": "src/lib/actions/broadcast.ts"
+        }
+      },
+      "filename": "src/lib/actions/broadcast.ts",
+      "exportedName": "sendBroadcastEmailAction"
+    },
+    "702760a155bc844a4a5ec1a95a296d2bd33f32c054": {
+      "workers": {
+        "app/dashboard/meetings/[id]/page": {
+          "moduleId": 27882,
+          "async": false,
+          "exportedName": "updateRsvp",
+          "filename": "src/lib/actions/meeting-workflow.ts"
+        },
+        "app/dashboard/page": {
+          "moduleId": 60889,
+          "async": false,
+          "exportedName": "updateRsvp",
+          "filename": "src/lib/actions/meeting-workflow.ts"
+        }
+      },
+      "filename": "src/lib/actions/meeting-workflow.ts",
+      "exportedName": "updateRsvp"
+    },
+    "6061cbb799802fb3fb20727096de6c8b104cde0117": {
+      "workers": {
+        "app/dashboard/finance/page": {
+          "moduleId": 39727,
+          "async": false,
+          "exportedName": "setBudget",
+          "filename": "src/lib/actions/finance.ts"
+        }
+      },
+      "filename": "src/lib/actions/finance.ts",
+      "exportedName": "setBudget"
+    },
+    "60f0da9aa61668142e477bc03f6b81c7f77668f262": {
+      "workers": {
+        "app/dashboard/finance/page": {
+          "moduleId": 39727,
+          "async": false,
+          "exportedName": "addTransaction",
+          "filename": "src/lib/actions/finance.ts"
+        }
+      },
+      "filename": "src/lib/actions/finance.ts",
+      "exportedName": "addTransaction"
+    },
+    "60d6540734efe8c18ff2b8041878947f256b5ac2cf": {
+      "workers": {
+        "app/dashboard/finance/page": {
+          "moduleId": 39727,
+          "async": false,
+          "exportedName": "createBudgetRequest",
+          "filename": "src/lib/actions/finance.ts"
+        }
+      },
+      "filename": "src/lib/actions/finance.ts",
+      "exportedName": "createBudgetRequest"
+    },
+    "70dd2477f90fbed8d16329e936660c480d37f42e09": {
+      "workers": {
+        "app/dashboard/finance/page": {
+          "moduleId": 39727,
+          "async": false,
+          "exportedName": "handleBudgetRequest",
+          "filename": "src/lib/actions/finance.ts"
+        }
+      },
+      "filename": "src/lib/actions/finance.ts",
+      "exportedName": "handleBudgetRequest"
+    },
+    "0025847d6b391f2b75954da7e63ef6713709e4d7ec": {
+      "workers": {
+        "app/dashboard/finance/page": {
+          "moduleId": 39727,
+          "async": false,
+          "exportedName": "exportFinanceCSV",
+          "filename": "src/lib/actions/finance.ts"
+        }
+      },
+      "filename": "src/lib/actions/finance.ts",
+      "exportedName": "exportFinanceCSV"
+    },
+    "60cdd1f686b975137c08684a4510c1862686f20f96": {
+      "workers": {
+        "app/dashboard/kpi/page": {
+          "moduleId": 81053,
+          "async": false,
+          "exportedName": "createTask",
+          "filename": "src/lib/actions/tasks.ts"
+        }
+      },
+      "filename": "src/lib/actions/tasks.ts",
+      "exportedName": "createTask"
+    },
+    "405dba05595862d04db3ec332b58f63bb6f867d2a9": {
+      "workers": {
+        "app/dashboard/kpi/page": {
+          "moduleId": 81053,
+          "async": false,
+          "exportedName": "completeTask",
+          "filename": "src/lib/actions/tasks.ts"
+        }
+      },
+      "filename": "src/lib/actions/tasks.ts",
+      "exportedName": "completeTask"
+    },
+    "404ca2600881dd8ca894009b012e595331fc82f919": {
+      "workers": {
+        "app/dashboard/kpi/page": {
+          "moduleId": 81053,
+          "async": false,
+          "exportedName": "reopenTask",
+          "filename": "src/lib/actions/tasks.ts"
+        }
+      },
+      "filename": "src/lib/actions/tasks.ts",
+      "exportedName": "reopenTask"
+    },
+    "402159d68fb9e4cfc3a8eeef674120e48cfb45a521": {
+      "workers": {
+        "app/dashboard/kpi/page": {
+          "moduleId": 81053,
+          "async": false,
+          "exportedName": "deleteTask",
+          "filename": "src/lib/actions/tasks.ts"
+        }
+      },
+      "filename": "src/lib/actions/tasks.ts",
+      "exportedName": "deleteTask"
+    },
+    "00fe23b3442d844b4527aa4972ee97ad34f3df7db2": {
+      "workers": {
+        "app/dashboard/kpi/page": {
+          "moduleId": 81053,
+          "async": false,
+          "exportedName": "exportKpiCSV",
+          "filename": "src/lib/actions/export.ts"
+        },
+        "app/dashboard/letters/page": {
+          "moduleId": 88173,
+          "async": false,
+          "exportedName": "exportKpiCSV",
+          "filename": "src/lib/actions/export.ts"
+        },
+        "app/dashboard/meetings/page": {
+          "moduleId": 56267,
+          "async": false,
+          "exportedName": "exportKpiCSV",
+          "filename": "src/lib/actions/export.ts"
+        }
+      },
+      "filename": "src/lib/actions/export.ts",
+      "exportedName": "exportKpiCSV"
+    },
+    "0000272eb9237886892578266425853d6de12c06b9": {
+      "workers": {
+        "app/dashboard/letters/page": {
+          "moduleId": 88173,
+          "async": false,
+          "exportedName": "exportPersonnelCSV",
+          "filename": "src/lib/actions/export.ts"
+        },
+        "app/dashboard/meetings/page": {
+          "moduleId": 56267,
+          "async": false,
+          "exportedName": "exportPersonnelCSV",
+          "filename": "src/lib/actions/export.ts"
+        }
+      },
+      "filename": "src/lib/actions/export.ts",
+      "exportedName": "exportPersonnelCSV"
+    },
+    "00192dfbba386cfce7e62aa89df482a77adefb693d": {
+      "workers": {
+        "app/dashboard/letters/page": {
+          "moduleId": 88173,
+          "async": false,
+          "exportedName": "exportLettersCSV",
+          "filename": "src/lib/actions/export.ts"
+        },
+        "app/dashboard/meetings/page": {
+          "moduleId": 56267,
+          "async": false,
+          "exportedName": "exportLettersCSV",
+          "filename": "src/lib/actions/export.ts"
+        }
+      },
+      "filename": "src/lib/actions/export.ts",
+      "exportedName": "exportLettersCSV"
+    },
+    "009a4ba2fbf5ea3dbd8a78c3eff0b3729cfd1a4bf6": {
+      "workers": {
+        "app/dashboard/letters/page": {
+          "moduleId": 88173,
+          "async": false,
+          "exportedName": "exportMeetingsCSV",
+          "filename": "src/lib/actions/export.ts"
+        },
+        "app/dashboard/meetings/page": {
+          "moduleId": 56267,
+          "async": false,
+          "exportedName": "exportMeetingsCSV",
+          "filename": "src/lib/actions/export.ts"
+        }
+      },
+      "filename": "src/lib/actions/export.ts",
+      "exportedName": "exportMeetingsCSV"
+    },
+    "406e6cd830f0b7fc077763bfc7e6201e5d10903d5d": {
+      "workers": {
+        "app/dashboard/letters/[id]/page": {
+          "moduleId": 13034,
+          "async": false,
+          "exportedName": "startProcessingLetter",
+          "filename": "src/lib/actions/letter-workflow.ts"
+        },
+        "app/dashboard/letters/page": {
+          "moduleId": 88173,
+          "async": false,
+          "exportedName": "startProcessingLetter",
+          "filename": "src/lib/actions/letter-workflow.ts"
+        }
+      },
+      "filename": "src/lib/actions/letter-workflow.ts",
+      "exportedName": "startProcessingLetter"
+    },
+    "604393e0c4465eb04dc16f629838c0fe2928754da0": {
+      "workers": {
+        "app/dashboard/letters/[id]/page": {
+          "moduleId": 13034,
+          "async": false,
+          "exportedName": "completeLetter",
+          "filename": "src/lib/actions/letter-workflow.ts"
+        }
+      },
+      "filename": "src/lib/actions/letter-workflow.ts",
+      "exportedName": "completeLetter"
+    },
+    "60ce949ad98e02cddc25158609818440a85f71c015": {
+      "workers": {
+        "app/dashboard/letters/[id]/page": {
+          "moduleId": 13034,
+          "async": false,
+          "exportedName": "requestRevision",
+          "filename": "src/lib/actions/letter-workflow.ts"
+        }
+      },
+      "filename": "src/lib/actions/letter-workflow.ts",
+      "exportedName": "requestRevision"
+    },
+    "600be96ac2d0603326ba3538430eaef5a0565d0697": {
+      "workers": {
+        "app/dashboard/letters/new/page": {
+          "moduleId": 37695,
+          "async": false,
+          "exportedName": "createLetter",
+          "filename": "src/lib/actions/letters.ts"
+        }
+      },
+      "filename": "src/lib/actions/letters.ts",
+      "exportedName": "createLetter"
+    },
+    "6095a67089c05fa4eacd1b8d34e1b7dac5243fb438": {
+      "workers": {
+        "app/dashboard/meetings/page": {
+          "moduleId": 56267,
+          "async": false,
+          "exportedName": "updateMeetingDate",
+          "filename": "src/lib/actions/meetings.ts"
+        }
+      },
+      "filename": "src/lib/actions/meetings.ts",
+      "exportedName": "updateMeetingDate"
+    },
+    "60218b9fad2c609dd7505a2762dfef556abb3d935c": {
+      "workers": {
+        "app/dashboard/meetings/[id]/page": {
+          "moduleId": 27882,
+          "async": false,
+          "exportedName": "saveNotes",
+          "filename": "src/lib/actions/meeting-workflow.ts"
+        }
+      },
+      "filename": "src/lib/actions/meeting-workflow.ts",
+      "exportedName": "saveNotes"
+    },
+    "407d4451a3ec9758ef661831cd3bc3fdc21e859a91": {
+      "workers": {
+        "app/dashboard/meetings/[id]/page": {
+          "moduleId": 27882,
+          "async": false,
+          "exportedName": "publishNotes",
+          "filename": "src/lib/actions/meeting-workflow.ts"
+        }
+      },
+      "filename": "src/lib/actions/meeting-workflow.ts",
+      "exportedName": "publishNotes"
+    },
+    "40279a0a5f04a7fce156265b4de40060220474aa7e": {
+      "workers": {
+        "app/dashboard/meetings/[id]/page": {
+          "moduleId": 27882,
+          "async": false,
+          "exportedName": "endMeeting",
+          "filename": "src/lib/actions/meeting-workflow.ts"
+        }
+      },
+      "filename": "src/lib/actions/meeting-workflow.ts",
+      "exportedName": "endMeeting"
+    },
+    "70850c3e7ee4a8bfb3221bd0e7543f88058cb044cc": {
+      "workers": {
+        "app/dashboard/meetings/[id]/page": {
+          "moduleId": 27882,
+          "async": false,
+          "exportedName": "markAttendance",
+          "filename": "src/lib/actions/meeting-workflow.ts"
+        }
+      },
+      "filename": "src/lib/actions/meeting-workflow.ts",
+      "exportedName": "markAttendance"
+    },
+    "609376d9def0c5707aa38efc70069fa685f495256e": {
+      "workers": {
+        "app/dashboard/meetings/new/page": {
+          "moduleId": 25957,
+          "async": false,
+          "exportedName": "createMeeting",
+          "filename": "src/lib/actions/meetings.ts"
+        }
+      },
+      "filename": "src/lib/actions/meetings.ts",
+      "exportedName": "createMeeting"
+    },
+    "607f8bed9ad38a1ba68acc217fd9aede5ec5451a33": {
+      "workers": {
+        "app/dashboard/members/page": {
+          "moduleId": 65848,
+          "async": false,
+          "exportedName": "removeMember",
+          "filename": "src/lib/actions/remove-member.ts"
+        }
+      },
+      "filename": "src/lib/actions/remove-member.ts",
+      "exportedName": "removeMember"
+    },
+    "609fbe941bdba62c0b8e747b66ce675d15ac6ff96b": {
+      "workers": {
+        "app/dashboard/members/invite/page": {
+          "moduleId": 8725,
+          "async": false,
+          "exportedName": "inviteMember",
+          "filename": "src/lib/actions/invite-member.ts"
+        }
+      },
+      "filename": "src/lib/actions/invite-member.ts",
+      "exportedName": "inviteMember"
+    },
+    "60a98e07823e3f1e3da5de5965561d18d36d6ac380": {
+      "workers": {
+        "app/dashboard/profile/page": {
+          "moduleId": 5964,
+          "async": false,
+          "exportedName": "updateProfile",
+          "filename": "src/lib/actions/profile.ts"
+        }
+      },
+      "filename": "src/lib/actions/profile.ts",
+      "exportedName": "updateProfile"
+    },
+    "601ced2c1c4f4fa108f2376aed3ff8c0a43693e1df": {
+      "workers": {
+        "app/dashboard/profile/page": {
+          "moduleId": 5964,
+          "async": false,
+          "exportedName": "changePassword",
+          "filename": "src/lib/actions/profile.ts"
+        }
+      },
+      "filename": "src/lib/actions/profile.ts",
+      "exportedName": "changePassword"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "P50dqi0pXlHX9YrnBjTnovGXTyQb+LUmFt+4Hwccb9U="
+}

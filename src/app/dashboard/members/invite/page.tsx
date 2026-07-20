@@ -5,8 +5,6 @@ import { InviteForm } from "./form";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
-export const dynamic = "force-dynamic";
-
 export default async function InvitePage() {
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();

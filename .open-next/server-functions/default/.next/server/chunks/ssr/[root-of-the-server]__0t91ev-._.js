@@ -1,0 +1,17 @@
+module.exports=[64240,(a,b,c)=>{"use strict";function d(a){if("function"!=typeof WeakMap)return null;var b=new WeakMap,c=new WeakMap;return(d=function(a){return a?c:b})(a)}c._=function(a,b){if(!b&&a&&a.__esModule)return a;if(null===a||"object"!=typeof a&&"function"!=typeof a)return{default:a};var c=d(b);if(c&&c.has(a))return c.get(a);var e={__proto__:null},f=Object.defineProperty&&Object.getOwnPropertyDescriptor;for(var g in a)if("default"!==g&&Object.prototype.hasOwnProperty.call(a,g)){var h=f?Object.getOwnPropertyDescriptor(a,g):null;h&&(h.get||h.set)?Object.defineProperty(e,g,h):e[g]=a[g]}return e.default=a,c&&c.set(a,e),e}},93695,(a,b,c)=>{b.exports=a.x("next/dist/shared/lib/no-fallback-error.external.js",()=>require("next/dist/shared/lib/no-fallback-error.external.js"))},10585,a=>{a.v("/_next/static/media/favicon.2vob68tjqpejf.ico"+(globalThis.NEXT_CLIENT_ASSET_SUFFIX||""))},68611,a=>{"use strict";let b={src:a.i(10585).default,width:256,height:256};a.s(["default",0,b])},55840,a=>{"use strict";a.s(["MeetingsClient",()=>b]);let b=(0,a.i(11857).registerClientReference)(function(){throw Error("Attempted to call MeetingsClient() from the server but MeetingsClient is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.")},"[project]/src/app/dashboard/meetings/meetings-client.tsx <module evaluation>","MeetingsClient")},46176,a=>{"use strict";a.s(["MeetingsClient",()=>b]);let b=(0,a.i(11857).registerClientReference)(function(){throw Error("Attempted to call MeetingsClient() from the server but MeetingsClient is on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.")},"[project]/src/app/dashboard/meetings/meetings-client.tsx","MeetingsClient")},56283,a=>{"use strict";a.i(55840);var b=a.i(46176);a.n(b)},2857,a=>{"use strict";var b=a.i(7997),c=a.i(717),d=a.i(20539);let e=(0,c.cache)(async()=>{let a=(0,d.createAdminClient)(),{data:b}=await a.from("meetings").select(`
+      id,
+      title,
+      agenda,
+      meeting_type,
+      meeting_link,
+      location,
+      started_at,
+      ended_at,
+      created_at,
+      scope,
+      creator:committee_assignments!creator_id(
+        user:profiles(full_name)
+      )
+    `).eq("committee_year_id","c2f2a48e-3e58-4559-aaa0-623a3825348b").order("started_at",{ascending:!1});if(!b)return[];let c=b.map(a=>a.id),e={};if(c.length>0){let{data:b}=await a.from("meeting_notes").select("meeting_id, published_at").in("meeting_id",c);if(b)for(let a of b)e[a.meeting_id]=a.published_at}let f={};if(c.length>0){let{data:b}=await a.from("meeting_invitees").select("meeting_id").in("meeting_id",c);if(b)for(let a of b){let b=a.meeting_id;f[b]=(f[b]??0)+1}}return b.map(a=>{let b=f[a.id]??0,c=e[a.id];return{id:a.id,title:a.title,agenda:a.agenda,meetingType:a.meeting_type,meetingLink:a.meeting_link,location:a.location,startedAt:a.started_at,endedAt:a.ended_at,creator:a.creator?.user?.full_name??"",inviteeCount:b,scope:a.scope??"individual",notesStatus:void 0===c?"none":c?"published":"draft"}})});var f=a.i(1696),g=a.i(56283);async function h(){let a=await e();return(0,b.jsx)(g.MeetingsClient,{initialMeetings:a,exportMeetingsCSV:f.exportMeetingsCSV})}a.s(["default",0,h],2857)},72872,a=>{a.n(a.i(2857))}];
+
+//# sourceMappingURL=%5Broot-of-the-server%5D__0t91ev-._.js.map

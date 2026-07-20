@@ -51,8 +51,8 @@ describe('KPI Data Functions', () => {
         if (table === 'tasks') {
           return createMockSupabase({
             data: [
-              { id: 'task-1', title: 'Task 1', description: 'Desc 1', status: 'done', priority: 'high', deadline: '2026-08-01', completed_at: '2026-07-15T00:00:00Z' },
-              { id: 'task-2', title: 'Task 2', description: null, status: 'todo', priority: 'medium', deadline: null, completed_at: null },
+              { id: 'task-1', title: 'Task 1', description: 'Desc 1', status: 'done', priority: 'high', deadline: '2026-08-01', completed_at: '2026-07-15T00:00:00Z', kpi_item_id: 'kpi-1' },
+              { id: 'task-2', title: 'Task 2', description: null, status: 'todo', priority: 'medium', deadline: null, completed_at: null, kpi_item_id: 'kpi-1' },
             ],
             error: null,
           });
@@ -93,8 +93,8 @@ describe('KPI Data Functions', () => {
         if (table === 'kpi_items') {
           return createMockSupabase({
             data: [
-              { id: 'kpi-1', is_milestone: true },
-              { id: 'kpi-2', is_milestone: false },
+              { id: 'kpi-1', is_milestone: true, division_id: 'div-1' },
+              { id: 'kpi-2', is_milestone: false, division_id: 'div-1' },
             ],
             error: null,
           });
@@ -102,9 +102,9 @@ describe('KPI Data Functions', () => {
         if (table === 'tasks') {
           return createMockSupabase({
             data: [
-              { status: 'done' },
-              { status: 'todo' },
-              { status: 'done' },
+              { status: 'done', kpi_item_id: 'kpi-1' },
+              { status: 'todo', kpi_item_id: 'kpi-1' },
+              { status: 'done', kpi_item_id: 'kpi-2' },
             ],
             error: null,
           });

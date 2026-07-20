@@ -37,7 +37,7 @@ describe('Dashboard Data', () => {
     it('should return division progress', async () => {
       mockFrom.mockImplementation((t: string) => {
         if (t === 'divisions') return chain({ data: [{ id: 'd-1', name: 'Div A', slug: 'a', sort_order: 1 }] });
-        if (t === 'kpi_items') return chain({ data: [{ id: 'k-1', is_milestone: true }] });
+        if (t === 'kpi_items') return chain({ data: [{ id: 'k-1', is_milestone: true, division_id: 'd-1' }] });
         return chain();
       });
       const { getDivisionsWithProgress } = await import('@/lib/data/dashboard');

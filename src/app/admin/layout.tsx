@@ -5,8 +5,6 @@ import { getUserNotifications, getUnreadCount } from "@/lib/data/notifications";
 import { getProfile } from "@/lib/data/profile";
 import { AdminNav } from "./_components/admin-nav";
 
-export const dynamic = "force-dynamic";
-
 const ROLE_LEVELS: Record<string, number> = {
   "PIC / Penanggung Jawab": 100,
   "Ketua Panitia": 90,

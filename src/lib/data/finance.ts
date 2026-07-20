@@ -93,42 +93,56 @@ export async function getBudgets(): Promise<BudgetWithDivision[]> {
 
   if (!divisions) return [];
 
-  const budgetsWithData = await Promise.all(
-    divisions.map(async (div) => {
-      const { data: budget } = await supabase
-        .from("budgets")
-        .select("*")
-        .eq("committee_year_id", YEAR_ID)
-        .eq("division_id", div.id)
-        .maybeSingle();
+  // Batch fetch all budgets
+  const divisionIds = divisions.map((d) => d.id);
+  const { data: allBudgets } = await supabase
+    .from("budgets")
+    .select("*")
+    .eq("committee_year_id", YEAR_ID)
+    .in("division_id", divisionIds);
 
-      const totalBudget = budget ? Number(budget.total_budget) : 0;
+  const budgetByDivision: Record<string, any> = {};
+  const budgetIds: string[] = [];
+  for (const b of allBudgets ?? []) {
+    budgetByDivision[(b as any).division_id] = b;
+    budgetIds.push((b as any).id);
+  }
 
-      let transactions: { amount: number; type: string }[] | null = null;
-      if (budget) {
-        const txRes = await supabase
-          .from("budget_transactions")
-          .select("amount, type")
-          .eq("budget_id", budget.id);
-        transactions = txRes.data as any;
+  // Batch fetch all transactions
+  let transactionsByBudget: Record<string, { amount: number; type: string }[]> = {};
+  if (budgetIds.length > 0) {
+    const { data: allTx } = await supabase
+      .from("budget_transactions")
+      .select("amount, type, budget_id")
+      .in("budget_id", budgetIds);
+    if (allTx) {
+      for (const tx of allTx) {
+        const bid = (tx as any).budget_id;
+        if (!transactionsByBudget[bid]) transactionsByBudget[bid] = [];
+        transactionsByBudget[bid].push(tx as any);
       }
+    }
+  }
 
-      const usedAmount = transactions
-        ? transactions.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0)
-        : 0;
+  const budgetsWithData = divisions.map((div) => {
+    const budget = budgetByDivision[div.id];
+    const totalBudget = budget ? Number(budget.total_budget) : 0;
+    const transactions = transactionsByBudget[budget?.id] ?? [];
+    const usedAmount = transactions
+      .filter((t) => t.type === "expense")
+      .reduce((s, t) => s + Number(t.amount), 0);
 
-      return {
-        id: budget?.id ?? "",
-        division_id: div.id,
-        division_name: div.name,
-        division_slug: div.slug,
-        total_budget: totalBudget,
-        used_amount: usedAmount,
-        remaining: totalBudget - usedAmount,
-        transaction_count: transactions?.length ?? 0,
-      };
-    }),
-  );
+    return {
+      id: budget?.id ?? "",
+      division_id: div.id,
+      division_name: div.name,
+      division_slug: div.slug,
+      total_budget: totalBudget,
+      used_amount: usedAmount,
+      remaining: totalBudget - usedAmount,
+      transaction_count: transactions.length,
+    };
+  });
 
   return budgetsWithData;
 }
@@ -166,26 +180,31 @@ export async function getBudgetDetail(divisionId: string): Promise<{
     transactions = txRes.data ?? [];
   }
 
-  const txWithNames = await Promise.all(
-    transactions.map(async (tx) => {
-      const { data: assign } = await supabase
-        .from("committee_assignments")
-        .select("user:profiles(full_name)")
-        .eq("id", tx.created_by)
-        .maybeSingle();
+  // Batch fetch creator names
+  const creatorIds = transactions.map((tx: any) => tx.created_by).filter(Boolean);
+  let creatorNames: Record<string, string> = {};
+  if (creatorIds.length > 0) {
+    const { data: creators } = await supabase
+      .from("committee_assignments")
+      .select("id, user:profiles(full_name)")
+      .in("id", creatorIds);
+    if (creators) {
+      for (const c of creators) {
+        creatorNames[(c as any).id] = (c as any).user?.full_name ?? "Unknown";
+      }
+    }
+  }
 
-      return {
-        id: tx.id,
-        type: tx.type as "income" | "expense",
-        amount: Number(tx.amount),
-        description: tx.description,
-        category: tx.category,
-        transaction_date: tx.transaction_date,
-        created_by_name: (assign as any)?.user?.full_name ?? "Unknown",
-        created_at: tx.created_at,
-      };
-    }),
-  );
+  const txWithNames = transactions.map((tx: any) => ({
+    id: tx.id,
+    type: tx.type as "income" | "expense",
+    amount: Number(tx.amount),
+    description: tx.description,
+    category: tx.category,
+    transaction_date: tx.transaction_date,
+    created_by_name: creatorNames[tx.created_by] ?? "Unknown",
+    created_at: tx.created_at,
+  }));
 
   const usedAmount = txWithNames
     .filter((t) => t.type === "expense")
