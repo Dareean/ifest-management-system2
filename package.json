@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "next build --webpack && opennextjs-cloudflare build --skipNextBuild",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
@@ -13,7 +13,7 @@
     "test:e2e": "playwright test",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "cf:build": "npx opennextjs-cloudflare build",
+    "cf:build": "npm run build",
     "cf:deploy": "npx opennextjs-cloudflare deploy",
     "cf:preview": "npx opennextjs-cloudflare preview"
   },
