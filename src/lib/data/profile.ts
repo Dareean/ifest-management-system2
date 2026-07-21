@@ -15,6 +15,7 @@ export interface ProfileData {
   assignment: {
     division: string;
     role: string;
+    level: number;
     isActive: boolean;
     assignedAt: string;
   } | null;
@@ -47,7 +48,7 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
     .select(`
       is_active, assigned_at,
       division:divisions(name),
-      role:roles(name)
+      role:roles(name, level)
     `)
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", userId)
@@ -102,6 +103,7 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
       ? {
           division: (assignment as any).division?.name ?? "",
           role: (assignment as any).role?.name ?? "",
+          level: (assignment as any).role?.level ?? 0,
           isActive: (assignment as any).is_active,
           assignedAt: (assignment as any).assigned_at,
         }
