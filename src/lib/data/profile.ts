@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,7 +26,7 @@ export interface ProfileData {
   };
 }
 
-export async function getProfile(): Promise<ProfileData | null> {
+export const getProfile = cache(async (): Promise<ProfileData | null> => {
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
   const userId = authData?.user?.id;
@@ -107,4 +108,4 @@ export async function getProfile(): Promise<ProfileData | null> {
       : null,
     stats: { totalLetters, totalMeetings, totalTasks, doneTasks },
   };
-}
+});

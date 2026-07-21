@@ -44,16 +44,12 @@ export default async function InvitePage() {
     .lt("level", callerLevel)
     .order("level", { ascending: false });
 
-  const availableRoles = (roles ?? []).filter((r) =>
-    ["anggota", "wakil-koordinator", "pic-sub"].includes(r.slug)
-  );
-
-  // Top-level roles (PIC, Ketua, Wakil Ketua) can assign to any division
-  let divisions: { id: string; name: string }[] | undefined;
-  if (callerLevel >= 80) {
+  // BPH roles can assign to any division
+  let divisions: { id: string; name: string; slug: string }[] | undefined;
+  if (callerLevel >= 75) {
     const { data: allDivisions } = await admin
       .from("divisions")
-      .select("id, name")
+      .select("id, name, slug")
       .eq("committee_year_id", YEAR_ID)
       .order("sort_order");
     divisions = allDivisions ?? undefined;
@@ -63,15 +59,15 @@ export default async function InvitePage() {
     <div className="flex flex-col gap-8 max-w-3xl mx-auto">
       <div>
         <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
-          DIVISI {divisionName.toUpperCase()}
+          {callerLevel >= 75 ? "BPH KEPANITIAAN" : `DIVISI ${divisionName.toUpperCase()}`}
         </p>
-        <h1 className="text-3xl font-extrabold tracking-tight text-on-surface">Undang Anggota</h1>
-        <p className="mt-1 text-base text-on-surface-variant">
-          Anggota baru akan mendapat email sambutan berisi akun login.
+        <h1 className="text-3xl font-black tracking-tight text-on-surface font-sans">Undang Anggota</h1>
+        <p className="mt-1 text-sm text-on-surface-variant font-medium">
+          Anggota baru akan mendapatkan email sambutan yang berisi kredensial akun login.
         </p>
       </div>
 
-      <InviteForm roles={availableRoles} divisions={divisions} />
+      <InviteForm roles={roles ?? []} divisions={divisions} />
     </div>
   );
 }

@@ -84,6 +84,7 @@ export default async function MembersPage() {
         nim: m.user?.nim ?? "",
         roleName: m.role?.name ?? "",
         roleLevel: m.role?.level ?? 0,
+        divisionName: m.division?.name ?? "",
       });
     }
 

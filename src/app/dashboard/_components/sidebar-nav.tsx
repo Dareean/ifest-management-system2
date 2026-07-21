@@ -67,8 +67,6 @@ function getNavItems(level: number): NavItem[] {
     items.push({ href: "/dashboard/members", label: "ANGGOTA", icon: Users });
   }
 
-  items.push({ href: "/dashboard/profile", label: "PROFIL", icon: User });
-
   if (level >= 80) {
     items.push({ href: "/admin", label: "ADMIN", icon: Settings });
   }
@@ -113,23 +111,32 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
       .toUpperCase();
   };
 
-  const LogoSection = () => (
-    <div className="flex items-center gap-2 select-none">
-      <img
-        src="/assets/logo_utama/logo_untad.webp"
-        alt="Logo UNTAD"
-        className="h-8 w-auto object-contain shrink-0"
-      />
-      <img
-        src="/assets/logo_utama/HMTI LOGO.webp"
-        alt="Logo HMTI"
-        className="h-8 w-auto object-contain shrink-0"
-      />
-      <img
-        src="/assets/logo_utama/Logo-IFEST-2026.webp"
-        alt="Logo IFEST"
-        className="h-9 w-auto object-contain shrink-0 ml-1"
-      />
+  const LogoSection = ({ isHeader = false }: { isHeader?: boolean }) => (
+    <div className={`flex select-none ${isHeader ? "items-center gap-2.5" : "flex-col items-center justify-center gap-2.5 w-full"}`}>
+      <div className="flex items-center justify-center gap-2.5">
+        <img
+          src="/assets/logo_utama/logo_untad.webp"
+          alt="Logo UNTAD"
+          className="h-7 w-auto object-contain shrink-0"
+        />
+        <div className="w-px h-5 bg-slate-200 shrink-0" />
+        <img
+          src="/assets/logo_utama/HMTI LOGO.webp"
+          alt="Logo HMTI"
+          className="h-7 w-auto object-contain shrink-0"
+        />
+        <div className="w-px h-5 bg-slate-200 shrink-0" />
+        <img
+          src="/assets/logo_utama/Logo-IFEST-2026.webp"
+          alt="Logo IFEST"
+          className="h-9 w-auto object-contain shrink-0 ml-1"
+        />
+      </div>
+      {!isHeader && (
+        <span className="font-mono text-sm font-black tracking-[0.35em] text-on-surface uppercase mt-0.5">
+          Sintuwu
+        </span>
+      )}
     </div>
   );
 
@@ -177,7 +184,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
   };
 
   const NavLinks = () => (
-    <nav className="flex flex-col gap-1.5 mt-6">
+    <nav className="flex flex-col gap-1.5">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = isItemActive(item.href);
@@ -216,26 +223,13 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
         <span className="tracking-wide font-sans">BERANDA</span>
       </Link>
 
-      {profile && (
-        <button
-          data-testid="logout-button"
-          onClick={() => {
-            setIsOpen(false);
-            handleLogout();
-          }}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-error hover:bg-error-container/20 transition-colors text-left w-full cursor-pointer"
-        >
-          <LogOut className="size-5 shrink-0" />
-          <span className="tracking-wide font-sans">KELUAR</span>
-        </button>
-      )}
     </div>
   );
 
   return (
     <>
       <header className="flex lg:hidden items-center justify-between px-6 h-16 bg-white border-b border-outline-variant/40 sticky top-0 z-40 w-full shrink-0">
-        <LogoSection />
+        <LogoSection isHeader />
 
         <div className="flex items-center gap-3">
           <NotificationBell initial={notifications} />
@@ -257,11 +251,11 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
 
           <div className="relative flex flex-col w-72 max-w-xs bg-white h-full p-6 justify-between shadow-2xl z-10 animate-in slide-in-from-left duration-250">
             <div>
-              <div className="flex items-center justify-between pb-6 border-b border-outline-variant/40">
+              <div className="flex flex-col items-center justify-center pb-6 border-b border-outline-variant/40 relative w-full">
                 <LogoSection />
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full transition-colors cursor-pointer"
+                  className="absolute right-0 top-0.5 p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full transition-colors cursor-pointer"
                 >
                   <X className="size-5" />
                 </button>
@@ -271,7 +265,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
                 <ProfileCard />
               </div>
 
-              <div className="mt-2">
+              <div className="mt-6">
                 <NavLinks />
               </div>
             </div>
@@ -282,12 +276,10 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
       )}
 
       <aside className="hidden lg:flex flex-col w-72 h-screen sticky top-0 bg-white border-r border-outline-variant/40 p-6 justify-between shrink-0 overflow-y-auto">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center">
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center justify-center w-full border-b border-outline-variant/30 pb-5">
             <LogoSection />
           </div>
-
-          <ProfileCard />
 
           <NavLinks />
         </div>
