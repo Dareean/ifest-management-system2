@@ -214,14 +214,16 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
 
   const BottomActions = () => (
     <div className="flex flex-col gap-1.5 pt-4 border-t border-outline-variant/40">
-      <Link
-        href="/"
-        onClick={() => setIsOpen(false)}
-        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors"
+      <button
+        onClick={() => {
+          setIsOpen(false);
+          handleLogout();
+        }}
+        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-error hover:bg-error-container/10 transition-colors cursor-pointer w-full text-left group"
       >
-        <Home className="size-5 shrink-0" />
-        <span className="tracking-wide font-sans">BERANDA</span>
-      </Link>
+        <LogOut className="size-5 shrink-0 text-on-surface-variant group-hover:text-error transition-colors" />
+        <span className="tracking-wide font-sans">KELUAR</span>
+      </button>
 
     </div>
   );

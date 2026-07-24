@@ -89,17 +89,6 @@ export function ProfileDropdown({ profile }: ProfileDropdownProps) {
             <Settings className="size-4 text-on-surface-variant" />
             <span>Settings</span>
           </Link>
-          <div className="h-px bg-outline-variant/30 my-1" />
-          <button
-            onClick={() => {
-              setIsOpen(false);
-              handleLogout();
-            }}
-            className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-error hover:bg-error-container/10 transition-colors uppercase tracking-wider w-full text-left cursor-pointer"
-          >
-            <LogOut className="size-4" />
-            <span>Keluar</span>
-          </button>
         </div>
       )}
     </div>

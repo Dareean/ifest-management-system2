@@ -51,55 +51,7 @@ async function sendWhatsAppForNotification(
   title: string,
   body?: string,
 ) {
-  try {
-    const admin = createAdminClient();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: userData }: any = await admin
-      .from("committee_assignments")
-      .select("user:profiles!inner(full_name, phone), user_id")
-      .eq("id", assignmentId)
-      .single();
-
-    const fullName = userData?.user?.full_name ?? "";
-    const phone = userData?.user?.phone;
-
-    if (!phone) return; // No phone number, skip WhatsApp
-
-    const { sendWhatsAppMessage, formatWhatsAppMessage } = await import("@/lib/fonnte");
-
-    // Format message based on notification type
-    let message = "";
-    if (type === "task") {
-      message = formatWhatsAppMessage({
-        title: "📋 Tugas Baru",
-        body: `Halo ${fullName},\n\nAnda memiliki tugas baru:\n*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "Sintuwu",
-      });
-    } else if (type === "letter") {
-      message = formatWhatsAppMessage({
-        title: "📄 Pembaruan Surat",
-        body: `Halo ${fullName},\n\n*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "Sintuwu",
-      });
-    } else if (type === "meeting") {
-      message = formatWhatsAppMessage({
-        title: "📅 Undangan Rapat",
-        body: `Halo ${fullName},\n\n*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "Sintuwu",
-      });
-    } else {
-      message = formatWhatsAppMessage({
-        title: title,
-        body: `Halo ${fullName},\n\n${body ?? title}`,
-        footer: "Sintuwu",
-      });
-    }
-
-    await sendWhatsAppMessage({ phone, message });
-  } catch {
-    // WhatsApp failure is non-critical
-  }
+  // WhatsApp notification disabled (Fonnte removed)
 }
 
 async function sendWhatsAppToGroup(
@@ -108,42 +60,7 @@ async function sendWhatsAppToGroup(
   title: string,
   body?: string,
 ) {
-  try {
-    const { sendWhatsAppMessage, formatWhatsAppMessage } = await import("@/lib/fonnte");
-
-    // Format message based on notification type (no personalization for group)
-    let message = "";
-    if (type === "task") {
-      message = formatWhatsAppMessage({
-        title: "📋 Tugas Baru",
-        body: `*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "Sintuwu",
-      });
-    } else if (type === "letter") {
-      message = formatWhatsAppMessage({
-        title: "📄 Pembaruan Surat",
-        body: `*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "Sintuwu",
-      });
-    } else if (type === "meeting") {
-      message = formatWhatsAppMessage({
-        title: "📅 Undangan Rapat",
-        body: `*${title}*${body ? `\n\n${body}` : ""}`,
-        footer: "Sintuwu",
-      });
-    } else {
-      message = formatWhatsAppMessage({
-        title: title,
-        body: body ?? title,
-        footer: "Sintuwu",
-      });
-    }
-
-    // For group, use groupId as the "phone" parameter
-    await sendWhatsAppMessage({ phone: groupId, message });
-  } catch {
-    // WhatsApp group failure is non-critical
-  }
+  // WhatsApp notification disabled (Fonnte removed)
 }
 
 export async function createNotification(

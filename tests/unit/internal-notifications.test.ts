@@ -23,11 +23,6 @@ vi.mock('@/lib/email', () => ({
   sendEmailNotification: mockSendEmailNotification,
 }));
 
-vi.mock('@/lib/fonnte', () => ({
-  sendWhatsAppMessage: vi.fn(),
-  formatWhatsAppMessage: vi.fn((m: any) => `*${m.title}*\n\n${m.body}\n\n_${m.footer}_`),
-}));
-
 function setupCommitteeAssignmentsMock(overrides?: { userData?: any; membersData?: any }) {
   const { userData = null, membersData = null } = overrides ?? {};
   return () => {
@@ -88,22 +83,6 @@ describe('Internal Notifications', () => {
       expect(mockSendEmailNotification).toHaveBeenCalled();
     });
 
-    it('should send WhatsApp for notification', async () => {
-      const committeeMock = setupCommitteeAssignmentsMock();
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'committee_assignments') return committeeMock();
-        if (table === 'notifications') return createMockSupabase({ data: [{ id: 'notif-1' }], error: null });
-        return createMockSupabase({ data: null, error: null });
-      });
-
-      const { sendWhatsAppMessage } = await import('@/lib/fonnte');
-      const { createNotification } = await import('@/lib/internal-notifications');
-      await createNotification('test-id', 'meeting', 'Meeting Title', 'Meeting Body', false);
-      await flushAsync();
-
-      expect(sendWhatsAppMessage).toHaveBeenCalled();
-    });
-
     it('should format task-type email correctly', async () => {
       const committeeMock = setupCommitteeAssignmentsMock();
       mockFrom.mockImplementation((table: string) => {
@@ -152,24 +131,6 @@ describe('Internal Notifications', () => {
       expect(html).toContain('Pembaruan surat');
     });
 
-    it('should skip WhatsApp when no phone number', async () => {
-      const committeeMock = setupCommitteeAssignmentsMock({
-        userData: { user: { full_name: 'No Phone', phone: null }, user_id: 'uid' },
-      });
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'committee_assignments') return committeeMock();
-        if (table === 'notifications') return createMockSupabase({ data: [{ id: 'notif-1' }], error: null });
-        return createMockSupabase({ data: null, error: null });
-      });
-
-      const { sendWhatsAppMessage } = await import('@/lib/fonnte');
-      const { createNotification } = await import('@/lib/internal-notifications');
-      await createNotification('test-id', 'test', 'Title', 'Body', false);
-      await flushAsync();
-
-      expect(sendWhatsAppMessage).not.toHaveBeenCalled();
-    });
-
     it('should handle missing email gracefully', async () => {
       mockGetUserById.mockResolvedValue({ data: { user: null }, error: null });
       const committeeMock = setupCommitteeAssignmentsMock();
@@ -188,38 +149,6 @@ describe('Internal Notifications', () => {
   });
 
   describe('notifyDivision', () => {
-    it('should notify division members with group WhatsApp', async () => {
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'committee_assignments') return setupCommitteeAssignmentsMock()();
-        if (table === 'divisions') return createMockSupabase({ data: { whatsapp_group_id: 'wa-group-1' }, error: null });
-        if (table === 'notifications') return createMockSupabase({ data: [{ id: 'notif-1' }], error: null });
-        return createMockSupabase({ data: null, error: null });
-      });
-
-      const { sendWhatsAppMessage } = await import('@/lib/fonnte');
-      const { notifyDivision } = await import('@/lib/internal-notifications');
-      await notifyDivision('div-1', 'test', 'Title', 'Body', false);
-      await flushAsync();
-
-      expect(sendWhatsAppMessage).toHaveBeenCalledWith(expect.objectContaining({ phone: 'wa-group-1' }));
-    });
-
-    it('should notify division with individual WhatsApp when no group id', async () => {
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'committee_assignments') return setupCommitteeAssignmentsMock()();
-        if (table === 'divisions') return createMockSupabase({ data: { whatsapp_group_id: null }, error: null });
-        if (table === 'notifications') return createMockSupabase({ data: [{ id: 'notif-1' }], error: null });
-        return createMockSupabase({ data: null, error: null });
-      });
-
-      const { sendWhatsAppMessage } = await import('@/lib/fonnte');
-      const { notifyDivision } = await import('@/lib/internal-notifications');
-      await notifyDivision('div-1', 'test', 'Title', 'Body', false);
-      await flushAsync();
-
-      expect(sendWhatsAppMessage).toHaveBeenCalled();
-    });
-
     it('should send emails when urgent', async () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === 'committee_assignments') return setupCommitteeAssignmentsMock()();
@@ -237,42 +166,6 @@ describe('Internal Notifications', () => {
   });
 
   describe('notifyAllMembers', () => {
-    it('should notify all members via group WhatsApp', async () => {
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'committee_assignments') return setupCommitteeAssignmentsMock()();
-        if (table === 'notifications') return createMockSupabase({ data: [{ id: 'notif-1' }], error: null });
-        return createMockSupabase({
-          data: [
-            { whatsapp_group_id: 'group-a' },
-            { whatsapp_group_id: 'group-b' },
-          ],
-          error: null,
-        });
-      });
-
-      const { sendWhatsAppMessage } = await import('@/lib/fonnte');
-      const { notifyAllMembers } = await import('@/lib/internal-notifications');
-      await notifyAllMembers('test', 'Title', 'Body', false);
-      await flushAsync();
-
-      expect(sendWhatsAppMessage).toHaveBeenCalled();
-    });
-
-    it('should fallback to individual WhatsApp when no groups configured', async () => {
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'committee_assignments') return setupCommitteeAssignmentsMock()();
-        if (table === 'notifications') return createMockSupabase({ data: [{ id: 'notif-1' }], error: null });
-        return createMockSupabase({ data: [], error: null });
-      });
-
-      const { sendWhatsAppMessage } = await import('@/lib/fonnte');
-      const { notifyAllMembers } = await import('@/lib/internal-notifications');
-      await notifyAllMembers('test', 'Title', 'Body', false);
-      await flushAsync();
-
-      expect(sendWhatsAppMessage).toHaveBeenCalled();
-    });
-
     it('should send emails when urgent', async () => {
       mockFrom.mockImplementation((table: string) => {
         if (table === 'committee_assignments') return setupCommitteeAssignmentsMock()();
@@ -302,56 +195,6 @@ describe('Internal Notifications', () => {
       await flushAsync();
 
       expect(mockSendEmailNotification).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('WhatsApp message formatting via createNotification', () => {
-    it('should format task WhatsApp message correctly', async () => {
-      const committeeMock = setupCommitteeAssignmentsMock();
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'committee_assignments') return committeeMock();
-        if (table === 'notifications') return createMockSupabase({ data: [{ id: 'notif-1' }], error: null });
-        return createMockSupabase({ data: null, error: null });
-      });
-
-      const { sendWhatsAppMessage } = await import('@/lib/fonnte');
-      const { createNotification } = await import('@/lib/internal-notifications');
-      await createNotification('test-id', 'task', 'Task Title', 'Task details', false);
-      await flushAsync();
-
-      expect(sendWhatsAppMessage).toHaveBeenCalled();
-    });
-
-    it('should format meeting WhatsApp message correctly', async () => {
-      const committeeMock = setupCommitteeAssignmentsMock();
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'committee_assignments') return committeeMock();
-        if (table === 'notifications') return createMockSupabase({ data: [{ id: 'notif-1' }], error: null });
-        return createMockSupabase({ data: null, error: null });
-      });
-
-      const { sendWhatsAppMessage } = await import('@/lib/fonnte');
-      const { createNotification } = await import('@/lib/internal-notifications');
-      await createNotification('test-id', 'meeting', 'Meeting Title', 'Meeting details', false);
-      await flushAsync();
-
-      expect(sendWhatsAppMessage).toHaveBeenCalled();
-    });
-
-    it('should format unknown type with default format', async () => {
-      const committeeMock = setupCommitteeAssignmentsMock();
-      mockFrom.mockImplementation((table: string) => {
-        if (table === 'committee_assignments') return committeeMock();
-        if (table === 'notifications') return createMockSupabase({ data: [{ id: 'notif-1' }], error: null });
-        return createMockSupabase({ data: null, error: null });
-      });
-
-      const { sendWhatsAppMessage } = await import('@/lib/fonnte');
-      const { createNotification } = await import('@/lib/internal-notifications');
-      await createNotification('test-id', 'unknown', 'Custom Title', 'Custom body', false);
-      await flushAsync();
-
-      expect(sendWhatsAppMessage).toHaveBeenCalled();
     });
   });
 });

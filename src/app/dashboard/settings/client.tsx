@@ -168,7 +168,7 @@ export function SettingsClient({ profile }: { profile: ProfileData }) {
 
             <div className="flex flex-col gap-2">
               <label htmlFor="phone" className="text-sm font-bold text-on-surface font-sans">
-                Nomor WhatsApp / Telepon
+                Nomor Telepon
               </label>
               <input
                 id="phone"
@@ -178,7 +178,7 @@ export function SettingsClient({ profile }: { profile: ProfileData }) {
                 onChange={(e) => setPhone(e.target.value)}
                 className="px-4 py-3 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest text-on-surface text-sm font-sans outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
               />
-              <span className="text-[11px] text-on-surface-variant/60 font-medium">Digunakan untuk menerima notifikasi pengingat via WhatsApp.</span>
+              <span className="text-[11px] text-on-surface-variant/60 font-medium">Digunakan untuk kontak koordinasi kepanitiaan.</span>
             </div>
           </div>
 
@@ -195,9 +195,9 @@ export function SettingsClient({ profile }: { profile: ProfileData }) {
       {activeTab === "NOTIFICATIONS" && (
         <div className="bg-white border border-outline-variant/60 rounded-3xl p-6 sm:p-8 flex flex-col gap-6 shadow-sm">
           <div>
-            <h3 className="text-base font-bold text-on-surface">Preferensi Notifikasi Email & WhatsApp</h3>
+            <h3 className="text-base font-bold text-on-surface">Preferensi Notifikasi Email</h3>
             <p className="text-xs text-on-surface-variant mt-1">
-              Atur pemberitahuan yang ingin Anda terima langsung ke inbox email dan nomor WhatsApp Anda.
+              Atur pemberitahuan yang ingin Anda terima langsung ke inbox email Anda.
             </p>
           </div>
 
@@ -256,23 +256,7 @@ export function SettingsClient({ profile }: { profile: ProfileData }) {
               />
             </div>
 
-            <div className="flex items-center justify-between pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-                  <Smartphone className="size-4.5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-on-surface">WhatsApp Alert Message (Fonnte)</p>
-                  <p className="text-xs text-on-surface-variant/70">Kirim pesan WhatsApp otomatis untuk tugas mendesak.</p>
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                checked={waTaskAlert}
-                onChange={(e) => setWaTaskAlert(e.target.checked)}
-                className="size-5 rounded-lg border-outline-variant text-primary focus:ring-primary cursor-pointer"
-              />
-            </div>
+            {/* Brevo email options... */}
           </div>
         </div>
       )}
@@ -385,23 +369,7 @@ export function SettingsClient({ profile }: { profile: ProfileData }) {
                 </div>
               </div>
 
-              {/* Fonnte Status */}
-              <div className="p-5 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest flex items-start gap-3.5">
-                <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 shrink-0">
-                  <Smartphone className="size-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-extrabold text-on-surface">Fonnte WhatsApp Gateway</h4>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      Terhubung
-                    </span>
-                  </div>
-                  <p className="text-xs text-on-surface-variant/70 mt-1">
-                    API Token aktif. Digunakan untuk pengiriman notifikasi WhatsApp pengingat tugas.
-                  </p>
-                </div>
-              </div>
+              {/* Brevo Status only */}
             </div>
           </div>
         </div>
