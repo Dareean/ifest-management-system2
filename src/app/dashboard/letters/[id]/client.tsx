@@ -181,6 +181,15 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
             <span>{letter.division}</span>
             <span className="text-outline-variant">•</span>
             <span>Diajukan oleh: <strong className="text-on-surface font-medium">{letter.requester}</strong></span>
+            <span className="text-outline-variant">•</span>
+            <span>Diajukan pada: <strong className="text-on-surface font-medium">
+              {(() => {
+                const date = new Date(letter.createdAt);
+                const dStr = date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+                const tStr = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false });
+                return `${dStr} • ${tStr} WITA`;
+              })()}
+            </strong></span>
           </p>
         </div>
       </div>
@@ -482,9 +491,12 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
                   {letter.deadlineAt ? (
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-sm font-semibold text-on-surface">
-                        {new Date(letter.deadlineAt).toLocaleDateString("id-ID", {
-                          day: "numeric", month: "short", year: "numeric"
-                        })}
+                        {(() => {
+                          const date = new Date(letter.deadlineAt);
+                          const dStr = date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+                          const tStr = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false });
+                          return `${dStr} • ${tStr} WITA`;
+                        })()}
                       </span>
                       {daysRemaining && (
                         <Badge variant={daysRemaining.variant} className="text-[10px] px-2 py-0">

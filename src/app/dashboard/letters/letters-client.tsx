@@ -287,9 +287,12 @@ export function LettersClient({ initialLetters, isApprover, divisions }: Letters
                       </Badge>
                     </div>
                     <span className="text-[10px] font-mono text-on-surface-variant">
-                      {new Date(letter.createdAt).toLocaleDateString("id-ID", {
-                        day: "numeric", month: "short", year: "numeric",
-                      })}
+                      {(() => {
+                        const date = new Date(letter.createdAt);
+                        const dStr = date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+                        const tStr = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false });
+                        return `${dStr} • ${tStr} WITA`;
+                      })()}
                     </span>
                   </div>
 
@@ -325,9 +328,12 @@ export function LettersClient({ initialLetters, isApprover, divisions }: Letters
                         <Clock className="size-3.5 shrink-0" />
                         <span>
                           Tenggat:{" "}
-                          {new Date(letter.deadlineAt).toLocaleDateString("id-ID", {
-                            day: "numeric", month: "long", year: "numeric",
-                          })}
+                          {(() => {
+                            const date = new Date(letter.deadlineAt);
+                            const dStr = date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+                            const tStr = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false });
+                            return `${dStr} • ${tStr} WITA`;
+                          })()}
                         </span>
                       </div>
                     )}

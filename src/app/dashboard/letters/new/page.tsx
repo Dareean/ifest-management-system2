@@ -58,9 +58,9 @@ export default function NewLetterPage() {
                 Deadline Dibutuhkan
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 name="deadlineAt"
-                className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none"
+                className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none cursor-pointer"
               />
             </div>
             <div>

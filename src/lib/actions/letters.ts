@@ -52,7 +52,7 @@ export async function createLetter(prevState: ActionState, formData: FormData): 
       letter_type: letterType,
       subject,
       body,
-      deadline_at: deadlineAt || null,
+      deadline_at: deadlineAt ? new Date(deadlineAt + "+08:00").toISOString() : null,
       target_institution: targetInstitution || null,
       category: category || null,
       request_options: requestOptions || null,

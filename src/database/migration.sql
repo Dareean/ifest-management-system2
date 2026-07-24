@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS letter_requests (
     status VARCHAR(20) DEFAULT 'requested',
     revision_count INT DEFAULT 0,
     final_document_url TEXT,
-    deadline_at DATE,
+    deadline_at TIMESTAMPTZ,
     target_institution VARCHAR(255),
     category VARCHAR(50),
     request_options TEXT,
