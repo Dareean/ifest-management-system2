@@ -14,6 +14,7 @@ export async function updateProfile(prevState: unknown, formData: FormData) {
   const fullName = formData.get("fullName") as string;
   const nim = formData.get("nim") as string;
   const phone = formData.get("phone") as string;
+  const avatarUrl = formData.get("avatarUrl") as string;
 
   const { error } = await admin
     .from("profiles")
@@ -22,6 +23,7 @@ export async function updateProfile(prevState: unknown, formData: FormData) {
       full_name: fullName,
       nim,
       phone: phone || null,
+      avatar_url: avatarUrl || null,
     })
     .eq("id", userId);
 

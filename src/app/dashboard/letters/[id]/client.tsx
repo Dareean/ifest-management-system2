@@ -9,7 +9,7 @@ import {
   ArrowLeft, Check, Send, RotateCcw, FileText,
   Clock, Building2, Tag, AlertTriangle, ExternalLink,
   User, CheckCircle2, AlertCircle, Calendar, Layers, ClipboardList,
-  Edit2
+  Edit2, UploadCloud, Loader2
 } from "lucide-react";
 import { startProcessingLetter, completeLetter, requestRevision } from "@/lib/actions/letter-workflow";
 import { getStatusDisplay, getPriorityDisplay } from "@/lib/data/letters";
@@ -51,6 +51,9 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [revisionState, revisionAction, revisionPending] = useActionState(requestRevision, null);
 
+  const [uploadMode, setUploadMode] = useState<"upload" | "link">("upload");
+  const [uploading, setUploading] = useState(false);
+
   async function handleStartProcessing() {
     setIsSubmitting(true);
     setActionMsg(null);
@@ -60,12 +63,60 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
     else router.refresh();
   }
 
-  async function handleCompleteSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!driveLink.trim()) {
-      setActionMsg("Link Google Drive harus diisi.");
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setActionMsg("Hanya file PDF yang diperbolehkan.");
       return;
     }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setActionMsg("Ukuran file maksimal 10MB.");
+      return;
+    }
+
+    setUploading(true);
+    setActionMsg(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "letters");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = (await response.json()) as { url?: string; error?: string };
+      if (response.ok && data.url) {
+        setDriveLink(data.url);
+      } else {
+        setActionMsg(data.error || "Gagal mengunggah dokumen.");
+      }
+    } catch (err) {
+      console.error("Document upload error:", err);
+      setActionMsg("Terjadi kesalahan saat mengunggah dokumen.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  async function handleCompleteSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (uploading) {
+      setActionMsg("Harap tunggu hingga proses unggah selesai.");
+      return;
+    }
+
+    if (!driveLink.trim()) {
+      setActionMsg("Dokumen harus diunggah atau link harus diisi.");
+      return;
+    }
+
     setIsSubmitting(true);
     setActionMsg(null);
     const result = await completeLetter(letter.id, driveLink);
@@ -79,6 +130,7 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
   }
 
   const daysRemaining = getDaysRemaining(letter.deadlineAt);
+
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6 px-4">
@@ -410,7 +462,7 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
                 className="inline-flex items-center justify-center gap-2 w-full h-12 bg-primary/10 text-primary hover:bg-primary/20 rounded-full font-semibold transition-colors text-sm"
               >
                 <ExternalLink className="size-4" />
-                Buka di Google Drive
+                {letter.finalDocumentUrl.includes("/api/files/") ? "Lihat / Unduh Dokumen" : "Buka di Google Drive"}
               </a>
             </div>
           )}
@@ -420,42 +472,117 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
       </div>
 
       {/* Selesaikan Surat Modal */}
-      <Modal open={showCompleteModal} onClose={() => setShowCompleteModal(false)} title="Selesaikan Surat & Lampirkan File">
+      <Modal open={showCompleteModal} onClose={() => { setShowCompleteModal(false); setActionMsg(null); }} title="Selesaikan Surat & Lampirkan File">
         <form onSubmit={handleCompleteSubmit} className="flex flex-col gap-4 font-sans">
           <div>
             <p className="text-sm text-on-surface-variant mb-4 leading-relaxed">
-              Masukkan link Google Drive dokumen final yang sudah ditandatangani. Link ini akan langsung terlihat oleh pengaju.
+              Pilih cara melampirkan dokumen resmi final yang sudah ditandatangani. Dokumen ini akan langsung dapat diunduh/dilihat oleh pengaju.
             </p>
-            <label className="caption block mb-1.5 text-on-surface-variant font-semibold">Link Dokumen Google Drive <span className="text-error">*</span></label>
-            <input
-              type="text"
-              value={driveLink}
-              onChange={(e) => setDriveLink(e.target.value)}
-              className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none"
-              placeholder="https://drive.google.com/..."
-              required
-            />
-            {driveLink && driveLink.startsWith("http") && (
-              <a
-                href={driveLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 mt-2 text-xs text-primary underline hover:opacity-70 transition-opacity"
+
+            <div className="flex border-b border-outline-variant/30 mb-4">
+              <button
+                type="button"
+                onClick={() => setUploadMode("upload")}
+                className={`flex-1 py-2 text-center text-sm font-semibold border-b-2 cursor-pointer transition-colors ${
+                  uploadMode === "upload"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-on-surface-variant hover:text-primary"
+                }`}
               >
-                <ExternalLink className="size-3" />
-                Cek link (buka di tab baru)
-              </a>
+                Upload File PDF (R2)
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadMode("link")}
+                className={`flex-1 py-2 text-center text-sm font-semibold border-b-2 cursor-pointer transition-colors ${
+                  uploadMode === "link"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-on-surface-variant hover:text-primary"
+                }`}
+              >
+                Link Google Drive
+              </button>
+            </div>
+
+            {uploadMode === "upload" ? (
+              <div className="flex flex-col gap-2">
+                <label className="caption block mb-1.5 text-on-surface-variant font-semibold">Upload Dokumen Final (PDF) <span className="text-error">*</span></label>
+                <div className="border-2 border-dashed border-primary/30 rounded-xl p-6 flex flex-col items-center justify-center gap-2 hover:border-primary/60 transition-colors bg-surface-container/10">
+                  {uploading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="size-8 text-primary animate-spin" />
+                      <p className="text-sm font-semibold text-on-surface">Mengunggah file...</p>
+                    </div>
+                  ) : driveLink && driveLink.includes("/api/files/") ? (
+                    <div className="flex flex-col items-center gap-2 w-full">
+                      <FileText className="size-8 text-primary" />
+                      <p className="text-sm font-semibold text-on-surface truncate max-w-xs">{driveLink.split("/").pop()}</p>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setDriveLink("")}
+                          className="text-xs font-semibold text-error hover:underline cursor-pointer"
+                        >
+                          Hapus File
+                        </button>
+                        <a
+                          href={driveLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5"
+                        >
+                          Pratinjau <ExternalLink className="size-3" />
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center gap-2 cursor-pointer w-full h-full py-4">
+                      <UploadCloud className="size-8 text-on-surface-variant" />
+                      <span className="text-sm font-semibold text-on-surface">Klik atau seret PDF di sini</span>
+                      <span className="text-xs text-on-surface-variant">Maksimal ukuran 10MB</span>
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="caption block mb-1.5 text-on-surface-variant font-semibold">Link Dokumen Google Drive <span className="text-error">*</span></label>
+                <input
+                  type="text"
+                  value={driveLink.includes("/api/files/") ? "" : driveLink}
+                  onChange={(e) => setDriveLink(e.target.value)}
+                  className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none"
+                  placeholder="https://drive.google.com/..."
+                />
+                {driveLink && driveLink.startsWith("http") && !driveLink.includes("/api/files/") && (
+                  <a
+                    href={driveLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2 text-xs text-primary underline hover:opacity-70 transition-opacity"
+                  >
+                    <ExternalLink className="size-3" />
+                    Cek link (buka di tab baru)
+                  </a>
+                )}
+              </div>
             )}
           </div>
           {actionMsg && (
             <p className="text-sm text-error bg-error-container font-mono p-3 rounded-lg border border-error/20">{actionMsg}</p>
           )}
           <div className="flex gap-2 justify-end mt-2">
-            <Button type="button" variant="ghost" onClick={() => { setShowCompleteModal(false); setActionMsg(null); }} className="cursor-pointer">
+            <Button type="button" variant="ghost" onClick={() => { setShowCompleteModal(false); setActionMsg(null); }} className="cursor-pointer" disabled={isSubmitting}>
               Batal
             </Button>
-            <Button type="submit" className="cursor-pointer" disabled={isSubmitting}>
-              {isSubmitting ? "Menyimpan..." : "Tandai Selesai & Kirim Link"}
+            <Button type="submit" className="cursor-pointer" disabled={isSubmitting || uploading}>
+              {isSubmitting ? "Menyimpan..." : "Tandai Selesai & Simpan"}
             </Button>
           </div>
         </form>

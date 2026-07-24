@@ -7,3 +7,11 @@ assets = { directory = ".open-next/assets", not_found_handling = "none" }
 
 [placement]
 mode = "smart"
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "sintuwu-ifest"
+preview_bucket_name = "sintuwu-ifest"
+
+
+

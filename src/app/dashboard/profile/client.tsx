@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pencil, Mail, Hash, Phone, Calendar, Shield, FileText, CalendarDays, CheckCircle, Circle, User, TrendingUp } from "lucide-react";
+import { Pencil, Mail, Hash, Phone, Calendar, Shield, FileText, CalendarDays, CheckCircle, Circle, User, TrendingUp, Camera, Loader2 } from "lucide-react";
 import { updateProfile, changePassword } from "@/lib/actions/profile";
 import type { ProfileData } from "@/lib/data/profile";
 
@@ -13,6 +13,10 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(updateProfile, null);
   const [pwState, pwAction, pwPending] = useActionState(changePassword, null);
+
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || "");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const getInitials = (name: string) => {
     if (!name) return "U";
@@ -22,6 +26,42 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
       .slice(0, 2)
       .join("")
       .toUpperCase();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadError("Ukuran gambar maksimal 2MB.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "avatars");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = (await response.json()) as { url?: string; error?: string };
+      if (response.ok && data.url) {
+        setAvatarUrl(data.url);
+      } else {
+        setUploadError(data.error || "Gagal mengunggah foto.");
+      }
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      setUploadError("Terjadi kesalahan saat mengunggah foto.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -49,17 +89,35 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
           {/* Profile Card */}
           <div className="bg-white border border-outline-variant/60 rounded-2xl p-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
-              {profile.avatarUrl ? (
-                <img
-                  src={profile.avatarUrl}
-                  alt={profile.fullName}
-                  className="w-16 h-16 rounded-full object-cover shrink-0 border border-outline-variant"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-block-lilac flex items-center justify-center font-bold text-primary text-2xl shrink-0">
-                  {getInitials(profile.fullName)}
-                </div>
-              )}
+              <div className="relative group shrink-0 select-none">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={profile.fullName}
+                    className="w-16 h-16 rounded-full object-cover border border-outline-variant"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-block-lilac flex items-center justify-center font-bold text-primary text-2xl">
+                    {getInitials(profile.fullName)}
+                  </div>
+                )}
+                {editing && (
+                  <label className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                    {uploading ? (
+                      <Loader2 className="size-5 text-white animate-spin" />
+                    ) : (
+                      <Camera className="size-5 text-white" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                      disabled={uploading}
+                    />
+                  </label>
+                )}
+              </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-2xl font-bold text-on-surface truncate">{profile.fullName || "Nama Panitia"}</h2>
                 <p className="text-sm text-on-surface-variant font-mono mt-1">
@@ -67,6 +125,9 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
                     ? `${profile.assignment.role} — ${profile.assignment.division}`
                     : "Belum terdaftar di kepanitiaan"}
                 </p>
+                {uploadError && (
+                  <p className="text-xs font-semibold text-error mt-1.5">{uploadError}</p>
+                )}
               </div>
             </div>
           </div>
@@ -84,6 +145,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
 
               <form action={formAction} className="flex flex-col gap-6">
                 <input type="hidden" name="userId" value={profile.userId ?? ""} />
+                <input type="hidden" name="avatarUrl" value={avatarUrl} />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {/* Email (readonly) */}
