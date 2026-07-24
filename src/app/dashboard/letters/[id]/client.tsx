@@ -47,12 +47,14 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [driveLink, setDriveLink] = useState(letter.finalDocumentUrl || "");
+  const [showDraft, setShowDraft] = useState(letter.status !== "sent");
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [revisionState, revisionAction, revisionPending] = useActionState(requestRevision, null);
 
   const [uploadMode, setUploadMode] = useState<"upload" | "link">("upload");
   const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   async function handleStartProcessing() {
     setIsSubmitting(true);
@@ -63,7 +65,7 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
     else router.refresh();
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -72,60 +74,77 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setActionMsg("Ukuran file maksimal 10MB.");
+    if (file.size > 90 * 1024 * 1024) {
+      setActionMsg("Ukuran file maksimal 90MB.");
       return;
     }
 
-    setUploading(true);
+    setSelectedFile(file);
     setActionMsg(null);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "letters");
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = (await response.json()) as { url?: string; error?: string };
-      if (response.ok && data.url) {
-        setDriveLink(data.url);
-      } else {
-        setActionMsg(data.error || "Gagal mengunggah dokumen.");
-      }
-    } catch (err) {
-      console.error("Document upload error:", err);
-      setActionMsg("Terjadi kesalahan saat mengunggah dokumen.");
-    } finally {
-      setUploading(false);
-    }
   };
 
   async function handleCompleteSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (uploading) {
-      setActionMsg("Harap tunggu hingga proses unggah selesai.");
-      return;
-    }
+    let finalUrl = driveLink;
 
-    if (!driveLink.trim()) {
-      setActionMsg("Dokumen harus diunggah atau link harus diisi.");
-      return;
+    if (uploadMode === "upload") {
+      if (!selectedFile) {
+        setActionMsg("Harap pilih file PDF terlebih dahulu.");
+        return;
+      }
+
+      setUploading(true);
+      setActionMsg("Mengunggah dokumen ke Google Drive...");
+
+      try {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("folder", "letters");
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = (await response.json()) as { url?: string; error?: string };
+        if (response.ok && data.url) {
+          finalUrl = data.url;
+        } else {
+          setActionMsg(data.error || "Gagal mengunggah dokumen.");
+          setUploading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Document upload error:", err);
+        setActionMsg("Terjadi kesalahan saat mengunggah dokumen.");
+        setUploading(false);
+        return;
+      } finally {
+        setUploading(false);
+      }
+    } else {
+      if (!finalUrl.trim()) {
+        setActionMsg("Dokumen harus diunggah atau link harus diisi.");
+        return;
+      }
     }
 
     setIsSubmitting(true);
-    setActionMsg(null);
-    const result = await completeLetter(letter.id, driveLink);
-    setIsSubmitting(false);
-    if (result.error) {
-      setActionMsg(result.error);
-    } else {
-      setShowCompleteModal(false);
-      router.refresh();
+    setActionMsg("Menyimpan status surat...");
+    try {
+      const result = await completeLetter(letter.id, finalUrl);
+      if (result.error) {
+        setActionMsg(result.error);
+      } else {
+        setShowCompleteModal(false);
+        router.refresh();
+      }
+    } catch (err) {
+      console.error("Complete letter error:", err);
+      setActionMsg("Terjadi kesalahan sistem.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -175,48 +194,116 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
       {/* Main Responsive Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
-        {/* Left Column: Letter Body Content & Revision History */}
+        {/* Left Column: Letter Body Content, PDF Preview & Revision History */}
         <div className="lg:col-span-2 flex flex-col gap-8">
           
-          {/* Document Preview Card (Paper Style) */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-on-surface-variant font-semibold">
-              <FileText className="size-5 text-primary" />
-              <h2>Maksud Surat</h2>
-            </div>
-            
-            <div className="bg-white border border-outline-variant/40 rounded-2xl shadow-sm relative overflow-hidden">
-              {/* Premium Top accent bar */}
-              <div className="h-1.5 w-full bg-gradient-to-r from-primary to-accent-magenta" />
-              
-              <div className="p-6 sm:p-10 min-h-[300px] flex flex-col justify-between font-sans">
-                {/* Simulated Paper Header */}
-                <div className="border-b border-outline-variant/20 pb-4 mb-6">
-                  <span className="text-[10px] font-mono tracking-widest text-on-surface-variant/50 uppercase">ISIAN PERMOHONAN</span>
-                </div>
-                
-                {/* Body Content */}
-                <div className="flex-1">
-                  <p className="whitespace-pre-wrap text-on-surface leading-relaxed text-base">
-                    {letter.body}
-                  </p>
-                </div>
-                
-                {/* Simulated Paper Footer */}
-                <div className="border-t border-outline-variant/10 pt-4 mt-8 flex justify-between items-center text-xs text-on-surface-variant/40 font-mono">
-                  <span>IFEST 2026</span>
-                  <span>ID: {letter.id.slice(0, 8)}</span>
+          {/* 1. Final Document Preview (Wide Main Column) - Shown at the TOP if completed */}
+          {letter.status === "sent" && letter.finalDocumentUrl && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2 text-on-surface-variant font-semibold">
+                <FileText className="size-5 text-primary" />
+                <h2 className="text-lg font-bold text-on-surface">Dokumen Resmi Final</h2>
+              </div>
+              <div className="bg-white border border-outline-variant/40 rounded-2xl shadow-sm relative overflow-hidden">
+                <div className="h-1.5 w-full bg-gradient-to-r from-primary to-accent-lilac" />
+                <div className="p-6">
+                  {letter.finalDocumentUrl.includes("drive.google.com") ? (
+                    <div className="w-full h-[650px] border border-outline-variant rounded-xl overflow-hidden bg-surface-container-low shadow-inner">
+                      <iframe
+                        src={letter.finalDocumentUrl.replace(/\/view(\?.*)?$/, "/preview")}
+                        className="w-full h-full border-0"
+                        allow="autoplay"
+                      />
+                    </div>
+                  ) : letter.finalDocumentUrl.includes("/api/files/") ? (
+                    <div className="w-full h-[650px] border border-outline-variant rounded-xl overflow-hidden bg-surface-container-low shadow-inner">
+                      <iframe
+                        src={`${letter.finalDocumentUrl}#toolbar=0`}
+                        className="w-full h-full border-0"
+                      />
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center bg-surface-container-low rounded-xl border border-outline-variant">
+                      <p className="text-sm text-on-surface-variant font-medium">Dokumen eksternal dilampirkan:</p>
+                      <a
+                        href={letter.finalDocumentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1.5 text-primary font-semibold underline hover:opacity-85"
+                      >
+                        Buka Dokumen <ExternalLink className="size-4" />
+                      </a>
+                    </div>
+                  )}
+                  
+                  <div className="mt-4 flex items-center justify-between border-t border-outline-variant/20 pt-4 text-xs text-on-surface-variant">
+                    <span className="font-medium">Tersimpan di Google Drive Organisasi</span>
+                    <a
+                      href={letter.finalDocumentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded-full transition-colors"
+                    >
+                      Buka di Tab Baru <ExternalLink className="size-3.5" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
+          )}
+
+          {/* 2. Document Preview Card (Paper Style) */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-on-surface font-semibold">
+                <FileText className="size-5 text-primary shrink-0" />
+                <h2 className="text-lg font-bold">{letter.status === "sent" ? "Detail Pengajuan Awal" : "Maksud Surat"}</h2>
+              </div>
+              {letter.status === "sent" && (
+                <button
+                  onClick={() => setShowDraft(!showDraft)}
+                  className="text-xs text-primary font-bold hover:underline cursor-pointer bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-full transition-colors"
+                >
+                  {showDraft ? "Sembunyikan Draf" : "Tampilkan Draf"}
+                </button>
+              )}
+            </div>
+            
+            {showDraft && (
+              <div className="bg-white border border-outline-variant/40 rounded-2xl shadow-sm relative overflow-hidden transition-all duration-300">
+                {/* Premium Top accent bar */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-primary to-accent-magenta" />
+                
+                <div className="p-6 sm:p-10 min-h-[150px] flex flex-col justify-between font-sans">
+                  {/* Simulated Paper Header */}
+                  <div className="border-b border-outline-variant/20 pb-4 mb-6 flex justify-between items-center">
+                    <span className="text-[10px] font-mono tracking-widest text-on-surface-variant/60 uppercase">ISIAN PERMOHONAN</span>
+                    <span className="text-[10px] font-mono text-on-surface-variant/40">IFEST 2026</span>
+                  </div>
+                  
+                  {/* Body Content */}
+                  <div className="flex-1">
+                    <p className="whitespace-pre-wrap text-on-surface leading-relaxed text-base">
+                      {letter.body}
+                    </p>
+                  </div>
+                  
+                  {/* Simulated Paper Footer */}
+                  <div className="border-t border-outline-variant/10 pt-4 mt-8 flex justify-between items-center text-xs text-on-surface-variant/40 font-mono">
+                    <span>Divisi: {letter.division}</span>
+                    <span>ID: {letter.id.slice(0, 8)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Request Options Card */}
+          {/* 3. Request Options Card */}
           {letter.requestOptions && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-on-surface-variant font-semibold">
                 <ClipboardList className="size-5 text-accent-lilac" />
-                <h2>Permintaan Opsi Surat</h2>
+                <h2 className="text-lg font-bold text-on-surface">Permintaan Opsi Surat</h2>
               </div>
               <div className="bg-surface-container-low border border-outline-variant/40 rounded-2xl p-6 shadow-xs">
                 <p className="whitespace-pre-wrap text-on-surface text-sm font-sans leading-relaxed">
@@ -226,9 +313,9 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
             </div>
           )}
 
-          {/* Revision History Section (Timeline Style) */}
+          {/* 4. Revision History Section (Timeline Style) */}
           <div className="flex flex-col gap-4">
-            <h2 className="text-xl font-bold tracking-tight text-on-surface flex items-center gap-2">
+            <h2 className="text-lg font-bold tracking-tight text-on-surface flex items-center gap-2">
               <RotateCcw className="size-5 text-accent-coral" />
               Riwayat Revisi ({letter.revisions.length})
             </h2>
@@ -277,7 +364,10 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
           {/* Action / Workflow Card (Sekretaris) */}
           {isApprover && (
             <div className="bg-white border border-outline-variant/50 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h3 className="text-sm font-bold font-mono tracking-wider text-on-surface-variant uppercase">Aksi Workflow</h3>
+              <h3 className="text-sm font-bold text-on-surface tracking-wide uppercase border-b border-outline-variant/20 pb-2.5 flex items-center gap-2">
+                <Layers className="size-4 text-primary shrink-0" />
+                <span>Aksi Workflow</span>
+              </h3>
               
               <div className="flex flex-col gap-3">
                 {/* Diajukan or Di Revisi */}
@@ -322,7 +412,10 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
           {/* Action / Workflow Card (Pengaju) */}
           {!isApprover && letter.status === "sent" && (
             <div className="bg-white border border-outline-variant/50 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h3 className="text-sm font-bold font-mono tracking-wider text-on-surface-variant uppercase">Aksi Penerima</h3>
+              <h3 className="text-sm font-bold text-on-surface tracking-wide uppercase border-b border-outline-variant/20 pb-2.5 flex items-center gap-2">
+                <Layers className="size-4 text-primary shrink-0" />
+                <span>Aksi Penerima</span>
+              </h3>
               <div className="flex flex-col gap-3">
                 <Button variant="outline" onClick={() => setShowRevisionModal(true)} className="w-full justify-center cursor-pointer h-12 gap-2 border-accent-coral text-accent-coral hover:bg-accent-coral/5">
                   <RotateCcw className="size-5" />
@@ -334,12 +427,15 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
 
           {/* Stepper Status for Requesters / All */}
           <div className="bg-white border border-outline-variant/50 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-            <h3 className="text-sm font-bold font-mono tracking-wider text-on-surface-variant uppercase">Status Pengajuan</h3>
+            <h3 className="text-sm font-bold text-on-surface tracking-wide uppercase border-b border-outline-variant/20 pb-2.5 flex items-center gap-2">
+              <Clock className="size-4 text-accent-lilac shrink-0" />
+              <span>Status Pengajuan</span>
+            </h3>
             
             <div className="flex flex-col gap-4 relative pl-5 before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-outline-variant/30">
               {/* Step 1: Diajukan */}
               <div className="relative flex items-start gap-3">
-                <div className={`absolute -left-[22px] top-1 w-2.5 h-2.5 rounded-full ${['requested', 'processing', 'in_revision', 'sent'].includes(letter.status) ? 'bg-primary ring-4 ring-primary/15' : 'bg-outline-variant'} z-10`} />
+                <div className={`absolute -left-[22px] top-1.5 w-2.5 h-2.5 rounded-full ${['requested', 'processing', 'in_revision', 'sent'].includes(letter.status) ? 'bg-primary ring-4 ring-primary/15' : 'bg-outline-variant'} z-10`} />
                 <div>
                   <p className="text-sm font-bold text-on-surface">Diajukan</p>
                   <p className="text-xs text-on-surface-variant text-[11px]">Surat berhasil dikirim ke sekretaris</p>
@@ -348,7 +444,7 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
 
               {/* Step 2: Diproses / Revisi */}
               <div className="relative flex items-start gap-3">
-                <div className={`absolute -left-[22px] top-1 w-2.5 h-2.5 rounded-full ${['processing', 'sent'].includes(letter.status) ? 'bg-primary ring-4 ring-primary/15' : letter.status === 'in_revision' ? 'bg-accent-coral ring-4 ring-accent-coral/15' : 'bg-outline-variant'} z-10`} />
+                <div className={`absolute -left-[22px] top-1.5 w-2.5 h-2.5 rounded-full ${['processing', 'sent'].includes(letter.status) ? 'bg-primary ring-4 ring-primary/15' : letter.status === 'in_revision' ? 'bg-accent-coral ring-4 ring-accent-coral/15' : 'bg-outline-variant'} z-10`} />
                 <div>
                   <p className="text-sm font-bold text-on-surface">
                     {letter.status === 'in_revision' ? 'Revisi' : 'Diproses'}
@@ -361,7 +457,7 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
 
               {/* Step 3: Selesai */}
               <div className="relative flex items-start gap-3">
-                <div className={`absolute -left-[22px] top-1 w-2.5 h-2.5 rounded-full ${letter.status === 'sent' ? 'bg-primary ring-4 ring-primary/15' : 'bg-outline-variant'} z-10`} />
+                <div className={`absolute -left-[22px] top-1.5 w-2.5 h-2.5 rounded-full ${letter.status === 'sent' ? 'bg-primary ring-4 ring-primary/15' : 'bg-outline-variant'} z-10`} />
                 <div>
                   <p className="text-sm font-bold text-on-surface">Selesai</p>
                   <p className="text-xs text-on-surface-variant text-[11px]">Dokumen final siap diunduh</p>
@@ -372,14 +468,17 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
 
           {/* Letter Details Card (Metadata list) */}
           <div className="bg-white border border-outline-variant/50 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-            <h3 className="text-sm font-bold font-mono tracking-wider text-on-surface-variant uppercase">Detail Informasi</h3>
+            <h3 className="text-sm font-bold text-on-surface tracking-wide uppercase border-b border-outline-variant/20 pb-2.5 flex items-center gap-2">
+              <ClipboardList className="size-4 text-accent-magenta shrink-0" />
+              <span>Detail Informasi</span>
+            </h3>
             
-            <div className="flex flex-col gap-4.5">
+            <div className="flex flex-col gap-4">
               {/* Deadline */}
               <div className="flex items-start gap-3">
-                <Calendar className="size-5 text-accent-coral shrink-0 mt-0.5" />
+                <Calendar className="size-4.5 text-accent-coral shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold font-mono tracking-wider uppercase text-on-surface-variant/60">DEADLINE DIBUTUHKAN</p>
+                  <p className="text-[10px] font-extrabold text-on-surface-variant/70 tracking-wider uppercase">DEADLINE DIBUTUHKAN</p>
                   {letter.deadlineAt ? (
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-sm font-semibold text-on-surface">
@@ -401,9 +500,9 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
 
               {/* Instansi Tujuan */}
               <div className="flex items-start gap-3">
-                <Building2 className="size-5 text-accent-lilac shrink-0 mt-0.5" />
+                <Building2 className="size-4.5 text-accent-lilac shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold font-mono tracking-wider uppercase text-on-surface-variant/60">INSTANSI TUJUAN</p>
+                  <p className="text-[10px] font-extrabold text-on-surface-variant/70 tracking-wider uppercase">INSTANSI TUJUAN</p>
                   <p className="text-sm font-semibold text-on-surface break-words">
                     {letter.targetInstitution || "-"}
                   </p>
@@ -412,9 +511,9 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
 
               {/* Kategori */}
               <div className="flex items-start gap-3">
-                <Tag className="size-5 text-accent-magenta shrink-0 mt-0.5" />
+                <Tag className="size-4.5 text-accent-magenta shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold font-mono tracking-wider uppercase text-on-surface-variant/60">KATEGORI SURAT</p>
+                  <p className="text-[10px] font-extrabold text-on-surface-variant/70 tracking-wider uppercase">KATEGORI SURAT</p>
                   <p className="text-sm font-semibold text-on-surface">
                     {letter.category ? categoryLabel[letter.category] ?? letter.category : "-"}
                   </p>
@@ -423,9 +522,9 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
 
               {/* Prioritas */}
               <div className="flex items-start gap-3">
-                <AlertTriangle className="size-5 text-accent-coral shrink-0 mt-0.5" />
+                <AlertTriangle className="size-4.5 text-accent-coral shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold font-mono tracking-wider uppercase text-on-surface-variant/60">PRIORITAS</p>
+                  <p className="text-[10px] font-extrabold text-on-surface-variant/70 tracking-wider uppercase">PRIORITAS</p>
                   <div className="mt-0.5">
                     <Badge
                       variant={priority.variant === 'danger' ? 'danger' : priority.variant === 'secondary' ? 'secondary' : 'default'}
@@ -439,9 +538,9 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
 
               {/* Divisi & Pengaju */}
               <div className="flex items-start gap-3 pt-3 border-t border-outline-variant/20">
-                <Layers className="size-5 text-on-surface-variant shrink-0 mt-0.5" />
+                <Layers className="size-4.5 text-on-surface-variant shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold font-mono tracking-wider uppercase text-on-surface-variant/60">UNIT / DIVISI</p>
+                  <p className="text-[10px] font-extrabold text-on-surface-variant/70 tracking-wider uppercase">UNIT / DIVISI</p>
                   <p className="text-sm font-semibold text-on-surface">
                     {letter.division}
                   </p>
@@ -452,17 +551,22 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
 
           {/* Final Document Link Card */}
           {letter.finalDocumentUrl && (
-            <div className="bg-white border border-outline-variant/50 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <h3 className="text-sm font-bold font-mono tracking-wider text-on-surface-variant uppercase">Dokumen Resmi</h3>
-              
+            <div className="bg-white border border-outline-variant/50 rounded-2xl p-6 shadow-sm flex flex-col gap-3">
+              <h3 className="text-sm font-bold text-on-surface tracking-wide uppercase border-b border-outline-variant/20 pb-2.5 flex items-center gap-2">
+                <ExternalLink className="size-4 text-primary shrink-0" />
+                <span>Unduh Dokumen</span>
+              </h3>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Dokumen resmi telah diunggah dan disimpan ke arsip.
+              </p>
               <a
                 href={letter.finalDocumentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 w-full h-12 bg-primary/10 text-primary hover:bg-primary/20 rounded-full font-semibold transition-colors text-sm"
+                className="inline-flex items-center justify-center gap-2 w-full h-11 bg-primary text-white hover:bg-primary/95 rounded-full font-semibold transition-colors text-sm cursor-pointer shadow-xs"
               >
                 <ExternalLink className="size-4" />
-                {letter.finalDocumentUrl.includes("/api/files/") ? "Lihat / Unduh Dokumen" : "Buka di Google Drive"}
+                Buka Dokumen
               </a>
             </div>
           )}
@@ -479,6 +583,22 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
               Pilih cara melampirkan dokumen resmi final yang sudah ditandatangani. Dokumen ini akan langsung dapat diunduh/dilihat oleh pengaju.
             </p>
 
+            {letter.finalDocumentUrl && (
+              <div 
+                className="mb-4 p-3 rounded-xl flex items-start gap-2.5"
+                style={{ 
+                  backgroundColor: '#fffbeb', 
+                  border: '1px solid #fde88d', 
+                  color: '#78350f' 
+                }}
+              >
+                <AlertCircle className="size-4 shrink-0 mt-0.5" style={{ color: '#b45309' }} />
+                <p className="text-xs leading-normal font-semibold">
+                  <strong>Info Overwrite:</strong> Mengunggah berkas baru akan secara otomatis menghapus berkas surat lama Anda dari Google Drive agar penyimpanan organisasi tetap rapi.
+                </p>
+              </div>
+            )}
+
             <div className="flex border-b border-outline-variant/30 mb-4">
               <button
                 type="button"
@@ -489,7 +609,7 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
                     : "border-transparent text-on-surface-variant hover:text-primary"
                 }`}
               >
-                Upload File PDF (R2)
+                Upload File PDF
               </button>
               <button
                 type="button"
@@ -513,33 +633,27 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
                       <Loader2 className="size-8 text-primary animate-spin" />
                       <p className="text-sm font-semibold text-on-surface">Mengunggah file...</p>
                     </div>
-                  ) : driveLink && driveLink.includes("/api/files/") ? (
+                  ) : selectedFile ? (
                     <div className="flex flex-col items-center gap-2 w-full">
-                      <FileText className="size-8 text-primary" />
-                      <p className="text-sm font-semibold text-on-surface truncate max-w-xs">{driveLink.split("/").pop()}</p>
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          type="button"
-                          onClick={() => setDriveLink("")}
-                          className="text-xs font-semibold text-error hover:underline cursor-pointer"
-                        >
-                          Hapus File
-                        </button>
-                        <a
-                          href={driveLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5"
-                        >
-                          Pratinjau <ExternalLink className="size-3" />
-                        </a>
-                      </div>
+                       <FileText className="size-8 text-primary" />
+                       <p className="text-sm font-semibold text-on-surface truncate max-w-xs">
+                         {selectedFile.name}
+                       </p>
+                       <div className="flex gap-2 mt-2">
+                         <button
+                           type="button"
+                           onClick={() => setSelectedFile(null)}
+                           className="text-xs font-semibold text-error hover:underline cursor-pointer"
+                         >
+                           Hapus File
+                         </button>
+                       </div>
                     </div>
                   ) : (
                     <label className="flex flex-col items-center gap-2 cursor-pointer w-full h-full py-4">
                       <UploadCloud className="size-8 text-on-surface-variant" />
                       <span className="text-sm font-semibold text-on-surface">Klik atau seret PDF di sini</span>
-                      <span className="text-xs text-on-surface-variant">Maksimal ukuran 10MB</span>
+                      <span className="text-xs text-on-surface-variant">Maksimal ukuran 90MB</span>
                       <input
                         type="file"
                         accept="application/pdf"

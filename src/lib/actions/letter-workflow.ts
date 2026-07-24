@@ -4,6 +4,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { createNotification, notifyDivision } from "@/lib/internal-notifications";
 import { requirePermission, requireRole, requireSecretary } from "@/lib/auth/authorize";
+import {
+  getGoogleAccessToken,
+  getGoogleAccessTokenFromRefreshToken,
+  deleteFromGoogleDrive,
+  extractGoogleDriveFileId
+} from "@/lib/utils/google-drive";
 
 export async function startProcessingLetter(id: string) {
   const auth = await requireSecretary();
@@ -57,6 +63,16 @@ export async function completeLetter(id: string, finalDocumentUrl: string) {
 
   const supabase = createAdminClient();
 
+  // 1. Get the current letter's finalDocumentUrl to see if we need to delete an old file
+  const { data: currentLetter } = await supabase
+    .from("letter_requests")
+    .select("final_document_url")
+    .eq("id", id)
+    .single();
+
+  const oldUrl = currentLetter?.final_document_url;
+
+  // 2. Perform database update first
   const { error } = await supabase
     .from("letter_requests")
     .update({ 
@@ -66,6 +82,46 @@ export async function completeLetter(id: string, finalDocumentUrl: string) {
     .eq("id", id);
 
   if (error) return { error: error.message };
+
+  // 3. If the database update was successful, and there was an old Google Drive file that is being replaced, delete it!
+  if (oldUrl && oldUrl !== finalDocumentUrl && oldUrl.includes("drive.google.com")) {
+    const oldFileId = extractGoogleDriveFileId(oldUrl);
+    if (oldFileId) {
+      try {
+        const oauthClientId = process.env.GDRIVE_CLIENT_ID;
+        const oauthClientSecret = process.env.GDRIVE_CLIENT_SECRET;
+        const oauthRefreshToken = process.env.GDRIVE_REFRESH_TOKEN;
+        const clientEmail = process.env.GDRIVE_CLIENT_EMAIL;
+        const privateKey = process.env.GDRIVE_PRIVATE_KEY;
+
+        const useOauth = oauthClientId && oauthClientSecret && oauthRefreshToken;
+        const useServiceAccount = clientEmail && privateKey;
+
+        let accessToken = "";
+        if (useOauth) {
+          accessToken = await getGoogleAccessTokenFromRefreshToken(
+            oauthClientId!,
+            oauthClientSecret!,
+            oauthRefreshToken!
+          );
+        } else if (useServiceAccount) {
+          accessToken = await getGoogleAccessToken(
+            clientEmail!,
+            privateKey!.replace(/\\n/g, "\n"),
+            ["https://www.googleapis.com/auth/drive"]
+          );
+        }
+
+        if (accessToken) {
+          await deleteFromGoogleDrive(accessToken, oldFileId);
+          console.log(`Successfully deleted old Google Drive file: ${oldFileId}`);
+        }
+      } catch (err) {
+        // Non-blocking: If deletion fails (e.g. file already deleted manually), log it but don't fail the completeLetter workflow
+        console.error("Failed to delete old file from Google Drive:", err);
+      }
+    }
+  }
 
   const { data: letter } = await supabase
     .from("letter_requests")

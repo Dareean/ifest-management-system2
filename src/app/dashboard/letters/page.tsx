@@ -7,12 +7,12 @@ import { ExportButton } from "@/components/export-button";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { FilterSection } from "./filter-section";
 import { LettersClient } from "./letters-client";
 import { SECRETARY_SLUGS } from "@/lib/auth/authorize";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
+// Trigger Turbopack rebuild
 export default async function LettersPage(props: {
   searchParams?: Promise<{ priority?: string; division?: string }>;
 }) {
@@ -87,9 +87,6 @@ export default async function LettersPage(props: {
         </div>
       </div>
 
-      {/* Filter Section — only for Sekretaris */}
-      {isSecretary && <FilterSection divisions={divisions} />}
-
       {/* Main List */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
@@ -112,7 +109,7 @@ export default async function LettersPage(props: {
             </Link>
           </div>
         ) : (
-          <LettersClient initialLetters={letters} isApprover={isSecretary} />
+          <LettersClient initialLetters={letters} isApprover={isSecretary} divisions={divisions} />
         )}
       </div>
     </div>

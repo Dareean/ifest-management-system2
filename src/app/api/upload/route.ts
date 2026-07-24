@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { getGoogleAccessToken, getGoogleAccessTokenFromRefreshToken, uploadToGoogleDrive } from "@/lib/utils/google-drive";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +26,66 @@ export async function POST(request: NextRequest) {
 
     // Validate folder name to prevent directory traversal
     const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, "");
+
+    // Google Drive Integration for Official Documents (letters)
+    if (safeFolder === "letters") {
+      const folderId = process.env.GDRIVE_FOLDER_ID;
+      
+      const oauthClientId = process.env.GDRIVE_CLIENT_ID;
+      const oauthClientSecret = process.env.GDRIVE_CLIENT_SECRET;
+      const oauthRefreshToken = process.env.GDRIVE_REFRESH_TOKEN;
+
+      const clientEmail = process.env.GDRIVE_CLIENT_EMAIL;
+      const privateKey = process.env.GDRIVE_PRIVATE_KEY;
+
+      if (!folderId) {
+        return NextResponse.json(
+          { error: "GDRIVE_FOLDER_ID belum dikonfigurasi di server." },
+          { status: 500 }
+        );
+      }
+
+      const useOauth = oauthClientId && oauthClientSecret && oauthRefreshToken;
+      const useServiceAccount = clientEmail && privateKey;
+
+      if (!useOauth && !useServiceAccount) {
+        return NextResponse.json(
+          { error: "Kredensial Google Drive (OAuth Refresh Token atau Service Account) belum dikonfigurasi di server." },
+          { status: 500 }
+        );
+      }
+
+      try {
+        let accessToken = "";
+        if (useOauth) {
+          accessToken = await getGoogleAccessTokenFromRefreshToken(
+            oauthClientId!,
+            oauthClientSecret!,
+            oauthRefreshToken!
+          );
+        } else {
+          accessToken = await getGoogleAccessToken(
+            clientEmail!,
+            privateKey!.replace(/\\n/g, "\n"),
+            ["https://www.googleapis.com/auth/drive"]
+          );
+        }
+
+        const fileUrl = await uploadToGoogleDrive(accessToken, file, folderId);
+
+        return NextResponse.json({
+          success: true,
+          url: fileUrl,
+          key: fileUrl.split("/").pop(),
+        });
+      } catch (err: any) {
+        console.error("Google Drive upload error:", err);
+        return NextResponse.json(
+          { error: err?.message || "Gagal mengunggah ke Google Drive." },
+          { status: 500 }
+        );
+      }
+    }
 
     // 3. Get R2 bucket binding
     const context = getCloudflareContext();

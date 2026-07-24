@@ -14,6 +14,7 @@ import { startProcessingLetter } from "@/lib/actions/letter-workflow";
 interface LettersClientProps {
   initialLetters: LetterData[];
   isApprover: boolean; // true = Sekretaris Panitia
+  divisions?: { id: string; name: string; slug: string }[];
 }
 
 interface Toast {
@@ -53,15 +54,26 @@ function filterRequester(letters: LetterData[], tab: RequesterTab) {
   return letters;
 }
 
+const PRIORITIES = [
+  { value: "", label: "Semua Prioritas" },
+  { value: "tinggi", label: "🔴 Tinggi" },
+  { value: "sedang", label: "🟡 Sedang" },
+  { value: "rendah", label: "🟢 Rendah" },
+];
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function LettersClient({ initialLetters, isApprover }: LettersClientProps) {
+export function LettersClient({ initialLetters, isApprover, divisions }: LettersClientProps) {
   const [letters, setLetters] = useState<LetterData[]>(initialLetters);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isPending, startTransition] = useTransition();
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
 
-  // Sync state when server-filtered initialLetters changes (e.g. via FilterSection)
+  // Filter states
+  const [selectedDivision, setSelectedDivision] = useState("");
+  const [selectedPriority, setSelectedPriority] = useState("");
+
+  // Sync state when server-filtered initialLetters changes
   useEffect(() => {
     setLetters(initialLetters);
   }, [initialLetters]);
@@ -97,85 +109,138 @@ export function LettersClient({ initialLetters, isApprover }: LettersClientProps
   };
 
   // ── Filtered lists ────────────────────────────────────────────────────────
-  const displayed = isApprover
-    ? filterSecretary(letters, secretaryTab)
-    : filterRequester(letters, requesterTab);
+  
+  // Base filtered list by division and priority
+  const baseFilteredLetters = letters.filter((l) => {
+    if (selectedDivision && l.divisionSlug !== selectedDivision) return false;
+    if (selectedPriority && l.priority !== selectedPriority) return false;
+    return true;
+  });
 
-  // Tab counts
+  const displayed = isApprover
+    ? filterSecretary(baseFilteredLetters, secretaryTab)
+    : filterRequester(baseFilteredLetters, requesterTab);
+
+  // Tab counts based on baseFilteredLetters
   const secretaryCounts: Record<SecretaryTab, number> = {
-    all: letters.length,
-    needs_action: letters.filter((l) => l.status === "requested" || l.status === "in_revision").length,
-    processing: letters.filter((l) => l.status === "processing").length,
-    sent: letters.filter((l) => l.status === "sent").length,
+    all: baseFilteredLetters.length,
+    needs_action: baseFilteredLetters.filter((l) => l.status === "requested" || l.status === "in_revision").length,
+    processing: baseFilteredLetters.filter((l) => l.status === "processing").length,
+    sent: baseFilteredLetters.filter((l) => l.status === "sent").length,
   };
 
   const requesterCounts: Record<RequesterTab, number> = {
-    active: letters.filter((l) => l.status !== "sent").length,
-    sent: letters.filter((l) => l.status === "sent").length,
+    active: baseFilteredLetters.filter((l) => l.status !== "sent").length,
+    sent: baseFilteredLetters.filter((l) => l.status === "sent").length,
   };
 
   // ─── Render ─────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ── Tab Bar ── */}
-      {isApprover ? (
-        <div className="flex items-center gap-1 bg-surface-container p-1.5 rounded-xl w-fit">
-          {SECRETARY_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setSecretaryTab(tab.key)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                secretaryTab === tab.key
-                  ? "bg-white shadow-sm text-on-surface"
-                  : "text-on-surface-variant hover:text-on-surface hover:bg-white/50"
-              }`}
+      {/* ── Toolbar: Tabs on Left, Dropdowns on Right ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/20 pb-4 mb-2">
+        {isApprover ? (
+          <div className="flex items-center gap-1 bg-surface-container p-1 rounded-xl w-fit">
+            {SECRETARY_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setSecretaryTab(tab.key)}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  secretaryTab === tab.key
+                    ? "bg-white shadow-sm text-on-surface"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-white/50"
+                }`}
+              >
+                {tab.label}
+                {secretaryCounts[tab.key] > 0 && (
+                  <span
+                    className={`text-[10px] font-bold font-mono min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 ${
+                      secretaryTab === tab.key
+                        ? tab.key === "needs_action"
+                          ? "bg-error/10 text-error"
+                          : "bg-primary/10 text-primary"
+                        : "bg-outline-variant/40 text-on-surface-variant"
+                    }`}
+                  >
+                    {secretaryCounts[tab.key]}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 bg-surface-container p-1 rounded-xl w-fit">
+            {REQUESTER_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setRequesterTab(tab.key)}
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                  requesterTab === tab.key
+                    ? "bg-white shadow-sm text-on-surface"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-white/50"
+                }`}
+              >
+                {tab.label}
+                {requesterCounts[tab.key] > 0 && (
+                  <span
+                    className={`text-[10px] font-bold font-mono min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 ${
+                      requesterTab === tab.key
+                        ? "bg-primary/10 text-primary"
+                        : "bg-outline-variant/40 text-on-surface-variant"
+                    }`}
+                  >
+                    {requesterCounts[tab.key]}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Dropdown Filters (Sekretaris only) */}
+        {isApprover && divisions && divisions.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Division dropdown */}
+            <select
+              value={selectedDivision}
+              onChange={(e) => setSelectedDivision(e.target.value)}
+              className="h-9 rounded-lg border border-outline-variant/60 bg-surface-bright px-3 text-xs font-bold text-on-surface focus:border-primary focus:outline-none cursor-pointer"
             >
-              {tab.label}
-              {secretaryCounts[tab.key] > 0 && (
-                <span
-                  className={`text-[10px] font-bold font-mono min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 ${
-                    secretaryTab === tab.key
-                      ? tab.key === "needs_action"
-                        ? "bg-error/10 text-error"
-                        : "bg-primary/10 text-primary"
-                      : "bg-outline-variant/40 text-on-surface-variant"
-                  }`}
-                >
-                  {secretaryCounts[tab.key]}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="flex items-center gap-1 bg-surface-container p-1.5 rounded-xl w-fit">
-          {REQUESTER_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setRequesterTab(tab.key)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                requesterTab === tab.key
-                  ? "bg-white shadow-sm text-on-surface"
-                  : "text-on-surface-variant hover:text-on-surface hover:bg-white/50"
-              }`}
+              <option value="">Semua Divisi</option>
+              {divisions.map((d) => (
+                <option key={d.slug} value={d.slug}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Priority dropdown */}
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              className="h-9 rounded-lg border border-outline-variant/60 bg-surface-bright px-3 text-xs font-bold text-on-surface focus:border-primary focus:outline-none cursor-pointer"
             >
-              {tab.label}
-              {requesterCounts[tab.key] > 0 && (
-                <span
-                  className={`text-[10px] font-bold font-mono min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 ${
-                    requesterTab === tab.key
-                      ? "bg-primary/10 text-primary"
-                      : "bg-outline-variant/40 text-on-surface-variant"
-                  }`}
-                >
-                  {requesterCounts[tab.key]}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
+              {PRIORITIES.map((p) => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+
+            {/* Reset button */}
+            {(selectedDivision || selectedPriority) && (
+              <button
+                onClick={() => {
+                  setSelectedDivision("");
+                  setSelectedPriority("");
+                }}
+                className="h-9 px-3 flex items-center gap-1 text-xs font-bold text-on-surface-variant hover:text-error hover:bg-error/5 border border-outline-variant/40 rounded-lg transition-colors cursor-pointer"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ── Empty State ── */}
       {displayed.length === 0 && (
