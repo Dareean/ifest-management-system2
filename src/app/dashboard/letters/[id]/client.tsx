@@ -101,6 +101,7 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
         const formData = new FormData();
         formData.append("file", selectedFile);
         formData.append("folder", "letters");
+        formData.append("subfolder", letter.letterType === "internal" ? "Internal" : "Eksternal");
 
         const response = await fetch("/api/upload", {
           method: "POST",
@@ -137,6 +138,7 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
       if (result.error) {
         setActionMsg(result.error);
       } else {
+        setActionMsg(null);
         setShowCompleteModal(false);
         router.refresh();
       }
@@ -517,6 +519,17 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
                   <p className="text-[10px] font-extrabold text-on-surface-variant/70 tracking-wider uppercase">INSTANSI TUJUAN</p>
                   <p className="text-sm font-semibold text-on-surface break-words">
                     {letter.targetInstitution || "-"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Jenis Surat */}
+              <div className="flex items-start gap-3">
+                <FileText className="size-4.5 text-primary shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-extrabold text-on-surface-variant/70 tracking-wider uppercase">JENIS SURAT</p>
+                  <p className="text-sm font-semibold text-on-surface capitalize">
+                    {letter.letterType}
                   </p>
                 </div>
               </div>

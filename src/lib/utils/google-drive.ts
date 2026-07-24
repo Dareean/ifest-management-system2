@@ -219,4 +219,50 @@ export async function deleteFromGoogleDrive(
   }
 }
 
+export async function getOrCreateSubfolder(
+  accessToken: string,
+  parentFolderId: string,
+  folderName: string
+): Promise<string> {
+  const query = `mimeType='application/vnd.google-apps.folder' and name='${folderName.replace(/'/g, "\\'")}' and '${parentFolderId}' in parents and trashed=false`;
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  
+  if (response.ok) {
+    const data = (await response.json()) as any;
+    if (data.files && data.files.length > 0) {
+      return data.files[0].id;
+    }
+  } else {
+    const errorText = await response.text();
+    console.error("Gagal mencari folder di Google Drive:", errorText);
+  }
+
+  const createResponse = await fetch("https://www.googleapis.com/drive/v3/files?fields=id", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: folderName,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [parentFolderId],
+    }),
+  });
+
+  const createData = (await createResponse.json()) as any;
+  if (!createResponse.ok) {
+    throw new Error(createData.error?.message || `Gagal membuat folder ${folderName} di Google Drive`);
+  }
+
+  return createData.id;
+}
+
 

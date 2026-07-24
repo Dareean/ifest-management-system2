@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { getGoogleAccessToken, getGoogleAccessTokenFromRefreshToken, uploadToGoogleDrive } from "@/lib/utils/google-drive";
+import { getGoogleAccessToken, getGoogleAccessTokenFromRefreshToken, uploadToGoogleDrive, getOrCreateSubfolder } from "@/lib/utils/google-drive";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const folder = (formData.get("folder") as string) || "general";
+    const subfolder = (formData.get("subfolder") as string) || "";
 
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
@@ -71,7 +72,16 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const fileUrl = await uploadToGoogleDrive(accessToken, file, folderId);
+        let targetFolderId = folderId;
+        if (subfolder) {
+          try {
+            targetFolderId = await getOrCreateSubfolder(accessToken, folderId, subfolder);
+          } catch (subfolderErr) {
+            console.error("Failed to get or create subfolder in Google Drive:", subfolderErr);
+          }
+        }
+
+        const fileUrl = await uploadToGoogleDrive(accessToken, file, targetFolderId);
 
         return NextResponse.json({
           success: true,
