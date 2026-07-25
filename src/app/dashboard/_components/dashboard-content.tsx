@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { getProfile } from "@/lib/data/profile";
 import { getCurrentAssignment } from "@/lib/data/personal-dashboard";
 import { getDashboardOverview, getDivisionsWithProgress } from "@/lib/data/dashboard";
-import { getDivisionKpiSummaries } from "@/lib/data/kpi";
 import { getFinanceOverview } from "@/lib/data/finance";
 import { getLetters, getStatusDisplay } from "@/lib/data/letters";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -40,20 +39,13 @@ const ROLE_MAP: Record<string, { slug: string; level: number }> = {
 // ── Global View (unauthenticated) ──
 
 export async function GlobalView() {
-  const [overview, divisions, kpiSummaries] = await Promise.all([
+  const [overview, divisions] = await Promise.all([
     getDashboardOverview(YEAR_ID),
     getDivisionsWithProgress(YEAR_ID),
-    getDivisionKpiSummaries(),
   ]);
 
-  const supabase = createAdminClient();
-  const { count: kpiCount } = await supabase
-    .from("kpi_items")
-    .select("*", { count: "exact", head: true })
-    .eq("committee_year_id", YEAR_ID);
-
-  const totalTasks = kpiSummaries.reduce((acc, s) => acc + s.totalTasks, 0);
-  const doneTasks = kpiSummaries.reduce((acc, s) => acc + s.doneTasks, 0);
+  const totalTasks = overview.totalTasks;
+  const doneTasks = divisions.reduce((acc, d) => acc + d.doneTasks, 0);
 
   return (
     <div className="flex flex-col gap-10">
@@ -66,7 +58,7 @@ export async function GlobalView() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 bg-white border border-outline-variant/60 rounded-2xl gap-4">
         <div className="flex-1">
           <p className="text-base font-bold text-on-surface">Login untuk melihat dashboard personal</p>
-          <p className="text-on-surface-variant text-sm mt-1">Lihat KPI, task, surat, dan rapat yang relevan dengan divisi Anda.</p>
+          <p className="text-on-surface-variant text-sm mt-1">Lihat task, surat, dan rapat yang relevan dengan divisi Anda.</p>
         </div>
         <Link href="/login">
           <Button variant="primary" className="cursor-pointer font-sans text-sm font-semibold shrink-0">Login</Button>
@@ -76,17 +68,17 @@ export async function GlobalView() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatBlock label="DIVISI AKTIF" value={String(divisions.length)} sub="Divisi berjalan" />
         <StatBlock label="ANGGOTA" value={String(overview.totalMembers)} sub="Total panitia" />
-        <Link href="/dashboard/kpi" className="block group">
+        <Link href="/dashboard/tasks" className="block group">
           <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all group-hover:border-outline-variant h-full">
-            <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">TOTAL KPI</p>
-            <p className="text-4xl font-black text-on-surface my-2 leading-none">{kpiCount}</p>
-            <p className="text-xs text-on-surface-variant font-mono">({doneTasks}/{totalTasks} tasks selesai)</p>
+            <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">TOTAL TASKS</p>
+            <p className="text-4xl font-black text-on-surface my-2 leading-none">{totalTasks}</p>
+            <p className="text-xs text-on-surface-variant font-mono">({doneTasks} selesai)</p>
           </div>
         </Link>
         <StatBlock label="TOTAL RAPAT" value={String(overview.totalMeetings)} sub="Pertemuan diadakan" />
       </div>
 
-      <DivisiProgressSection kpiSummaries={kpiSummaries} />
+      <DivisiProgressSection divisions={divisions} />
     </div>
   );
 }
@@ -184,6 +176,7 @@ function SekretarisView({ assignmentId, greeting, profile }: { assignmentId: str
   );
 }
 
+// Stats wrapper for Sekretaris/Bendahara and standard views
 function BendaharaView({ assignmentId, greeting, profile }: { assignmentId: string; greeting: string; profile: any }) {
   return (
     <div className="flex flex-col gap-10">
@@ -282,7 +275,7 @@ function StatBlock({ label, value, sub }: { label: string; value: string; sub: s
   );
 }
 
-function DivisiProgressSection({ kpiSummaries }: { kpiSummaries: any[] }) {
+function DivisiProgressSection({ divisions }: { divisions: any[] }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -290,22 +283,21 @@ function DivisiProgressSection({ kpiSummaries }: { kpiSummaries: any[] }) {
           <TrendingUp className="size-5 text-error" />
           <h2 className="text-xl font-bold tracking-tight text-on-surface">Progres Divisi</h2>
         </div>
-        <Link href="/dashboard/kpi" className="text-xs font-mono text-accent-magenta hover:underline uppercase tracking-wider font-bold">
-          Lihat detail KPI →
+        <Link href="/dashboard/tasks" className="text-xs font-mono text-accent-magenta hover:underline uppercase tracking-wider font-bold">
+          Lihat detail Tugas →
         </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        {kpiSummaries.map((s) => {
+        {divisions.map((s) => {
           const progress = s.totalTasks > 0 ? Math.round((s.doneTasks / s.totalTasks) * 100) : 0;
           return (
-            <Link href="/dashboard/kpi" key={s.divisionId} className="block group">
+            <Link href="/dashboard/tasks" key={s.id} className="block group">
               <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between h-full hover:border-accent-magenta/50 transition-all">
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-sans text-lg font-bold text-on-surface group-hover:text-accent-magenta transition-colors leading-tight">{s.divisionName}</h3>
-                    <Badge variant="outline" className="text-[10px] font-mono whitespace-nowrap">{s.milestoneKpis} milestone</Badge>
+                    <h3 className="font-sans text-lg font-bold text-on-surface group-hover:text-accent-magenta transition-colors leading-tight">{s.name}</h3>
                   </div>
-                  <p className="text-xs text-on-surface-variant font-mono">{s.totalKpis} KPI &middot; {s.doneTasks}/{s.totalTasks} tasks</p>
+                  <p className="text-xs text-on-surface-variant font-mono">{s.doneTasks}/{s.totalTasks} tasks selesai</p>
                 </div>
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-xs font-mono text-on-surface-variant mb-1.5">
@@ -333,28 +325,15 @@ async function KetuaStats() {
     getDivisionsWithProgress(YEAR_ID),
   ]);
 
-  const supabase = createAdminClient();
-  const { count: kpiCount } = await supabase
-    .from("kpi_items")
-    .select("*", { count: "exact", head: true })
-    .eq("committee_year_id", YEAR_ID);
-
-  const { data: recentLetters } = await supabase
-    .from("letter_requests")
-    .select("id, subject, status, created_at")
-    .eq("committee_year_id", YEAR_ID)
-    .order("created_at", { ascending: false })
-    .limit(5);
-
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatBlock label="DIVISI AKTIF" value={String(divisions.length)} sub="Divisi berjalan" />
         <StatBlock label="ANGGOTA" value={String(overview.totalMembers)} sub="Total panitia" />
-        <StatBlock label="TOTAL KPI" value={String(kpiCount)} sub="Indikator kinerja" />
+        <StatBlock label="TOTAL TASKS" value={String(overview.totalTasks)} sub="Tugas dikelola" />
         <StatBlock label="TOTAL RAPAT" value={String(overview.totalMeetings)} sub="Pertemuan diadakan" />
       </div>
-      <DivisiProgressSection kpiSummaries={await getDivisionKpiSummaries()} />
+      <DivisiProgressSection divisions={divisions} />
     </>
   );
 }

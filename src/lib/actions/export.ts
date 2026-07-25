@@ -24,16 +24,16 @@ async function requireActiveMember() {
   return { id: (assignment as any).id };
 }
 
-function toCSV(headers: string[], rows: string[][]): string {
-  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+function toCSV(headers: string[], rows: any[][]): string {
+  const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   return [headers.join(","), ...rows.map((r) => r.map(escape).join(","))].join("\n");
 }
 
 // ============================================================
-// KPI Export
+// Task Export
 // ============================================================
 
-export async function exportKpiCSV() {
+export async function exportTasksCSV() {
   const member = await requireActiveMember();
   if (!member) return "";
   const supabase = createAdminClient();
@@ -48,41 +48,47 @@ export async function exportKpiCSV() {
 
   const rows: string[][] = [];
   for (const div of divisions) {
-      const { data: kpis } = await supabase
-        .from("kpi_items")
-        .select("id, title, target, deadline, is_milestone")
-        .eq("committee_year_id", YEAR_ID)
-        .eq("division_id", div.id);
+    const { data: tasks } = await supabase
+      .from("tasks")
+      .select(`
+        title,
+        description,
+        status,
+        priority,
+        deadline,
+        assignee:committee_assignments(
+          profiles(full_name)
+        )
+      `)
+      .eq("committee_year_id", YEAR_ID)
+      .eq("division_id", div.id)
+      .order("created_at");
 
-    if (kpis) {
-      for (const kpi of kpis) {
-        const { data: tasks } = await supabase
-          .from("tasks")
-          .select("title, status")
-          .eq("committee_year_id", YEAR_ID)
-          .eq("kpi_item_id", kpi.id);
-
-        const totalTasks = tasks?.length ?? 0;
-        const doneTasks = tasks?.filter((t) => t.status === "done").length ?? 0;
-
+    if (tasks) {
+      for (const t of tasks) {
+        const assigneeName = (t.assignee as any)?.profiles?.full_name ?? "-";
         rows.push([
           div.name,
-          kpi.title,
-          kpi.target,
-          kpi.deadline ?? "-",
-          kpi.is_milestone ? "Milestone" : "Reguler",
-          String(totalTasks),
-          String(doneTasks),
-          totalTasks > 0 ? `${Math.round((doneTasks / totalTasks) * 100)}%` : "-",
+          t.title,
+          t.description ?? "-",
+          t.priority,
+          t.status === "done" ? "Selesai" : "Todo",
+          t.deadline ?? "-",
+          assigneeName,
         ]);
       }
     }
   }
 
   return toCSV(
-    ["Divisi", "KPI", "Target", "Deadline", "Tipe", "Total Task", "Selesai", "Progress"],
+    ["Divisi", "Judul Task", "Deskripsi", "Prioritas", "Status", "Deadline", "Penanggung Jawab"],
     rows,
   );
+}
+
+// Keep exportKpiCSV as alias for safety
+export async function exportKpiCSV() {
+  return exportTasksCSV();
 }
 
 // ============================================================

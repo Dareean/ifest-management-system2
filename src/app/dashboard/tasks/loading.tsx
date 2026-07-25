@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function KpiLoading() {
+export default function TasksLoading() {
   return (
     <div className="flex flex-col gap-10">
       {/* Header */}

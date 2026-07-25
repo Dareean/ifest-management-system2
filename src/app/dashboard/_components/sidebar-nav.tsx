@@ -20,6 +20,7 @@ import {
   X,
   ChevronRight,
   Users,
+  CheckSquare,
 } from "lucide-react";
 import type { NotificationItem } from "@/lib/data/notifications";
 import type { ProfileData } from "@/lib/data/profile";
@@ -50,7 +51,7 @@ function getRoleLevel(roleName: string | undefined): number {
 function getNavItems(level: number): NavItem[] {
   const items: NavItem[] = [
     { href: "/dashboard", label: "OVERVIEW", icon: LayoutDashboard },
-    { href: "/dashboard/kpi", label: "KPI", icon: Target },
+    { href: "/dashboard/tasks", label: "TASKS", icon: CheckSquare },
   ];
 
   if (level >= 60 && level !== 70) {

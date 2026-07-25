@@ -32,15 +32,15 @@ describe('Export Actions', () => {
       mockFrom.mockImplementation((t: string) => {
         if (t === 'committee_assignments') return createMockSupabase({ id: 'a-1' });
         if (t === 'divisions') return createMockSupabase([{ id: 'd-1', name: 'Divisi A', slug: 'a' }]);
-        if (t === 'kpi_items') return createMockSupabase([{ id: 'k-1', title: 'KPI 1', target: '100%', deadline: '2026-12-31', is_milestone: true }]);
         if (t === 'tasks') return createMockSupabase([{ title: 'T1', status: 'done' }, { title: 'T2', status: 'todo' }]);
         return createMockSupabase(null);
       });
       const { exportKpiCSV } = await import('@/lib/actions/export');
       const csv = await exportKpiCSV();
       expect(csv).toContain('Divisi A');
-      expect(csv).toContain('KPI 1');
-      expect(csv).toContain('50%');
+      expect(csv).toContain('T1');
+      expect(csv).toContain('Selesai');
+      expect(csv).toContain('Todo');
     });
   });
 

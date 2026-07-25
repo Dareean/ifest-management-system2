@@ -49,6 +49,7 @@ describe('Tasks Actions', () => {
     it('should complete task', async () => {
       mockFrom.mockImplementation((t: string) => {
         if (t === 'committee_assignments') return chain({ id: 'a-1', division_id: 'd-1', role: { level: 60 } });
+        if (t === 'tasks') return chain({ id: 'task-1', division_id: 'd-1', assignee_id: 'a-1' });
         return chain(null);
       });
       const { completeTask } = await import('@/lib/actions/tasks');
@@ -60,6 +61,7 @@ describe('Tasks Actions', () => {
     it('should reopen task', async () => {
       mockFrom.mockImplementation((t: string) => {
         if (t === 'committee_assignments') return chain({ id: 'a-1', division_id: 'd-1', role: { level: 60 } });
+        if (t === 'tasks') return chain({ id: 'task-1', division_id: 'd-1', assignee_id: 'a-1' });
         return chain(null);
       });
       const { reopenTask } = await import('@/lib/actions/tasks');
@@ -71,6 +73,7 @@ describe('Tasks Actions', () => {
     it('should delete task', async () => {
       mockFrom.mockImplementation((t: string) => {
         if (t === 'committee_assignments') return chain({ id: 'a-1', division_id: 'd-1', role: { level: 60 } });
+        if (t === 'tasks') return chain({ id: 'task-1', division_id: 'd-1', assignee_id: 'a-1' });
         return chain(null);
       });
       const { deleteTask } = await import('@/lib/actions/tasks');

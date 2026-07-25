@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface DashboardOverview {
   totalMembers: number;
-  totalKpis: number;
+  totalTasks: number;
   totalLetters: number;
   totalMeetings: number;
 }
@@ -12,14 +12,14 @@ export interface DivisionProgress {
   name: string;
   slug: string;
   sort_order: number;
-  totalKpis: number;
-  milestones: number;
+  totalTasks: number;
+  doneTasks: number;
 }
 
 export async function getDashboardOverview(committeeYearId: string): Promise<DashboardOverview> {
   const supabase = createAdminClient();
 
-  const [assignments, kpis, letters, meetings] = await Promise.all([
+  const [assignments, tasks, letters, meetings] = await Promise.all([
     supabase
       .from("committee_assignments")
       .select("id", { count: "exact", head: true })
@@ -27,7 +27,7 @@ export async function getDashboardOverview(committeeYearId: string): Promise<Das
       .eq("is_active", true),
 
     supabase
-      .from("kpi_items")
+      .from("tasks")
       .select("id", { count: "exact", head: true })
       .eq("committee_year_id", committeeYearId),
 
@@ -44,7 +44,7 @@ export async function getDashboardOverview(committeeYearId: string): Promise<Das
 
   return {
     totalMembers: assignments.count ?? 0,
-    totalKpis: kpis.count ?? 0,
+    totalTasks: tasks.count ?? 0,
     totalLetters: letters.count ?? 0,
     totalMeetings: meetings.count ?? 0,
   };
@@ -61,27 +61,30 @@ export async function getDivisionsWithProgress(committeeYearId: string): Promise
 
   if (!divisions) return [];
 
-  // Batch fetch all KPIs
+  // Batch fetch all tasks
   const divisionIds = divisions.map((d) => d.id);
-  const { data: allDivisionKpis } = await supabase
-    .from("kpi_items")
-    .select("id, is_milestone, division_id")
+  const { data: allTasks } = await supabase
+    .from("tasks")
+    .select("id, status, division_id")
     .eq("committee_year_id", committeeYearId)
     .in("division_id", divisionIds);
 
-  const kpiByDivision: Record<string, any[]> = {};
-  for (const kpi of allDivisionKpis ?? []) {
-    const did = (kpi as any).division_id;
-    if (!kpiByDivision[did]) kpiByDivision[did] = [];
-    kpiByDivision[did].push(kpi);
+  const tasksByDivision: Record<string, any[]> = {};
+  for (const task of allTasks ?? []) {
+    const did = (task as any).division_id;
+    if (!tasksByDivision[did]) tasksByDivision[did] = [];
+    tasksByDivision[did].push(task);
   }
 
-  return divisions.map((div) => ({
-    id: div.id,
-    name: div.name,
-    slug: div.slug,
-    sort_order: div.sort_order,
-    totalKpis: kpiByDivision[div.id]?.length ?? 0,
-    milestones: kpiByDivision[div.id]?.filter((k: any) => k.is_milestone).length ?? 0,
-  }));
+  return divisions.map((div) => {
+    const divTasks = tasksByDivision[div.id] ?? [];
+    return {
+      id: div.id,
+      name: div.name,
+      slug: div.slug,
+      sort_order: div.sort_order,
+      totalTasks: divTasks.length,
+      doneTasks: divTasks.filter((t: any) => t.status === "done").length,
+    };
+  });
 }

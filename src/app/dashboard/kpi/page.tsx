@@ -1,11 +1,5 @@
-import { getAllKpisWithTasks, getDivisionKpiSummaries } from "@/lib/data/kpi";
-import { KpiClient } from "./client";
+import { redirect } from "next/navigation";
 
-export default async function KpiPage() {
-  const [kpis, summaries] = await Promise.all([
-    getAllKpisWithTasks(),
-    getDivisionKpiSummaries(),
-  ]);
-
-  return <KpiClient kpis={kpis} summaries={summaries} />;
+export default function KpiPageRedirect() {
+  redirect("/dashboard/tasks");
 }
