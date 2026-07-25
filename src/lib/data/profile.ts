@@ -47,7 +47,7 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
     .from("committee_assignments")
     .select(`
       is_active, assigned_at,
-      division:divisions(name),
+      division:divisions!committee_assignments_division_id_fkey(name),
       role:roles(name, level)
     `)
     .eq("committee_year_id", YEAR_ID)

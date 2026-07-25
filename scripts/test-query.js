@@ -1,30 +1,25 @@
-const { Client } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
+
+const NEXT_PUBLIC_SUPABASE_URL = 'https://xxmxbyiggrottreetrig.supabase.co';
+const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXhieWlnZ3JvdHRyZWV0cmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzM5NjczNSwiZXhwIjoyMDk4OTcyNzM1fQ.XOqLhMsqoHAb3J6FZH6jo4jZiOAxGl6BMhdZshY_3xw';
+const YEAR_ID = 'c2f2a48e-3e58-4559-aaa0-623a3825348b';
+const userId = '7770b377-481d-4eb4-917e-95f22b9b5387'; // Daren's profile ID
+
+const admin = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false }
+});
 
 async function main() {
-  const host = 'db.xxmxbyiggrottreetrig.supabase.co';
-  const client = new Client({
-    connectionString: `postgresql://postgres:I-Fest%402026@${host}:5432/postgres`,
-    ssl: { rejectUnauthorized: false }
-  });
+  const { data, error } = await admin
+    .from('committee_assignments')
+    .select('id, division_id, role:roles(name, slug, level), division:divisions!committee_assignments_division_id_fkey(id, name)')
+    .eq('committee_year_id', YEAR_ID)
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .maybeSingle();
 
-  try {
-    await client.connect();
-    console.log('Connected!');
-    
-    console.log('Querying from profiles...');
-    const resProfiles = await client.query(`
-      SELECT ca.id, p.full_name, p.nim
-      FROM committee_assignments ca
-      JOIN profiles p ON ca.user_id = p.id
-      LIMIT 5;
-    `);
-    console.log('Profiles success:', resProfiles.rows);
-
-    await client.end();
-  } catch (err) {
-    console.error('Error:', err);
-    await client.end().catch(() => {});
-  }
+  console.log('Error:', error);
+  console.log('Data:', JSON.stringify(data, null, 2));
 }
 
 main();

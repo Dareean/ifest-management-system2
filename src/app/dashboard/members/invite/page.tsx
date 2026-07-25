@@ -18,7 +18,7 @@ export default async function InvitePage() {
     .from("committee_assignments")
     .select(`
       id,
-      division:divisions(name),
+      division:divisions!committee_assignments_division_id_fkey(name),
       role:roles(name, slug, level)
     `)
     .eq("committee_year_id", YEAR_ID)

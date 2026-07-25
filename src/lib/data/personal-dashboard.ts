@@ -57,7 +57,7 @@ export async function getCurrentAssignment(userId: string) {
   const admin = createAdminClient();
   const { data } = await admin
     .from("committee_assignments")
-    .select("id, division_id, role:roles(name, slug, level), division:divisions(id, name)")
+    .select("id, division_id, role:roles(name, slug, level), division:divisions!committee_assignments_division_id_fkey(id, name)")
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", userId)
     .eq("is_active", true)
@@ -198,7 +198,7 @@ export async function getPersonalDashboard(): Promise<PersonalData> {
   // Get the user's committee assignment for this year
   const { data: assignment } = await admin
     .from("committee_assignments")
-    .select("id, division_id, role:roles(name), division:divisions(id, name)")
+    .select("id, division_id, role:roles(name), division:divisions!committee_assignments_division_id_fkey(id, name)")
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", userId)
     .eq("is_active", true)

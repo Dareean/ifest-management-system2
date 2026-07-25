@@ -194,7 +194,7 @@ export async function exportPersonnelCSV() {
     .from("committee_assignments")
     .select(`
       user:profiles(full_name, nim),
-      division:divisions(name),
+      division:divisions!committee_assignments_division_id_fkey(name),
       role:roles(name, level)
     `)
     .eq("committee_year_id", YEAR_ID)

@@ -25,7 +25,7 @@ export async function getAllMembers(): Promise<DivisionGroup[]> {
     .select(`
       id,
       division_id,
-      division:divisions(name),
+      division:divisions!committee_assignments_division_id_fkey(name),
       role:roles(name, level),
       user:profiles(full_name)
     `)
@@ -66,7 +66,7 @@ export async function getDivisionMembers(divisionId: string): Promise<MemberOpti
     .select(`
       id,
       division_id,
-      division:divisions(name),
+      division:divisions!committee_assignments_division_id_fkey(name),
       role:roles(name, level),
       user:profiles(full_name)
     `)
@@ -94,7 +94,7 @@ export async function getBPHMembers(): Promise<MemberOption[]> {
     .select(`
       id,
       division_id,
-      division:divisions(name),
+      division:divisions!committee_assignments_division_id_fkey(name),
       role:roles(name, level),
       user:profiles(full_name)
     `)

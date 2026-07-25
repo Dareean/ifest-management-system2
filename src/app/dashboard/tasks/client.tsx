@@ -217,7 +217,7 @@ export function TasksClient({ divisions: initialDivisions, summaries, profile, a
                 <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase">SUPERVISI DIVISI</span>
                 <h3 className="text-xl font-bold text-slate-800 mt-0.5 group-hover:text-emerald-700 transition-colors">Daren</h3>
               </div>
-              <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full font-mono font-bold text-[10px]">
+              <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full font-mono font-bold text-[10px] shrink-0 whitespace-nowrap">
                 {darenStats.done}/{darenStats.total} Done
               </Badge>
             </div>
@@ -251,7 +251,7 @@ export function TasksClient({ divisions: initialDivisions, summaries, profile, a
                 <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase">SUPERVISI DIVISI</span>
                 <h3 className="text-xl font-bold text-slate-800 mt-0.5 group-hover:text-indigo-700 transition-colors">Gabriel</h3>
               </div>
-              <Badge className="bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full font-mono font-bold text-[10px]">
+              <Badge className="bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full font-mono font-bold text-[10px] shrink-0 whitespace-nowrap">
                 {gabrielStats.done}/{gabrielStats.total} Done
               </Badge>
             </div>
@@ -285,7 +285,7 @@ export function TasksClient({ divisions: initialDivisions, summaries, profile, a
                 <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase">SUPERVISI DIVISI</span>
                 <h3 className="text-xl font-bold text-slate-800 mt-0.5 group-hover:text-rose-700 transition-colors">Reyqal</h3>
               </div>
-              <Badge className="bg-rose-50 text-rose-700 border border-rose-100 rounded-full font-mono font-bold text-[10px]">
+              <Badge className="bg-rose-50 text-rose-700 border border-rose-100 rounded-full font-mono font-bold text-[10px] shrink-0 whitespace-nowrap">
                 {reyqalStats.done}/{reyqalStats.total} Done
               </Badge>
             </div>
@@ -397,7 +397,7 @@ export function TasksClient({ divisions: initialDivisions, summaries, profile, a
                         {div.description || "Divisi operasional I-FEST 2026."}
                       </p>
                     </div>
-                    <Badge variant="outline" className="text-xs font-mono font-bold text-slate-500 border-slate-200 bg-slate-50/50">
+                    <Badge variant="outline" className="text-xs font-mono font-bold text-slate-500 border-slate-200 bg-slate-50/50 shrink-0 whitespace-nowrap">
                       {div.doneTasks} / {div.totalTasks} Tasks
                     </Badge>
                   </div>
@@ -518,7 +518,7 @@ export function TasksClient({ divisions: initialDivisions, summaries, profile, a
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-200/10 to-transparent blur-xl pointer-events-none" />
             <div className="flex justify-between items-center mb-6">
               <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">URUTAN TENGGAT WAKTU</p>
-              <Badge className="bg-indigo-50 border-indigo-100 text-indigo-600 rounded-full font-mono text-[9px] px-2.5">
+              <Badge className="bg-indigo-50 border-indigo-100 text-indigo-600 rounded-full font-mono text-[9px] px-2.5 shrink-0 whitespace-nowrap">
                 {timelineTasks.length} Aktif
               </Badge>
             </div>

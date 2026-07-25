@@ -88,7 +88,7 @@ export async function getAssignments(): Promise<AssignmentData[]> {
     .select(`
       id,
       user:profiles(full_name, nim),
-      division:divisions(name, slug),
+      division:divisions!committee_assignments_division_id_fkey(name, slug),
       role:roles(name, slug)
     `)
     .eq("committee_year_id", YEAR_ID)
