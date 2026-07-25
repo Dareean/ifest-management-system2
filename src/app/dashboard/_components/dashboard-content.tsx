@@ -23,18 +23,7 @@ import { LettersSkeleton } from "./skeletons/letters-skeleton";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
-const ROLE_MAP: Record<string, { slug: string; level: number }> = {
-  "PIC / Penanggung Jawab": { slug: "pic", level: 100 },
-  "Ketua Panitia": { slug: "ketua-panitia", level: 90 },
-  "Wakil Ketua": { slug: "wakil-ketua", level: 80 },
-  "Sekretaris I": { slug: "sekretaris", level: 75 },
-  "Sekretaris II": { slug: "sekretaris", level: 75 },
-  "Bendahara": { slug: "bendahara", level: 70 },
-  "Koordinator Divisi": { slug: "koordinator", level: 60 },
-  "Wakil Koordinator": { slug: "wakil-koordinator", level: 55 },
-  "PIC / Penanggung Jawab Subdivisi": { slug: "pic-sub", level: 53 },
-  "Anggota": { slug: "anggota", level: 50 },
-};
+
 
 // ── Global View (unauthenticated) ──
 
@@ -91,9 +80,8 @@ export async function DashboardContent({ userId }: { userId: string }) {
 
   if (!assignment) return <GlobalView />;
 
-  const roleInfo = ROLE_MAP[assignment.roleName] ?? { slug: "anggota", level: 50 };
-  const level = roleInfo.level;
-  const slug = roleInfo.slug;
+  const level = assignment.roleLevel;
+  const slug = assignment.roleSlug;
   const greeting = profile?.fullName?.split(" ")[0] ?? "Panitia";
 
   // Determine which role view to render

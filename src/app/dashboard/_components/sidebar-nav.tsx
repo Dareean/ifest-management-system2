@@ -25,27 +25,10 @@ import {
 import type { NotificationItem } from "@/lib/data/notifications";
 import type { ProfileData } from "@/lib/data/profile";
 
-const ROLE_MAP: Record<string, { slug: string; level: number }> = {
-  "PIC / Penanggung Jawab": { slug: "pic", level: 100 },
-  "Ketua Panitia": { slug: "ketua-panitia", level: 90 },
-  "Wakil Ketua": { slug: "wakil-ketua", level: 80 },
-  "Sekretaris I": { slug: "sekretaris", level: 75 },
-  "Sekretaris II": { slug: "sekretaris", level: 75 },
-  "Bendahara": { slug: "bendahara", level: 70 },
-  "Koordinator Divisi": { slug: "koordinator", level: 60 },
-  "Wakil Koordinator": { slug: "wakil-koordinator", level: 55 },
-  "PIC / Penanggung Jawab Subdivisi": { slug: "pic-sub", level: 53 },
-  "Anggota": { slug: "anggota", level: 50 },
-};
-
 interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-}
-
-function getRoleLevel(roleName: string | undefined): number {
-  return ROLE_MAP[roleName ?? ""]?.level ?? 0;
 }
 
 function getNavItems(level: number): NavItem[] {
@@ -87,9 +70,9 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
   const supabase = createClient();
 
   const navItems = useMemo(() => {
-    const level = getRoleLevel(profile?.assignment?.role);
+    const level = profile?.assignment?.level ?? 0;
     return getNavItems(level);
-  }, [profile?.assignment?.role]);
+  }, [profile?.assignment?.level]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
