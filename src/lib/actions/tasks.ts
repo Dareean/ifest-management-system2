@@ -179,3 +179,77 @@ export async function deleteTask(taskId: string) {
   revalidatePath("/dashboard/tasks");
   return { success: true };
 }
+
+export async function updateTask(
+  taskId: string,
+  data: {
+    title?: string;
+    description?: string | null;
+    status?: string;
+    priority?: string;
+    deadline?: string | null;
+    assigneeId?: string | null;
+  }
+) {
+  const caller = await requireActiveMember();
+  if (!caller) return { error: "Silakan login terlebih dahulu" };
+
+  const supabase = createAdminClient();
+
+  // Fetch task to verify ownership
+  const { data: task, error: fetchErr } = await supabase
+    .from("tasks")
+    .select("division_id, assignee_id")
+    .eq("id", taskId)
+    .maybeSingle();
+
+  if (fetchErr || !task) return { error: "Task tidak ditemukan" };
+
+  const level = caller.role?.level ?? 0;
+  if (level < 70) {
+    if (level >= 55) {
+      if (caller.division_id !== task.division_id) {
+        return { error: "Anda hanya dapat mengubah task untuk divisi Anda sendiri" };
+      }
+    } else {
+      // Regular Member can only update status of their own assigned tasks
+      if (caller.id !== task.assignee_id) {
+        return { error: "Anda hanya dapat mengelola task yang ditugaskan kepada Anda" };
+      }
+      // If it's a regular member, they should ONLY be able to change status!
+      if (
+        data.title !== undefined ||
+        data.description !== undefined ||
+        data.priority !== undefined ||
+        data.deadline !== undefined ||
+        data.assigneeId !== undefined
+      ) {
+        return { error: "Anggota hanya dapat mengubah status task" };
+      }
+    }
+  }
+
+  const updatePayload: any = {};
+  if (data.title !== undefined) updatePayload.title = data.title;
+  if (data.description !== undefined) updatePayload.description = data.description;
+  if (data.status !== undefined) {
+    updatePayload.status = data.status;
+    if (data.status === "done") {
+      updatePayload.completed_at = new Date().toISOString();
+    } else {
+      updatePayload.completed_at = null;
+    }
+  }
+  if (data.priority !== undefined) updatePayload.priority = data.priority;
+  if (data.deadline !== undefined) updatePayload.deadline = data.deadline;
+  if (data.assigneeId !== undefined) updatePayload.assignee_id = data.assigneeId;
+
+  const { error } = await supabase
+    .from("tasks")
+    .update(updatePayload)
+    .eq("id", taskId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard/tasks");
+  return { success: true };
+}

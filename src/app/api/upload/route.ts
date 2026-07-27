@@ -28,9 +28,11 @@ export async function POST(request: NextRequest) {
     // Validate folder name to prevent directory traversal
     const safeFolder = folder.replace(/[^a-zA-Z0-9_-]/g, "");
 
-    // Google Drive Integration for Official Documents (letters)
-    if (safeFolder === "letters") {
-      const folderId = process.env.GDRIVE_FOLDER_ID;
+    // Google Drive Integration for Official Documents (letters) and Weekly Reports
+    if (safeFolder === "letters" || safeFolder === "weekly-reports") {
+      const folderId = safeFolder === "weekly-reports"
+        ? "1yyFIKfYU8KKhAKefBzXvkpxcvyb9D_Sg"
+        : process.env.GDRIVE_FOLDER_ID;
       
       const oauthClientId = process.env.GDRIVE_CLIENT_ID;
       const oauthClientSecret = process.env.GDRIVE_CLIENT_SECRET;
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
 
       if (!folderId) {
         return NextResponse.json(
-          { error: "GDRIVE_FOLDER_ID belum dikonfigurasi di server." },
+          { error: "Google Drive Folder ID belum dikonfigurasi di server." },
           { status: 500 }
         );
       }

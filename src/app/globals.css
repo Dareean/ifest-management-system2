@@ -95,6 +95,10 @@
 }
 
 @layer base {
+  html {
+    font-size: 15px; /* Scale down all rem-based font sizes and spacing (default is 16px) */
+  }
+
   * {
     border-color: var(--color-outline-variant);
   }
@@ -108,7 +112,7 @@
   /* Eyebrow style from DESIGN.md — JetBrains Mono, uppercase, spaced */
   .eyebrow {
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -118,63 +122,63 @@
   /* Caption style */
   .caption {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 400;
     letter-spacing: 0.05em;
     line-height: 1;
   }
 
-  /* Display XL — 86px, 600 weight, -0.02em tracking */
+  /* Display XL — 86px -> 72px, 600 weight, -0.02em tracking */
   .display-xl {
-    font-size: 86px;
+    font-size: 72px;
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1;
   }
 
-  /* Display LG — 64px, 600 weight, -0.015em tracking */
+  /* Display LG — 64px -> 52px, 600 weight, -0.015em tracking */
   .display-lg {
-    font-size: 64px;
+    font-size: 52px;
     font-weight: 600;
     letter-spacing: -0.015em;
     line-height: 1;
   }
 
-  /* Headline LG — 32px, 500 weight, -0.01em tracking */
+  /* Headline LG — 32px -> 28px, 500 weight, -0.01em tracking */
   .headline-lg {
-    font-size: 32px;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    line-height: 1.2;
-  }
-
-  /* Headline LG Mobile — 28px, 500 weight, -0.01em tracking */
-  .headline-lg-mobile {
     font-size: 28px;
     font-weight: 500;
     letter-spacing: -0.01em;
     line-height: 1.2;
   }
 
-  /* Body LG — 20px, 400 weight, -0.01em tracking */
+  /* Headline LG Mobile — 28px -> 24px, 500 weight, -0.01em tracking */
+  .headline-lg-mobile {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  /* Body LG — 20px -> 18px, 400 weight, -0.01em tracking */
   .body-lg {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 400;
     letter-spacing: -0.01em;
     line-height: 1.5;
   }
 
-  /* Body MD — 18px, 400 weight, -0.01em tracking */
+  /* Body MD — 18px -> 16px, 400 weight, -0.01em tracking */
   .body-md {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 400;
     letter-spacing: -0.01em;
     line-height: 1.5;
   }
 
-  /* Button style — 18px, 500 weight, 1.0 line height */
+  /* Button style — 18px -> 16px, 500 weight, 1.0 line height */
   .btn-text {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
     line-height: 1;
   }

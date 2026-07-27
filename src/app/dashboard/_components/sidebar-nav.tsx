@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -19,6 +19,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
   Users,
   CheckSquare,
 } from "lucide-react";
@@ -49,6 +50,7 @@ function getNavItems(level: number): NavItem[] {
 
   if (level >= 55) {
     items.push({ href: "/dashboard/members", label: "ANGGOTA", icon: Users });
+    items.push({ href: "/dashboard/weekly-report", label: "LAPORAN", icon: FileText });
   }
 
   if (level >= 80) {
@@ -67,12 +69,84 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  const [isLaporanExpanded, setIsLaporanExpanded] = useState(pathname.startsWith("/dashboard/weekly-report"));
+
+  useEffect(() => {
+    if (pathname.startsWith("/dashboard/weekly-report")) {
+      setIsLaporanExpanded(true);
+    }
+  }, [pathname]);
 
   const navItems = useMemo(() => {
     const level = profile?.assignment?.level ?? 0;
     return getNavItems(level);
   }, [profile?.assignment?.level]);
+
+  // Dynamically compute sub-tabs for LAPORAN based on supervisor or division membership
+  const laporanSubItems = useMemo(() => {
+    if (!profile) return [];
+    
+    const level = profile.assignment?.level ?? 0;
+    const nameLower = profile.fullName?.toLowerCase() || "";
+    const isDaren = nameLower.includes("daren") || nameLower.includes("dareean");
+    const isGabriel = nameLower.includes("gabriel");
+    const isReyqal = nameLower.includes("reyqal");
+    
+    const baseHref = "/dashboard/weekly-report";
+    
+    const ALL_DIVISIONS = [
+      { slug: "acara", label: "ACARA", dbName: "Acara" },
+      { slug: "logistik", label: "LOGISTIK", dbName: "Logistik" },
+      { slug: "lapangan", label: "LAPANGAN", dbName: "Lapangan" },
+      { slug: "ekonomi-kreatif", label: "EKRAF", dbName: "Ekonomi Kreatif" },
+      { slug: "konsumsi", label: "KONSUMSI", dbName: "Konsumsi" },
+      { slug: "keamanan", label: "KEAMANAN", dbName: "Keamanan" },
+      { slug: "humas", label: "HUMAS", dbName: "Humas" },
+      { slug: "sponsorship", label: "SPONSORSHIP", dbName: "Sponsorship" },
+      { slug: "kreativitas", label: "KREATIVITAS", dbName: "Kreativitas" }
+    ];
+
+    if (level >= 75 || level === 70) {
+      // BPH: sees all
+      return ALL_DIVISIONS.map(d => ({
+        href: `${baseHref}?div=${d.slug}`,
+        label: d.label,
+        slug: d.slug
+      }));
+    } else if (isDaren) {
+      return [
+        { href: `${baseHref}?div=ekonomi-kreatif`, label: "EKRAF", slug: "ekonomi-kreatif" },
+        { href: `${baseHref}?div=konsumsi`, label: "KONSUMSI", slug: "konsumsi" },
+        { href: `${baseHref}?div=keamanan`, label: "KEAMANAN", slug: "keamanan" }
+      ];
+    } else if (isGabriel) {
+      return [
+        { href: `${baseHref}?div=acara`, label: "ACARA", slug: "acara" },
+        { href: `${baseHref}?div=logistik`, label: "LOGISTIK", slug: "logistik" },
+        { href: `${baseHref}?div=lapangan`, label: "LAPANGAN", slug: "lapangan" }
+      ];
+    } else if (isReyqal) {
+      return [
+        { href: `${baseHref}?div=humas`, label: "HUMAS", slug: "humas" },
+        { href: `${baseHref}?div=sponsorship`, label: "SPONSORSHIP", slug: "sponsorship" },
+        { href: `${baseHref}?div=kreativitas`, label: "KREATIVITAS", slug: "kreativitas" }
+      ];
+    } else {
+      // Coordinator or regular member: sees their own division
+      const userDivName = profile.assignment?.division || "";
+      const matched = ALL_DIVISIONS.find(d => d.dbName.toLowerCase() === userDivName.toLowerCase());
+      if (matched) {
+        return [
+          { href: `${baseHref}?div=${matched.slug}`, label: matched.label, slug: matched.slug }
+        ];
+      }
+    }
+    
+    return [];
+  }, [profile]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -168,29 +242,83 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
   };
 
   const NavLinks = () => (
-    <nav className="flex flex-col gap-1.5">
+    <nav className="flex flex-col gap-2">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = isItemActive(item.href);
+        const hasSubItems = item.label === "LAPORAN" && laporanSubItems.length > 0;
+        const isExpanded = hasSubItems && isLaporanExpanded;
 
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setIsOpen(false)}
-            className={cn(
-              "flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all select-none group",
-              isActive
-                ? "bg-primary text-on-primary"
-                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <Icon className="size-5 shrink-0" />
-              <span className="tracking-wide font-sans">{item.label}</span>
+          <div key={item.href} className="flex flex-col">
+            <div className="flex items-center w-full">
+              <Link
+                href={item.href}
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  "flex-1 flex items-center justify-between px-4 py-3.5 rounded-xl text-xs font-bold transition-all select-none group uppercase tracking-wider",
+                  isActive
+                    ? "bg-black text-accent-lime border border-black/10 shadow-md shadow-black/5"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon 
+                    className={cn(
+                      "size-5 shrink-0 transition-colors", 
+                      isActive ? "text-accent-lime" : "text-on-surface-variant group-hover:text-on-surface"
+                    )} 
+                  />
+                  <span className="font-sans font-extrabold">{item.label}</span>
+                </div>
+                {!hasSubItems && isActive && <ChevronRight className="size-4 shrink-0 text-accent-lime" />}
+              </Link>
+
+              {hasSubItems && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsLaporanExpanded(!isLaporanExpanded);
+                  }}
+                  className={cn(
+                    "p-2.5 rounded-xl hover:bg-surface-container-low transition-colors cursor-pointer mr-1",
+                    isActive ? "text-accent-lime hover:bg-neutral-900" : "text-on-surface-variant hover:text-on-surface"
+                  )}
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="size-4 shrink-0" />
+                  ) : (
+                    <ChevronRight className="size-4 shrink-0" />
+                  )}
+                </button>
+              )}
             </div>
-            {isActive && <ChevronRight className="size-4 shrink-0 text-on-primary" />}
-          </Link>
+
+            {/* Sub-items rendering */}
+            {hasSubItems && isExpanded && (
+              <div className="pl-6 ml-4 border-l border-outline-variant/30 flex flex-col gap-1 mt-1">
+                {laporanSubItems.map((sub) => {
+                  const isSubActive = searchParams.get("div") === sub.slug;
+                  return (
+                    <Link
+                      key={sub.href}
+                      href={sub.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "pl-4 pr-3 py-2 rounded-lg text-[10px] font-bold tracking-wider transition-all select-none uppercase font-sans",
+                        isSubActive
+                          ? "bg-black/5 text-primary font-black border-l-2 border-primary pl-3"
+                          : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                      )}
+                    >
+                      {sub.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         );
       })}
     </nav>
