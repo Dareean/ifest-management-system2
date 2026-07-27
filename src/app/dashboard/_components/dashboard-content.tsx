@@ -494,7 +494,7 @@ function DivisiProgressSection({ divisions }: { divisions: any[] }) {
 
                     {/* Label split by words */}
                     <div className="text-[8px] md:text-[10px] font-bold text-on-surface-variant mt-2 text-center h-8 flex flex-col justify-start leading-tight select-none">
-                      {nameParts.map((part, idx) => (
+                      {nameParts.map((part: string, idx: number) => (
                         <span key={idx} className="block truncate max-w-[36px] sm:max-w-[50px] md:max-w-none group-hover:text-accent-magenta transition-colors">
                           {part}
                         </span>

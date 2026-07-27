@@ -43,7 +43,7 @@ describe('Supabase Clients', () => {
       mockCookieStore.getAll.mockReturnValue([{ name: 'test', value: 'val' }]);
       const { createClient } = await import('@/lib/supabase/server');
       await createClient();
-      const callOpts = mockCreateServerClient.mock.calls[0][2];
+      const callOpts = (mockCreateServerClient as any).mock.calls[0][2];
       const result = callOpts.cookies.getAll();
       expect(result).toEqual([{ name: 'test', value: 'val' }]);
     });

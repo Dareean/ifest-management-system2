@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAs, TEST_ACCOUNTS } from '../utils/test-helpers';
+import { loginAs, TEST_ACCOUNTS, waitForToast } from '../utils/test-helpers';
 
 /**
  * E2E Tests for Navigation & Redirects
@@ -265,7 +265,7 @@ test.describe('Redirect - Post-Action', () => {
 
   test('should redirect to login after session expires', async ({ page }) => {
     // Simulate session expiry by clearing session
-    await page.clearCookies();
+    await page.context().clearCookies();
     await page.goto('/dashboard');
 
     // Should redirect to login

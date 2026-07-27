@@ -17,7 +17,7 @@ export interface DivisionGroup {
   members: MemberOption[];
 }
 
-export async function getAllMembers(): Promise<DivisionGroup[]> {
+export async function getAllMembers(options?: { year?: string }): Promise<DivisionGroup[]> {
   const supabase = createAdminClient();
 
   const { data: assignments } = await supabase
@@ -29,7 +29,7 @@ export async function getAllMembers(): Promise<DivisionGroup[]> {
       role:roles(name, level),
       user:profiles(full_name)
     `)
-    .eq("committee_year_id", YEAR_ID)
+    .eq("committee_year_id", options?.year || YEAR_ID)
     .eq("is_active", true);
 
   if (!assignments) return [];

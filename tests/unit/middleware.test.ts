@@ -20,7 +20,7 @@ describe('Middleware', () => {
     mockUpdateSession.mockResolvedValue(new Response(null, { status: 200 }));
     const mod = await import('@/middleware');
     const request = new Request('http://localhost/dashboard');
-    await mod.middleware(request);
+    await mod.middleware(request as any);
     expect(mockUpdateSession).toHaveBeenCalledWith(request);
   });
 });

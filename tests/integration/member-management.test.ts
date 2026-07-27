@@ -144,13 +144,15 @@ describe('Member Management Integration', () => {
   });
 
   it('should verify member has valid role and division', async () => {
-    const { data: assignment } = await supabase
+    const { data: assignment, error } = await supabase
       .from('committee_assignments')
-      .select('id, role_id, division_id, role:roles(name), division:divisions(name)')
+      .select('id, role_id, division_id, role:roles(name), division:divisions!committee_assignments_division_id_fkey(name)')
       .eq('committee_year_id', YEAR_ID)
       .eq('is_active', true)
       .limit(1)
       .single();
+
+    if (error) console.error("Database query failed:", error);
 
     expect(assignment).toBeTruthy();
     expect(assignment!.role_id).toBeTruthy();
