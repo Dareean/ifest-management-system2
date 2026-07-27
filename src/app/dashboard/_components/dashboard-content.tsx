@@ -226,7 +226,7 @@ async function KoordinatorWeeklyReportAlert({ divisionId, currentWeek }: { divis
 
   return (
     <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 border rounded-2xl gap-4 ${alertConfig.bg}`}>
-      <div className="flex gap-3">
+      <div className="flex items-start gap-3">
         <div className={`p-2 bg-white rounded-xl shadow-sm shrink-0 ${alertConfig.iconColor}`}>
           <FileText className="size-5" />
         </div>
@@ -844,6 +844,7 @@ async function KoordinatorPerformanceSection({ divisionId }: { divisionId: strin
   const circumference = 2 * Math.PI * r;
   const strokeDashoffset = circumference - (taskProgress / 100) * circumference;
 
+  const currentWeek = "Agustus W1";
   // 2. Fetch weekly reports history for active month (e.g. Agustus)
   const targetWeeks = ["Agustus W1", "Agustus W2", "Agustus W3", "Agustus W4"];
   const { data: reports } = await supabase
@@ -936,26 +937,47 @@ async function KoordinatorPerformanceSection({ divisionId }: { divisionId: strin
 
             {targetWeeks.map((week, idx) => {
               const status = reportsMap[week] || "UNSUBMITTED";
+              const isCurrentWeek = week === currentWeek;
+              
               let colorClass = "bg-slate-200 border-slate-300 text-slate-500";
               let label = "Belum";
+              let pulseClass = "";
 
               if (status === "APPROVED") {
                 colorClass = "bg-emerald-500 border-emerald-600 text-white shadow-sm shadow-emerald-500/20";
                 label = "Approved";
+                if (isCurrentWeek) {
+                  colorClass += " ring-4 ring-emerald-500/30";
+                }
               } else if (status === "PENDING") {
-                colorClass = "bg-amber-400 border-amber-500 text-white shadow-sm shadow-amber-500/20";
+                colorClass = "bg-indigo-500 border-indigo-600 text-white shadow-sm shadow-indigo-500/20";
                 label = "Pending";
+                if (isCurrentWeek) {
+                  colorClass += " ring-4 ring-indigo-500/30";
+                  pulseClass = "animate-pulse";
+                }
               } else if (status === "NEED_FIX") {
                 colorClass = "bg-rose-500 border-rose-600 text-white shadow-sm shadow-rose-500/20";
                 label = "Revisi";
+                if (isCurrentWeek) {
+                  colorClass += " ring-4 ring-rose-500/30";
+                  pulseClass = "animate-pulse";
+                }
+              } else {
+                // UNSUBMITTED
+                if (isCurrentWeek) {
+                  colorClass = "bg-amber-500 border-amber-600 text-white shadow-sm ring-4 ring-amber-500/30";
+                  pulseClass = "animate-pulse";
+                  label = "Belum (Aktif)";
+                }
               }
 
               return (
                 <div key={week} className="flex flex-col items-center gap-1.5 relative z-10 flex-1">
-                  <div className={`size-8 rounded-full border-2 flex items-center justify-center text-[10px] font-black font-mono transition-all duration-300 ${colorClass}`}>
+                  <div className={`size-8 rounded-full border-2 flex items-center justify-center text-[10px] font-black font-mono transition-all duration-300 ${colorClass} ${pulseClass}`}>
                     W{idx + 1}
                   </div>
-                  <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-tight">
+                  <span className={`text-[9px] font-bold uppercase tracking-tight text-center ${isCurrentWeek ? "text-accent-magenta font-black" : "text-on-surface-variant/70"}`}>
                     {label}
                   </span>
                 </div>
