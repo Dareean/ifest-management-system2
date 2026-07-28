@@ -4,12 +4,13 @@ import { getCurrentAssignment } from "@/lib/data/personal-dashboard";
 import { getDashboardOverview, getDivisionsWithProgress } from "@/lib/data/dashboard";
 import { getFinanceOverview } from "@/lib/data/finance";
 import { getLetters, getStatusDisplay } from "@/lib/data/letters";
+import { getMeetings } from "@/lib/data/meetings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
-  CheckCircle, FileText, Calendar, TrendingUp,
+  CheckCircle, FileText, Calendar, TrendingUp, PlayCircle, Clock, MapPin,
 } from "lucide-react";
 import { PersonalStats } from "./sections/personal-stats";
 import { SekretarisStats } from "./sections/sekretaris-stats";
@@ -113,6 +114,9 @@ function KetuaView({ assignmentId, greeting, profile }: { assignmentId: string; 
       <Suspense fallback={<StatCardsSkeleton count={4} />}>
         <KetuaStats />
       </Suspense>
+      <Suspense fallback={<MeetingsSkeleton />}>
+        <OngoingMeetingsSection />
+      </Suspense>
       <Suspense fallback={<LettersSkeleton />}>
         <RecentLettersSection />
       </Suspense>
@@ -126,6 +130,9 @@ function WakilKetuaView({ assignmentId, greeting, profile }: { assignmentId: str
       <HeaderSection title={`DASHBOARD WAKIL KETUA`} greeting={greeting} subtitle="Pantau kinerja seluruh divisi." />
       <Suspense fallback={<StatCardsSkeleton count={4} />}>
         <KetuaStats />
+      </Suspense>
+      <Suspense fallback={<MeetingsSkeleton />}>
+        <OngoingMeetingsSection />
       </Suspense>
       <Suspense fallback={<LettersSkeleton />}>
         <RecentLettersSection />
@@ -143,6 +150,9 @@ function SekretarisView({ assignmentId, greeting, profile }: { assignmentId: str
       </Suspense>
       <Suspense fallback={<div className="h-48 bg-slate-100 rounded-2xl animate-pulse" />}>
         <WeeklyReportProgressSection />
+      </Suspense>
+      <Suspense fallback={<MeetingsSkeleton />}>
+        <OngoingMeetingsSection />
       </Suspense>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="flex flex-col gap-4">
@@ -177,6 +187,9 @@ function BendaharaView({ assignmentId, greeting, profile }: { assignmentId: stri
       </Suspense>
       <Suspense fallback={<div className="h-48 bg-slate-100 rounded-2xl animate-pulse" />}>
         <WeeklyReportProgressSection />
+      </Suspense>
+      <Suspense fallback={<MeetingsSkeleton />}>
+        <OngoingMeetingsSection />
       </Suspense>
       <Suspense fallback={<LettersSkeleton />}>
         <PersonalLetters assignmentId={assignmentId} />
@@ -530,6 +543,172 @@ async function KetuaStats() {
       <DivisiProgressSection divisions={divisions} />
       <WeeklyReportProgressSection />
     </>
+  );
+}
+
+async function OngoingMeetingsSection() {
+  const meetings = await getMeetings();
+  const now = new Date();
+
+  const ongoing = meetings.filter(
+    (m) => !m.endedAt && m.startedAt && new Date(m.startedAt) <= now
+  );
+  const upcoming = meetings
+    .filter((m) => !m.endedAt && m.startedAt && new Date(m.startedAt) > now)
+    .sort((a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime())
+    .slice(0, 3);
+  const completed = meetings
+    .filter((m) => m.endedAt)
+    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+    .slice(0, 3);
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const timeStr = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) + " WITA";
+    const dateStrFormatted = date.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+    return `${dateStrFormatted}, ${timeStr}`;
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <SectionTitle icon={Calendar} title="Monitoring Rapat Panitia" />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Kolom 1: Sedang Berlangsung */}
+        <div className="flex flex-col gap-3.5 bg-surface-container-low/40 p-4 border border-outline-variant/30 rounded-2xl h-full">
+          <div className="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+            <h3 className="text-xs font-mono font-bold tracking-wider text-on-surface uppercase flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              Sedang Berjalan
+            </h3>
+            <Badge variant="success" className="text-[9px] font-mono px-1.5 py-0">{ongoing.length} Rapat</Badge>
+          </div>
+          
+          {ongoing.length === 0 ? (
+            <div className="bg-white border border-outline-variant/40 rounded-xl p-5 text-center min-h-[140px] flex items-center justify-center">
+              <p className="text-xs font-mono text-on-surface-variant leading-relaxed">Tidak ada rapat yang sedang berlangsung.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {ongoing.map((m) => (
+                <Link href={`/dashboard/meetings/${m.id}`} key={m.id} className="block group">
+                  <div className="bg-white border border-emerald-200 hover:border-emerald-500 rounded-xl p-3.5 flex flex-col gap-2.5 hover:shadow-xs transition-all relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />
+                    <div className="pl-1.5 min-w-0">
+                      <p className="text-xs font-mono text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5 w-fit uppercase mb-1.5">
+                        Live Now
+                      </p>
+                      <p className="text-sm font-bold text-on-surface truncate group-hover:text-accent-magenta transition-colors">
+                        {m.title}
+                      </p>
+                      <p className="text-[11px] text-on-surface-variant font-mono mt-1 flex items-center gap-1.5">
+                        <Clock className="size-3 text-emerald-600 shrink-0" />
+                        <span>{formatDate(m.startedAt)}</span>
+                      </p>
+                      {m.location && (
+                        <p className="text-[10px] text-on-surface-variant font-sans mt-0.5 truncate">
+                          📍 {m.location}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Kolom 2: Rapat Terjadwal */}
+        <div className="flex flex-col gap-3.5 bg-surface-container-low/40 p-4 border border-outline-variant/30 rounded-2xl h-full">
+          <div className="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+            <h3 className="text-xs font-mono font-bold tracking-wider text-on-surface uppercase flex items-center gap-1.5">
+              <Calendar className="size-3.5 text-blue-500 shrink-0" />
+              Rapat Terjadwal
+            </h3>
+            <Badge variant="info" className="text-[9px] font-mono px-1.5 py-0">{upcoming.length} Rapat</Badge>
+          </div>
+          
+          {upcoming.length === 0 ? (
+            <div className="bg-white border border-outline-variant/40 rounded-xl p-5 text-center min-h-[140px] flex items-center justify-center">
+              <p className="text-xs font-mono text-on-surface-variant leading-relaxed">Tidak ada rapat terjadwal mendatang.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {upcoming.map((m) => (
+                <Link href={`/dashboard/meetings/${m.id}`} key={m.id} className="block group">
+                  <div className="bg-white border border-blue-200 hover:border-blue-500 rounded-xl p-3.5 flex flex-col gap-2.5 hover:shadow-xs transition-all relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
+                    <div className="pl-1.5 min-w-0">
+                      <p className="text-xs font-mono text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5 w-fit uppercase mb-1.5">
+                        {m.meetingType === "adhoc" ? "Kondisional" : "Terjadwal"}
+                      </p>
+                      <p className="text-sm font-bold text-on-surface truncate group-hover:text-accent-magenta transition-colors">
+                        {m.title}
+                      </p>
+                      <p className="text-[11px] text-on-surface-variant font-mono mt-1 flex items-center gap-1.5">
+                        <Clock className="size-3 text-blue-500 shrink-0" />
+                        <span>{formatDate(m.startedAt)}</span>
+                      </p>
+                      {m.location && (
+                        <p className="text-[10px] text-on-surface-variant font-sans mt-0.5 truncate">
+                          📍 {m.location}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Kolom 3: Rapat Selesai */}
+        <div className="flex flex-col gap-3.5 bg-surface-container-low/40 p-4 border border-outline-variant/30 rounded-2xl h-full">
+          <div className="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+            <h3 className="text-xs font-mono font-bold tracking-wider text-on-surface uppercase flex items-center gap-1.5">
+              <CheckCircle className="size-3.5 text-slate-500 shrink-0" />
+              Selesai
+            </h3>
+            <Badge variant="secondary" className="text-[9px] font-mono px-1.5 py-0">{completed.length} Rapat</Badge>
+          </div>
+          
+          {completed.length === 0 ? (
+            <div className="bg-white border border-outline-variant/40 rounded-xl p-5 text-center min-h-[140px] flex items-center justify-center">
+              <p className="text-xs font-mono text-on-surface-variant leading-relaxed">Belum ada rapat yang selesai.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {completed.map((m) => (
+                <Link href={`/dashboard/meetings/${m.id}`} key={m.id} className="block group">
+                  <div className="bg-white border border-slate-200 hover:border-slate-400 rounded-xl p-3.5 flex flex-col gap-2.5 hover:shadow-xs transition-all relative overflow-hidden opacity-80 hover:opacity-100">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-400" />
+                    <div className="pl-1.5 min-w-0">
+                      <p className="text-[11px] text-on-surface font-bold truncate group-hover:text-accent-magenta transition-colors">
+                        {m.title}
+                      </p>
+                      <p className="text-[10px] text-on-surface-variant font-mono mt-1 flex items-center gap-1.5">
+                        <Clock className="size-3 text-slate-400 shrink-0" />
+                        <span>Selesai: {formatDate(m.startedAt)}</span>
+                      </p>
+                      {m.notesStatus === "published" && (
+                        <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-1.5 py-0 w-fit block mt-1">
+                          Notulensi Ada
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
   );
 }
 
