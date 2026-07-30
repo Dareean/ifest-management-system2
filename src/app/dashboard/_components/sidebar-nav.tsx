@@ -158,6 +158,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
 
   const isItemActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
+    if (href === "/dashboard/finance") return pathname === "/dashboard/finance";
     return pathname.startsWith(href);
   };
 
@@ -259,22 +260,22 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
                 href={item.href}
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  "flex-1 flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all select-none group uppercase tracking-wider font-mono",
+                  "flex-1 flex items-center justify-between px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all select-none group uppercase tracking-wider font-mono",
                   isActive
-                    ? "bg-[#0B0C10] text-white border border-slate-800 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
+                    ? "bg-[#04000D] text-[#DCEEB1] shadow-sm font-extrabold"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-slate-100/70"
                 )}
               >
                 <div className="flex items-center gap-3">
                   <Icon 
                     className={cn(
-                      "size-4 shrink-0 transition-colors", 
-                      isActive ? "text-white" : "text-slate-500 group-hover:text-slate-800"
+                      "size-[17px] shrink-0 transition-colors", 
+                      isActive ? "text-[#DCEEB1]" : "text-slate-500 group-hover:text-slate-800"
                     )} 
                   />
                   <span className="font-mono font-extrabold">{item.label}</span>
                 </div>
-                {!hasSubItems && isActive && <ChevronRight className="size-4 shrink-0 text-slate-400" />}
+                {!hasSubItems && isActive && <ChevronRight className="size-4 shrink-0 text-[#DCEEB1]" />}
               </Link>
 
               {hasSubItems && (
@@ -309,7 +310,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
                       href={sub.href}
                       onClick={() => setIsOpen(false)}
                       className={cn(
-                        "pl-4 pr-3 py-2 rounded-lg text-[10px] font-bold tracking-wider transition-all select-none uppercase font-mono",
+                        "pl-4 pr-3 py-2 rounded-lg text-[11px] font-bold tracking-wider transition-all select-none uppercase font-mono",
                         isSubActive
                           ? "bg-slate-900 text-white font-black border-l-2 border-pink-500 pl-3"
                           : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
@@ -334,9 +335,9 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
           setIsOpen(false);
           handleLogout();
         }}
-        className="flex items-center gap-2.5 px-4 py-3 rounded-2xl text-xs font-extrabold text-pink-500 hover:text-pink-600 hover:bg-pink-50/50 transition-colors cursor-pointer w-full text-left font-mono tracking-widest uppercase group"
+        className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[13px] font-extrabold text-[#FF3D8B] hover:bg-[#FF3D8B]/5 transition-colors cursor-pointer w-full text-left font-mono tracking-widest uppercase group"
       >
-        <LogOut className="size-4 shrink-0 text-pink-500 group-hover:text-pink-600 transition-colors" />
+        <LogOut className="size-[17px] shrink-0 text-[#FF3D8B] transition-colors" />
         <span>KELUAR</span>
       </button>
     </div>

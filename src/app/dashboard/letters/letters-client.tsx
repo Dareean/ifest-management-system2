@@ -323,7 +323,7 @@ export function LettersClient({ initialLetters, isApprover, divisions }: Letters
             return (
               <div
                 key={letter.id}
-                className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col justify-between hover:border-pink-300 hover:shadow-md transition-all shadow-xs group"
+                className="bg-white border border-[#04000D]/5 rounded-2xl p-6 flex flex-col justify-between hover:border-accent-magenta/30 shadow-[0_8px_30px_rgb(0,0,0,0.015)] hover:shadow-md transition-all group"
               >
                 {/* Main Card Link Area */}
                 <Link href={`/dashboard/letters/${letter.id}`} className="block flex-1">

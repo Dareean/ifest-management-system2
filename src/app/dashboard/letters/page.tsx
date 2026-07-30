@@ -64,13 +64,13 @@ export default async function LettersPage(props: {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-pink-500 font-mono text-[11px] font-extrabold tracking-widest uppercase mb-1">
+          <p className="text-accent-magenta font-mono text-[10px] font-bold uppercase tracking-widest mb-1">
             SISTEM SURAT
           </p>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-on-surface font-sans">
             Permohonan Surat
           </h1>
-          <p className="mt-1 text-sm text-slate-400 font-sans">
+          <p className="mt-1 text-sm text-on-surface-variant font-sans">
             {isSecretary
               ? "Kelola dan pantau seluruh permohonan surat kepanitiaan."
               : "Ajukan dan pantau status permohonan surat Anda."}
@@ -79,7 +79,7 @@ export default async function LettersPage(props: {
         <div className="flex items-center gap-3 shrink-0 sm:self-end">
           <ExportButton label="Export CSV" filename="surat" fetchCsv={exportLettersCSV} />
           <Link href="/dashboard/letters/new">
-            <Button size="sm" className="h-9 font-mono font-bold text-xs uppercase cursor-pointer bg-slate-900 text-white hover:bg-black rounded-2xl gap-1.5 px-4 shadow-xs">
+            <Button size="sm" className="h-9 font-mono font-bold text-xs uppercase cursor-pointer bg-[#04000D] text-[#DCEEB1] hover:bg-black rounded-xl gap-1.5 px-4 shadow-sm">
               <Plus className="size-4" />
               Ajukan Surat
             </Button>

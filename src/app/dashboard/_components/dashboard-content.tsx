@@ -392,12 +392,15 @@ function AnggotaView({ assignmentId, divisionName, greeting, profile }: { assign
 function HeaderSection({ title, greeting, subtitle }: { title: string; greeting: string; subtitle: string }) {
   return (
     <div>
-      <p className="text-pink-500 font-mono text-[11px] font-extrabold tracking-widest uppercase mb-1">
+      <p className="text-accent-magenta font-mono text-[10px] font-bold uppercase tracking-widest mb-1">
         {title || "ADMIN PANEL"}
       </p>
-      <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
+      <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-on-surface font-sans">
         Dashboard
       </h1>
+      {subtitle && (
+        <p className="mt-1 text-sm text-on-surface-variant font-sans">{subtitle}</p>
+      )}
     </div>
   );
 }
@@ -405,8 +408,8 @@ function HeaderSection({ title, greeting, subtitle }: { title: string; greeting:
 function SectionTitle({ icon: Icon, title }: { icon: any; title: string }) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <Icon className="size-5 text-pink-500" />
-      <h2 className="text-xl font-bold tracking-tight text-slate-900 font-sans">{title}</h2>
+      <Icon className="size-5 text-accent-magenta" />
+      <h2 className="text-xl font-bold tracking-tight text-on-surface font-sans">{title}</h2>
     </div>
   );
 }
@@ -414,13 +417,13 @@ function SectionTitle({ icon: Icon, title }: { icon: any; title: string }) {
 function StatBlock({ label, value, icon: Icon, iconBg = "bg-slate-100", iconColor = "text-slate-600" }: { label: string; value: string; icon?: any; iconBg?: string; iconColor?: string }) {
   const IconComp = Icon || UsersIcon;
   return (
-    <div className="bg-white border border-slate-100 rounded-3xl p-6 flex items-center gap-5 shadow-xs hover:border-slate-200 transition-all">
-      <div className={`p-3.5 rounded-2xl ${iconBg} ${iconColor} shrink-0`}>
+    <div className="bg-white border border-[#04000D]/5 rounded-2xl p-5 md:p-6 flex items-center gap-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] hover:border-[#04000D]/10 transition-all">
+      <div className={`p-3.5 rounded-xl ${iconBg} ${iconColor} shrink-0`}>
         <IconComp className="size-6" />
       </div>
       <div className="flex flex-col">
-        <p className="text-[11px] font-mono font-bold tracking-widest text-slate-400 uppercase">{label}</p>
-        <p className="text-3xl font-black text-slate-900 leading-none mt-1 font-sans">{value}</p>
+        <p className="text-[9px] font-mono font-bold tracking-wider text-on-surface-variant/70 uppercase">{label}</p>
+        <p className="text-2xl md:text-3xl font-extrabold text-on-surface leading-none mt-1 font-sans">{value}</p>
       </div>
     </div>
   );

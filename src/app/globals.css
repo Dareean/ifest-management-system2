@@ -2,9 +2,9 @@
 
 @theme {
   /* SURFACE TOKENS */
-  --color-surface: #f9fafb;
+  --color-surface: #FDF8FA;
   --color-surface-dim: #e2e8f0;
-  --color-surface-bright: #f9fafb;
+  --color-surface-bright: #FDF8FA;
   --color-surface-container-lowest: #ffffff;
   --color-surface-container-low: #f8f2f4;
   --color-surface-container: #f2ecef;
@@ -18,7 +18,8 @@
   --color-outline-variant: #ccc4cc;
   --color-surface-tint: #665971;
 
-  /* BRAND — Midnight Ink */
+  /* BRAND — Midnight Ink & Digital Symphony */
+  --color-midnight: #04000D;
   --color-primary: #000000;
   --color-on-primary: #ffffff;
   --color-primary-container: #21172c;

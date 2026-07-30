@@ -43,59 +43,89 @@ export function ReportClient({ report }: { report: FinanceReportData }) {
     URL.revokeObjectURL(url);
   }
 
+  const incomeTotal = report.divisions.reduce((s, d) => s + d.transactions.filter(t => t.type === 'income').reduce((a, b) => a + b.amount, 0), 0);
+
   return (
-    <div className="flex flex-col gap-8 max-w-5xl mx-auto px-4">
-      {/* Header Actions */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-xs font-bold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="size-4" /> Kembali
-        </button>
-        <div className="flex items-center gap-3 print:hidden">
-          <Button variant="outline" onClick={handleExportCSV} className="cursor-pointer text-xs">
+    <div className="flex flex-col gap-8 w-full pb-12">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+        <div>
+          <p className="text-accent-magenta font-mono text-[10px] font-bold uppercase tracking-widest mb-1">
+            LAPORAN PERTANGGUNGJAWABAN
+          </p>
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-on-surface font-sans">
+            LPJ Keuangan Kepanitiaan
+          </h1>
+          <p className="mt-1 text-sm text-on-surface-variant font-sans">
+            Rekapitulasi anggaran, pengeluaran per divisi, dan bukti transaksi I-FEST 2026.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0 print:hidden">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 bg-white text-xs font-mono font-bold text-slate-700 hover:bg-slate-50 transition-all cursor-pointer shadow-xs"
+          >
+            <ArrowLeft className="size-4" /> Kembali
+          </button>
+
+          <Button 
+            variant="outline" 
+            onClick={handleExportCSV} 
+            className="h-9 px-4 rounded-xl text-xs font-mono font-bold border-slate-200 hover:bg-slate-50 gap-1.5 cursor-pointer shadow-xs"
+          >
             <FileDown className="size-4" /> Export CSV
           </Button>
-          <Button variant="primary" onClick={handlePrint} className="cursor-pointer text-xs">
+
+          <Button 
+            onClick={handlePrint} 
+            className="h-9 px-5 rounded-xl text-xs font-mono font-bold bg-[#04000D] text-[#DCEEB1] hover:bg-black gap-1.5 cursor-pointer shadow-sm"
+          >
             <Printer className="size-4" /> Cetak / PDF
           </Button>
         </div>
       </div>
 
-      {/* LPJ Document */}
-      <div ref={printRef} className="bg-white border border-outline-variant/60 rounded-2xl p-8 sm:p-12 shadow-sm">
-        {/* Kop Surat */}
-        <div className="text-center border-b-2 border-black pb-6 mb-8">
-          <h1 className="text-2xl font-black tracking-tight">LAPORAN PERTANGGUNGJAWABAN KEUANGAN</h1>
-          <p className="text-lg font-bold mt-1">PANITIA INFORMATICS FESTIVAL (I-FEST) 2026</p>
-          <p className="text-sm text-on-surface-variant mt-1 font-mono">
-            HMTI — Universitas Tadulako
+      {/* LPJ Document Container */}
+      <div ref={printRef} className="bg-white border border-[#04000D]/5 rounded-3xl p-6 sm:p-10 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.015)] w-full">
+        {/* Kop Surat Header */}
+        <div className="text-center border-b-2 border-slate-900 pb-8 mb-10">
+          <h2 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 font-sans uppercase">
+            LAPORAN PERTANGGUNGJAWABAN KEUANGAN
+          </h2>
+          <p className="text-base sm:text-lg font-extrabold text-slate-800 mt-1 font-sans">
+            PANITIA INFORMATICS FESTIVAL (I-FEST) 2026
           </p>
-          <p className="text-xs text-on-surface-variant font-mono mt-0.5">
-            Periode: {report.divisions.length > 0 ? `${formatDate(report.divisions[0]?.transactions?.[0]?.transaction_date ?? report.generatedAt)}` : ""}
+          <p className="text-xs sm:text-sm text-slate-500 font-mono mt-1">
+            HMTI — Universitas Tadulako &middot; Periode: {report.divisions.length > 0 ? `${formatDate(report.divisions[0]?.transactions?.[0]?.transaction_date ?? report.generatedAt)}` : "2026"}
           </p>
         </div>
 
         {/* Ringkasan Global */}
-        <div className="mb-10">
-          <h2 className="text-lg font-bold mb-4 border-b border-outline-variant/30 pb-2">A. RINGKASAN ANGGARAN</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-surface-container-low rounded-xl p-4 text-center">
-              <p className="text-[10px] font-mono font-bold text-on-surface-variant tracking-wider uppercase">TOTAL ANGGARAN</p>
-              <p className="text-xl font-black text-on-surface mt-1">{formatRp(report.overview.total_budget)}</p>
+        <div className="mb-12">
+          <h3 className="text-xs font-mono font-extrabold text-accent-magenta tracking-widest uppercase mb-4 flex items-center gap-2">
+            <span>A. RINGKASAN ANGGARAN & DANA</span>
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="bg-white border border-[#04000D]/5 rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
+              <p className="text-[10px] font-mono font-bold text-slate-400 tracking-wider uppercase">TOTAL ANGGARAN</p>
+              <p className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-1 font-sans">{formatRp(report.overview.total_budget)}</p>
             </div>
-            <div className="bg-surface-container-low rounded-xl p-4 text-center">
-              <p className="text-[10px] font-mono font-bold text-on-surface-variant tracking-wider uppercase">PEMASUKAN</p>
-              <p className="text-xl font-black text-accent-green mt-1">{formatRp(report.divisions.reduce((s, d) => s + d.transactions.filter(t => t.type === 'income').reduce((a, b) => a + b.amount, 0), 0))}</p>
+
+            <div className="bg-white border border-[#04000D]/5 rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
+              <p className="text-[10px] font-mono font-bold text-slate-400 tracking-wider uppercase">PEMASUKAN DANA</p>
+              <p className="text-2xl md:text-3xl font-extrabold text-emerald-600 mt-1 font-sans">{formatRp(incomeTotal)}</p>
             </div>
-            <div className="bg-surface-container-low rounded-xl p-4 text-center">
-              <p className="text-[10px] font-mono font-bold text-on-surface-variant tracking-wider uppercase">PENGELUARAN</p>
-              <p className="text-xl font-black text-error mt-1">{formatRp(report.overview.total_used)}</p>
+
+            <div className="bg-white border border-[#04000D]/5 rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
+              <p className="text-[10px] font-mono font-bold text-slate-400 tracking-wider uppercase">PENGELUARAN DANA</p>
+              <p className="text-2xl md:text-3xl font-extrabold text-rose-600 mt-1 font-sans">{formatRp(report.overview.total_used)}</p>
             </div>
-            <div className="bg-surface-container-low rounded-xl p-4 text-center">
-              <p className="text-[10px] font-mono font-bold text-on-surface-variant tracking-wider uppercase">SISA ANGGARAN</p>
-              <p className={`text-xl font-black mt-1 ${report.overview.total_remaining >= 0 ? "text-accent-green" : "text-error"}`}>
+
+            <div className="bg-white border border-[#04000D]/5 rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
+              <p className="text-[10px] font-mono font-bold text-slate-400 tracking-wider uppercase">SISA ANGGARAN</p>
+              <p className={`text-2xl md:text-3xl font-extrabold mt-1 font-sans ${report.overview.total_remaining >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                 {formatRp(report.overview.total_remaining)}
               </p>
             </div>
@@ -103,120 +133,136 @@ export function ReportClient({ report }: { report: FinanceReportData }) {
         </div>
 
         {/* Breakdown per Divisi */}
-        <div className="mb-10">
-          <h2 className="text-lg font-bold mb-4 border-b border-outline-variant/30 pb-2">B. RINCIAN ANGGARAN PER DIVISI</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-surface-container-low border-b border-outline-variant/20">
-                  <th className="text-left px-3 py-2.5 text-[10px] font-mono font-bold tracking-wider">Divisi</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-mono font-bold tracking-wider">Anggaran</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-mono font-bold tracking-wider">Terpakai</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-mono font-bold tracking-wider">Sisa</th>
-                  <th className="text-center px-3 py-2.5 text-[10px] font-mono font-bold tracking-wider">Penggunaan</th>
-                  <th className="text-right px-3 py-2.5 text-[10px] font-mono font-bold tracking-wider">Transaksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.divisions.map((d) => {
-                  const pct = d.total_budget > 0 ? Math.round((d.used_amount / d.total_budget) * 100) : 0;
-                  return (
-                    <tr key={d.division_id} className="border-b border-outline-variant/10">
-                      <td className="px-3 py-3 font-bold">{d.division_name}</td>
-                      <td className="px-3 py-3 text-right font-mono">{formatRp(d.total_budget)}</td>
-                      <td className="px-3 py-3 text-right font-mono text-error">{formatRp(d.used_amount)}</td>
-                      <td className={`px-3 py-3 text-right font-mono ${d.remaining >= 0 ? "text-accent-green" : "text-error"}`}>{formatRp(d.remaining)}</td>
-                      <td className="px-3 py-3 text-center">
-                        <div className="inline-flex items-center gap-2">
-                          <div className="w-16 h-1.5 rounded-full bg-surface-container overflow-hidden">
-                            <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(pct, 100)}%` }} />
+        <div className="mb-12">
+          <h3 className="text-xs font-mono font-extrabold text-accent-magenta tracking-widest uppercase mb-4 flex items-center gap-2">
+            <span>B. RINCIAN ANGGARAN PER DIVISI</span>
+          </h3>
+
+          <div className="rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="bg-[#04000D] text-[#DCEEB1] font-mono text-xs uppercase tracking-wider">
+                    <th className="text-left px-4 py-3.5 font-extrabold">Divisi</th>
+                    <th className="text-right px-4 py-3.5 font-extrabold">Anggaran</th>
+                    <th className="text-right px-4 py-3.5 font-extrabold">Terpakai</th>
+                    <th className="text-right px-4 py-3.5 font-extrabold">Sisa</th>
+                    <th className="text-center px-4 py-3.5 font-extrabold">Persentase</th>
+                    <th className="text-right px-4 py-3.5 font-extrabold">Transaksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {report.divisions.map((d) => {
+                    const pct = d.total_budget > 0 ? Math.round((d.used_amount / d.total_budget) * 100) : 0;
+                    return (
+                      <tr key={d.division_id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-4 py-3.5 font-bold text-slate-900 font-sans">{d.division_name}</td>
+                        <td className="px-4 py-3.5 text-right font-mono font-medium text-slate-900">{formatRp(d.total_budget)}</td>
+                        <td className="px-4 py-3.5 text-right font-mono font-bold text-rose-600">{formatRp(d.used_amount)}</td>
+                        <td className={`px-4 py-3.5 text-right font-mono font-bold ${d.remaining >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                          {formatRp(d.remaining)}
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
+                          <div className="inline-flex items-center justify-center gap-2">
+                            <div className="w-20 h-2 rounded-full bg-slate-100 overflow-hidden">
+                              <div className="h-full rounded-full bg-slate-900" style={{ width: `${Math.min(pct, 100)}%` }} />
+                            </div>
+                            <span className="text-xs font-mono font-bold text-slate-700">{pct}%</span>
                           </div>
-                          <span className="text-[10px] font-mono">{pct}%</span>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 text-right font-mono">{d.transaction_count}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="bg-surface-container-low font-bold">
-                  <td className="px-3 py-3">TOTAL</td>
-                  <td className="px-3 py-3 text-right font-mono">{formatRp(report.overview.total_budget)}</td>
-                  <td className="px-3 py-3 text-right font-mono text-error">{formatRp(report.overview.total_used)}</td>
-                  <td className={`px-3 py-3 text-right font-mono ${report.overview.total_remaining >= 0 ? "text-accent-green" : "text-error"}`}>{formatRp(report.overview.total_remaining)}</td>
-                  <td className="px-3 py-3 text-center">
-                    {report.overview.total_budget > 0
-                      ? `${Math.round((report.overview.total_used / report.overview.total_budget) * 100)}%`
-                      : "0%"}
-                  </td>
-                  <td className="px-3 py-3 text-right font-mono">
-                    {report.divisions.reduce((s, d) => s + d.transaction_count, 0)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+                        </td>
+                        <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-700">{d.transaction_count}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-slate-900 text-white font-bold font-sans">
+                    <td className="px-4 py-3.5 uppercase font-extrabold">TOTAL ANGGARAN</td>
+                    <td className="px-4 py-3.5 text-right font-mono text-white font-black">{formatRp(report.overview.total_budget)}</td>
+                    <td className="px-4 py-3.5 text-right font-mono text-rose-400 font-black">{formatRp(report.overview.total_used)}</td>
+                    <td className={`px-4 py-3.5 text-right font-mono font-black ${report.overview.total_remaining >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                      {formatRp(report.overview.total_remaining)}
+                    </td>
+                    <td className="px-4 py-3.5 text-center font-mono font-black">
+                      {report.overview.total_budget > 0
+                        ? `${Math.round((report.overview.total_used / report.overview.total_budget) * 100)}%`
+                        : "0%"}
+                    </td>
+                    <td className="px-4 py-3.5 text-right font-mono font-black">
+                      {report.divisions.reduce((s, d) => s + d.transaction_count, 0)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
         </div>
 
         {/* Detail Transaksi per Divisi */}
-        <div>
-          <h2 className="text-lg font-bold mb-4 border-b border-outline-variant/30 pb-2">C. DETAIL TRANSAKSI</h2>
+        <div className="mb-12">
+          <h3 className="text-xs font-mono font-extrabold text-accent-magenta tracking-widest uppercase mb-4 flex items-center gap-2">
+            <span>C. DETAIL TRANSAKSI KEUANGAN</span>
+          </h3>
+
           {report.divisions.map((d) => (
             d.transactions.length > 0 && (
-              <div key={d.division_id} className="mb-6">
-                <h3 className="text-sm font-bold text-primary mb-2">{d.division_name}</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-surface-container-low border-b border-outline-variant/20">
-                        <th className="text-left px-2 py-1.5 font-mono font-bold">Tanggal</th>
-                        <th className="text-left px-2 py-1.5 font-mono font-bold">Tipe</th>
-                        <th className="text-left px-2 py-1.5 font-mono font-bold">Kategori</th>
-                        <th className="text-left px-2 py-1.5 font-mono font-bold">Deskripsi</th>
-                        <th className="text-right px-2 py-1.5 font-mono font-bold">Jumlah</th>
-                        <th className="text-left px-2 py-1.5 font-mono font-bold">No. Bukti</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {d.transactions.map((tx) => (
-                        <tr key={tx.id} className="border-b border-outline-variant/10">
-                          <td className="px-2 py-2 font-mono">{formatDate(tx.transaction_date)}</td>
-                          <td className="px-2 py-2">
-                            <span className={tx.type === "income" ? "text-accent-green" : "text-error"}>
-                              {tx.type === "income" ? "Masuk" : "Keluar"}
-                            </span>
-                          </td>
-                          <td className="px-2 py-2 text-on-surface-variant">{tx.category || "-"}</td>
-                          <td className="px-2 py-2">{tx.description}</td>
-                          <td className={`px-2 py-2 text-right font-mono ${tx.type === "expense" ? "text-error" : "text-accent-green"}`}>
-                            {tx.type === "expense" ? "-" : "+"}{formatRp(tx.amount)}
-                          </td>
-                          <td className="px-2 py-2 font-mono text-on-surface-variant">{tx.receipt_number || "-"}</td>
+              <div key={d.division_id} className="mb-8">
+                <h4 className="text-sm font-bold text-slate-900 mb-3 font-sans border-l-4 border-pink-500 pl-3">
+                  Divisi {d.division_name}
+                </h4>
+                <div className="rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 font-mono uppercase">
+                          <th className="text-left px-3 py-2.5 font-bold">Tanggal</th>
+                          <th className="text-left px-3 py-2.5 font-bold">Tipe</th>
+                          <th className="text-left px-3 py-2.5 font-bold">Kategori</th>
+                          <th className="text-left px-3 py-2.5 font-bold">Deskripsi</th>
+                          <th className="text-right px-3 py-2.5 font-bold">Jumlah</th>
+                          <th className="text-left px-3 py-2.5 font-bold">No. Bukti</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 bg-white">
+                        {d.transactions.map((tx) => (
+                          <tr key={tx.id} className="hover:bg-slate-50/50">
+                            <td className="px-3 py-2.5 font-mono text-slate-600">{formatDate(tx.transaction_date)}</td>
+                            <td className="px-3 py-2.5 font-bold">
+                              <span className={tx.type === "income" ? "text-emerald-600" : "text-rose-600"}>
+                                {tx.type === "income" ? "MASUK" : "KELUAR"}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 font-mono text-slate-600">{tx.category || "-"}</td>
+                            <td className="px-3 py-2.5 font-sans font-medium text-slate-900">{tx.description}</td>
+                            <td className={`px-3 py-2.5 text-right font-mono font-bold ${tx.type === "expense" ? "text-rose-600" : "text-emerald-600"}`}>
+                              {tx.type === "expense" ? "-" : "+"}{formatRp(tx.amount)}
+                            </td>
+                            <td className="px-3 py-2.5 font-mono text-slate-500">{tx.receipt_number || "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="mt-12 pt-6 border-t border-outline-variant/30">
+        {/* Footer Tanda Tangan */}
+        <div className="mt-14 pt-8 border-t border-slate-200">
           <div className="grid grid-cols-2 gap-16">
             <div>
-              <p className="text-sm font-bold mb-6">Mengetahui,</p>
-              <p className="text-sm font-bold">PIC I-FEST 2026</p>
-              <br /><br />
-              <p className="text-sm font-bold underline mt-8">( _________________ )</p>
+              <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2">MENGETAHUI,</p>
+              <p className="text-sm font-extrabold text-slate-900 font-sans">Ketua Panitia I-FEST 2026</p>
+              <div className="h-20" />
+              <p className="text-sm font-bold text-slate-900 font-sans underline">( _________________________ )</p>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold mb-6">Palu, {formatDate(report.generatedAt)}</p>
-              <p className="text-sm font-bold">Bendahara</p>
-              <br /><br />
-              <p className="text-sm font-bold underline mt-8">( _________________ )</p>
+              <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-2">PALU, {formatDate(report.generatedAt).toUpperCase()}</p>
+              <p className="text-sm font-extrabold text-slate-900 font-sans">Bendahara Umum</p>
+              <div className="h-20" />
+              <p className="text-sm font-bold text-slate-900 font-sans underline">( _________________________ )</p>
             </div>
           </div>
         </div>
@@ -226,7 +272,7 @@ export function ReportClient({ report }: { report: FinanceReportData }) {
         @media print {
           body { background: white; }
           header, footer, .print\\:hidden { display: none !important; }
-          .max-w-5xl { max-width: 100%; padding: 0; margin: 0; }
+          .w-full { max-width: 100%; padding: 0; margin: 0; }
         }
       `}</style>
     </div>
