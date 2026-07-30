@@ -21,6 +21,7 @@ import { RegistrationStatsChart } from "./sections/registration-stats-chart";
 import { VerificationDonutChart } from "./sections/verification-donut-chart";
 import { SecretaryQuickActions } from "./sections/secretary-quick-actions";
 import { SecretaryLetterChart } from "./sections/secretary-letter-chart";
+import { LatestNotulensiPRSection } from "./sections/latest-notulensi-pr";
 import { SECRETARY_SLUGS } from "@/lib/auth/authorize";
 import { Users as UsersIcon, Clock as ClockIcon, CheckCircle2 as CheckCircleIcon, AlertTriangle as AlertTriangleIcon } from "lucide-react";
 import { StatCardsSkeleton } from "./skeletons/stat-cards-skeleton";
@@ -439,7 +440,7 @@ function SectionTitle({ icon: Icon, title }: { icon: any; title: string }) {
   );
 }
 
-function StatBlock({ label, value, icon: Icon, iconBg = "bg-slate-100", iconColor = "text-slate-600" }: { label: string; value: string; icon?: any; iconBg?: string; iconColor?: string }) {
+function StatBlock({ label, value, icon: Icon, iconBg = "bg-slate-100", iconColor = "text-slate-600", sub }: { label: string; value: string; icon?: any; iconBg?: string; iconColor?: string; sub?: string }) {
   const IconComp = Icon || UsersIcon;
   return (
     <div className="bg-white border border-[#04000D]/5 rounded-2xl p-5 md:p-6 flex items-center gap-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] hover:border-[#04000D]/10 transition-all">
@@ -449,6 +450,29 @@ function StatBlock({ label, value, icon: Icon, iconBg = "bg-slate-100", iconColo
       <div className="flex flex-col">
         <p className="text-[9px] font-mono font-bold tracking-wider text-on-surface-variant/70 uppercase">{label}</p>
         <p className="text-2xl md:text-3xl font-extrabold text-on-surface leading-none mt-1 font-sans">{value}</p>
+        {sub && <p className="text-xs text-on-surface-variant font-mono mt-1">{sub}</p>}
+      </div>
+    </div>
+  );
+}
+
+function DivisiProgressSection({ divisions }: { divisions: any[] }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 className="text-xl font-bold tracking-tight text-on-surface font-sans">Progres Per Divisi</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {divisions.map((d) => (
+          <div key={d.id || d.name} className="bg-white border border-outline-variant/60 rounded-2xl p-5 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-on-surface font-sans">{d.name}</span>
+              <span className="text-xs font-mono font-bold text-accent-magenta">{d.progress ?? 0}%</span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+              <div className="bg-accent-magenta h-full rounded-full transition-all duration-500" style={{ width: `${d.progress ?? 0}%` }} />
+            </div>
+            <p className="text-xs font-mono text-on-surface-variant">{d.doneTasks ?? 0} / {d.totalTasks ?? 0} task selesai</p>
+          </div>
+        ))}
       </div>
     </div>
   );

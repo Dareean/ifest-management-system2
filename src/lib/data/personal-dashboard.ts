@@ -76,15 +76,17 @@ export async function getCurrentAssignment(userId: string) {
 }
 
 export async function getUserTasks(assignmentId: string) {
+  if (!assignmentId) return [];
   const admin = createAdminClient();
   const { data: userAssignments } = await admin
     .from("committee_assignments")
     .select("division_id")
     .eq("id", assignmentId)
-    .single();
+    .maybeSingle();
 
   if (!userAssignments) return [];
   const divisionId = (userAssignments as any).division_id;
+  if (!divisionId) return [];
 
   const { data: kpis } = await admin
     .from("kpi_items")
@@ -115,6 +117,7 @@ export async function getUserTasks(assignmentId: string) {
 }
 
 export async function getUserMeetings(assignmentId: string) {
+  if (!assignmentId) return [];
   const admin = createAdminClient();
   const { data } = await admin
     .from("meeting_invitees")
@@ -159,6 +162,7 @@ export async function getUserMeetings(assignmentId: string) {
 }
 
 export async function getUserLetters(assignmentId: string) {
+  if (!assignmentId) return [];
   const admin = createAdminClient();
   const { data } = await admin
     .from("letter_requests")
@@ -340,6 +344,7 @@ export async function getLetterStats() {
 
   const all = data ?? [];
   return {
+    total: all.length,
     pending: all.filter((l: any) => l.status === "requested").length,
     approved: all.filter((l: any) => l.status === "approved").length,
     inRevision: all.filter((l: any) => l.status === "in_revision").length,

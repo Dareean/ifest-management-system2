@@ -4,24 +4,26 @@ import { type ReactNode, useEffect } from "react";
 import { X } from "lucide-react";
 
 interface ModalProps {
-  open: boolean;
+  open?: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
   size?: "sm" | "lg" | "xl";
 }
 
-export function Modal({ open, onClose, title, children, size = "sm" }: ModalProps) {
+export function Modal({ open, isOpen, onClose, title, children, size = "sm" }: ModalProps) {
+  const isModalOpen = open ?? isOpen ?? false;
   useEffect(() => {
-    if (open) {
+    if (isModalOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [open]);
+  }, [isModalOpen]);
 
-  if (!open) return null;
+  if (!isModalOpen) return null;
 
   const maxW =
     size === "xl" ? "max-w-4xl" :

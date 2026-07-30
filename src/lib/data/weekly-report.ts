@@ -210,7 +210,7 @@ export async function getWeeklyReportProgressData() {
   const divisionStats = divisions.map((div: any) => {
     const divReports = reports.filter((r) => r.divisionId === div.id || r.divisionSlug === div.slug);
     const submittedCount = divReports.length;
-    const approvedCount = divReports.filter((r) => r.status === "approved").length;
+    const approvedCount = divReports.filter((r) => (r.status as string) === "APPROVED" || (r.status as string) === "approved").length;
     const progress = Math.min(100, Math.round((submittedCount / EXPECTED_WEEKS) * 100));
 
     return {
