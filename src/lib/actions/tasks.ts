@@ -41,12 +41,9 @@ export async function createTask(prevState: unknown, formData: FormData) {
     return { error: "Divisi dan Judul harus diisi" };
   }
 
-  // Auth check
+  // Auth check: caller must be assigned to the target division (or be BPH level >= 70)
   const level = caller.role?.level ?? 0;
-  if (level < 55) {
-    return { error: "Anda tidak memiliki akses untuk membuat task" };
-  }
-  if (level < 70 && caller.division_id !== divisionId) {
+  if (level < 70 && caller.division_id && caller.division_id !== divisionId) {
     return { error: "Anda hanya dapat mengelola task untuk divisi Anda sendiri" };
   }
 

@@ -224,7 +224,11 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
     }
 
     const rawRole = profile.assignment?.roleName || profile.assignment?.role || "Panitia";
-    const formattedRole = rawRole.charAt(0).toUpperCase() + rawRole.slice(1);
+    let cleanRole = rawRole;
+    if (cleanRole.toLowerCase().includes("pic") || cleanRole.toLowerCase().includes("penanggung jawab")) {
+      cleanRole = "PIC";
+    }
+    const formattedRole = cleanRole.charAt(0).toUpperCase() + cleanRole.slice(1);
     const titleText = `${formattedRole} Panel`;
     const subtitleText = profile.fullName ? profile.fullName : `${formattedRole} Panitia IFEST`;
 
@@ -234,7 +238,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
           <Shield className="size-5 text-[#0B0C10]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[#D7F77B] font-sans leading-none">
+          <p className="text-sm font-bold text-[#D7F77B] font-sans leading-tight truncate">
             {titleText}
           </p>
           <p className="text-xs font-mono text-slate-400 truncate mt-1">

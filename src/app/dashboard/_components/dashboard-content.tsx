@@ -17,7 +17,6 @@ import { SekretarisStats } from "./sections/sekretaris-stats";
 import { PersonalTasks } from "./sections/personal-tasks";
 import { PersonalMeetings } from "./sections/personal-meetings";
 import { PersonalLetters } from "./sections/personal-letters";
-import { LatestNotulensiPRSection } from "./sections/latest-notulensi-pr";
 import { RegistrationStatsChart } from "./sections/registration-stats-chart";
 import { VerificationDonutChart } from "./sections/verification-donut-chart";
 import { SecretaryQuickActions } from "./sections/secretary-quick-actions";
@@ -125,13 +124,25 @@ export async function DashboardContent({ userId }: { userId: string }) {
 function KetuaView({ assignmentId, greeting, profile }: { assignmentId: string; greeting: string; profile: any }) {
   return (
     <div className="flex flex-col gap-10">
-      <HeaderSection title={`DASHBOARD KETUA`} greeting={greeting} subtitle="Pantau kinerja seluruh divisi." />
+      <HeaderSection title={`DASHBOARD KETUA`} greeting={greeting} subtitle="Pantau kinerja dan progres seluruh divisi kepanitiaan." />
       <Suspense fallback={<StatCardsSkeleton count={4} />}>
         <KetuaStats />
       </Suspense>
-      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
-        <LatestNotulensiPRSection />
-      </Suspense>
+
+      {/* Dual Committee Monitoring Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="lg:col-span-2">
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-3xl animate-pulse" />}>
+            <RegistrationStatsChart />
+          </Suspense>
+        </div>
+        <div className="lg:col-span-1">
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-3xl animate-pulse" />}>
+            <VerificationDonutChart />
+          </Suspense>
+        </div>
+      </div>
+
       <Suspense fallback={<MeetingsSkeleton />}>
         <OngoingMeetingsSection />
       </Suspense>
@@ -149,9 +160,21 @@ function WakilKetuaView({ assignmentId, greeting, profile }: { assignmentId: str
       <Suspense fallback={<StatCardsSkeleton count={4} />}>
         <KetuaStats />
       </Suspense>
-      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
-        <LatestNotulensiPRSection />
-      </Suspense>
+
+      {/* Dual Committee Monitoring Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="lg:col-span-2">
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-3xl animate-pulse" />}>
+            <RegistrationStatsChart />
+          </Suspense>
+        </div>
+        <div className="lg:col-span-1">
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-3xl animate-pulse" />}>
+            <VerificationDonutChart />
+          </Suspense>
+        </div>
+      </div>
+
       <Suspense fallback={<MeetingsSkeleton />}>
         <OngoingMeetingsSection />
       </Suspense>
@@ -189,16 +212,6 @@ function SekretarisView({ assignmentId, greeting, profile }: { assignmentId: str
           </Suspense>
         </div>
       </div>
-
-      {/* Broadcast Notulensi & PR Divisi */}
-      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
-        <LatestNotulensiPRSection />
-      </Suspense>
-
-      {/* Weekly Report Progress */}
-      <Suspense fallback={<div className="h-48 bg-slate-100 rounded-2xl animate-pulse" />}>
-        <WeeklyReportProgressSection />
-      </Suspense>
 
       {/* Ongoing & Monitoring Rapat */}
       <Suspense fallback={<MeetingsSkeleton />}>
@@ -242,12 +255,21 @@ function BendaharaView({ assignmentId, greeting, profile }: { assignmentId: stri
       <Suspense fallback={<StatCardsSkeleton count={3} />}>
         <BendaharaStats />
       </Suspense>
-      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
-        <LatestNotulensiPRSection />
-      </Suspense>
-      <Suspense fallback={<div className="h-48 bg-slate-100 rounded-2xl animate-pulse" />}>
-        <WeeklyReportProgressSection />
-      </Suspense>
+
+      {/* Dual Financial Monitoring Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="lg:col-span-2">
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-3xl animate-pulse" />}>
+            <RegistrationStatsChart />
+          </Suspense>
+        </div>
+        <div className="lg:col-span-1">
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-3xl animate-pulse" />}>
+            <VerificationDonutChart />
+          </Suspense>
+        </div>
+      </div>
+
       <Suspense fallback={<MeetingsSkeleton />}>
         <OngoingMeetingsSection />
       </Suspense>
@@ -429,233 +451,41 @@ function StatBlock({ label, value, icon: Icon, iconBg = "bg-slate-100", iconColo
   );
 }
 
-function DivisiProgressSection({ divisions }: { divisions: any[] }) {
-  // Sort divisions by progress percentage descending, then by total tasks descending
-  const sortedDivisions = [...divisions].sort((a, b) => {
-    const progressA = a.totalTasks > 0 ? a.doneTasks / a.totalTasks : 0;
-    const progressB = b.totalTasks > 0 ? b.doneTasks / b.totalTasks : 0;
-    if (progressB !== progressA) {
-      return progressB - progressA;
-    }
-    return b.totalTasks - a.totalTasks;
-  });
-
-  // Calculate overall stats
-  const totalTasks = divisions.reduce((acc, d) => acc + d.totalTasks, 0);
-  const doneTasks = divisions.reduce((acc, d) => acc + d.doneTasks, 0);
-  const openTasks = totalTasks - doneTasks;
-  const overallProgress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
-
-  // SVG donut math
-  const r = 70;
-  const circumference = 2 * Math.PI * r; // ~439.82
-  const strokeDashoffset = circumference - (overallProgress / 100) * circumference;
-
-  return (
-    <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 md:p-8">
-      <div className="flex items-center justify-between mb-8 pb-4 border-b border-outline-variant/30">
-        <div>
-          <div className="flex items-center gap-2">
-            <TrendingUp className="size-5 text-accent-magenta" />
-            <h2 className="text-xl font-bold tracking-tight text-on-surface">Monitoring Progres</h2>
-          </div>
-          <p className="text-xs text-on-surface-variant mt-1 font-sans">
-            Visualisasi status penyelesaian tugas dan perbandingan progres divisi panitia I-FEST 2026.
-          </p>
-        </div>
-        <Link href="/dashboard/tasks" className="text-xs font-mono text-accent-magenta hover:underline uppercase tracking-wider font-bold shrink-0">
-          Lihat detail Tugas →
-        </Link>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-8 items-stretch">
-        {/* Left Side: Donut Chart (Overall Progress) */}
-        <div className="w-full lg:w-72 shrink-0 flex flex-col items-center justify-center p-6 bg-surface-container-low/30 rounded-2xl border border-outline-variant/30">
-          <h3 className="text-sm font-bold text-on-surface mb-6 uppercase tracking-wider font-mono text-center">Akumulasi Tugas</h3>
-          
-          <div className="relative w-40 h-40 flex items-center justify-center">
-            <svg width="100%" height="100%" viewBox="0 0 200 200" className="transform -rotate-90">
-              <defs>
-                <linearGradient id="donutGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="var(--color-primary, #000000)" />
-                  <stop offset="100%" stopColor="var(--color-accent-magenta, #FF3D8B)" />
-                </linearGradient>
-              </defs>
-              {/* Background Circle */}
-              <circle
-                cx="100"
-                cy="100"
-                r={r}
-                fill="transparent"
-                stroke="var(--color-surface-container, #f3f4f6)"
-                strokeWidth="14"
-              />
-              {/* Progress Circle */}
-              <circle
-                cx="100"
-                cy="100"
-                r={r}
-                fill="transparent"
-                stroke="url(#donutGradient)"
-                strokeWidth="14"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                className="transition-all duration-1000 ease-out"
-              />
-            </svg>
-            
-            {/* Center Labels */}
-            <div className="absolute flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-on-surface tracking-tight">{overallProgress}%</span>
-              <span className="text-[10px] font-mono font-bold text-on-surface-variant/80 uppercase tracking-widest mt-0.5">Selesai</span>
-            </div>
-          </div>
-
-          {/* Legend */}
-          <div className="mt-6 w-full space-y-2.5">
-            <div className="flex items-center justify-between text-xs font-mono">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-accent-magenta" />
-                <span className="text-on-surface-variant">Selesai</span>
-              </div>
-              <span className="font-bold text-on-surface">{doneTasks} tasks</span>
-            </div>
-            <div className="flex items-center justify-between text-xs font-mono">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-surface-container" />
-                <span className="text-on-surface-variant">Belum Selesai</span>
-              </div>
-              <span className="font-bold text-on-surface">{openTasks} tasks</span>
-            </div>
-            <div className="border-t border-outline-variant/30 pt-2.5 flex items-center justify-between text-xs font-mono">
-              <span className="text-on-surface-variant font-bold">Total Tugas</span>
-              <span className="font-bold text-on-surface">{totalTasks} tasks</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side: Vertical Bar Chart (Division Progress) */}
-        <div className="flex-1 flex flex-col justify-between p-6 bg-surface-container-low/30 rounded-2xl border border-outline-variant/30 min-h-[340px]">
-          <h3 className="text-sm font-bold text-on-surface mb-6 uppercase tracking-wider font-mono px-1">Progres Per Divisi</h3>
-          
-          <div className="flex items-end h-64 w-full">
-            {/* Y-Axis Labels */}
-            <div className="w-8 h-48 flex flex-col justify-between text-[9px] font-mono text-on-surface-variant/50 text-right pr-2 select-none pb-8">
-              <span>100%</span>
-              <span>75%</span>
-              <span>50%</span>
-              <span>25%</span>
-              <span>0%</span>
-            </div>
-
-            {/* Bars Area */}
-            <div className="flex-1 h-56 flex items-end justify-around relative px-1">
-              {/* Horizontal grid lines */}
-              <div className="absolute inset-x-0 top-0 bottom-8 pointer-events-none flex flex-col justify-between">
-                <div className="w-full border-b border-dashed border-outline-variant/10" />
-                <div className="w-full border-b border-dashed border-outline-variant/10" />
-                <div className="w-full border-b border-dashed border-outline-variant/10" />
-                <div className="w-full border-b border-dashed border-outline-variant/10" />
-                <div className="w-full border-b border-dashed border-outline-variant/10" />
-              </div>
-
-              {sortedDivisions.map((s) => {
-                const progress = s.totalTasks > 0 ? Math.round((s.doneTasks / s.totalTasks) * 100) : 0;
-                const nameParts = s.name.split(" ");
-                return (
-                  <Link href="/dashboard/tasks" key={s.id} className="h-full flex flex-col justify-end items-center group relative z-10 flex-1 px-0.5 sm:px-1 max-w-[64px]">
-                    {/* Tooltip / Value on top */}
-                    <span className="text-[9px] font-mono font-bold text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity mb-1 absolute -top-4 bg-surface-container border border-outline-variant/30 px-1 rounded shadow-xs pointer-events-none whitespace-nowrap z-20">
-                      {s.doneTasks}/{s.totalTasks} tasks
-                    </span>
-
-                    {/* Bar Visual */}
-                    <div className="w-3.5 sm:w-6 md:w-8 h-32 bg-surface-container/50 rounded-t-md overflow-hidden flex items-end border border-outline-variant/5 group-hover:border-accent-magenta/30 transition-colors shadow-inner">
-                      <div 
-                        className="w-full rounded-t-sm bg-gradient-to-t from-primary to-accent-magenta transition-all duration-1000 ease-out origin-bottom" 
-                        style={{ height: `${progress}%` }}
-                      />
-                    </div>
-
-                    {/* Percentage */}
-                    <span className="font-mono text-[9px] md:text-xs font-extrabold text-on-surface mt-1.5 leading-none">
-                      {progress}%
-                    </span>
-
-                    {/* Label split by words */}
-                    <div className="text-[8px] md:text-[10px] font-bold text-on-surface-variant mt-2 text-center h-8 flex flex-col justify-start leading-tight select-none">
-                      {nameParts.map((part: string, idx: number) => (
-                        <span key={idx} className="block truncate max-w-[36px] sm:max-w-[50px] md:max-w-none group-hover:text-accent-magenta transition-colors">
-                          {part}
-                        </span>
-                      ))}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Role-specific Async Section Components ──
 
 async function KetuaStats() {
-  const [overview, divisions] = await Promise.all([
-    getDashboardOverview(YEAR_ID),
-    getDivisionsWithProgress(YEAR_ID),
-  ]);
+  const overview = await getDashboardOverview(YEAR_ID);
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* 4 Main Stat Cards matching Reference Layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        <StatBlock
-          label="TOTAL PENGGUNA"
-          value={String(overview.totalMembers || 21)}
-          icon={UsersIcon}
-          iconBg="bg-slate-100"
-          iconColor="text-slate-600"
-        />
-        <StatBlock
-          label="PENDING"
-          value="7"
-          icon={ClockIcon}
-          iconBg="bg-amber-50"
-          iconColor="text-amber-500"
-        />
-        <StatBlock
-          label="TERVERIFIKASI"
-          value="1"
-          icon={CheckCircleIcon}
-          iconBg="bg-emerald-50"
-          iconColor="text-emerald-500"
-        />
-        <StatBlock
-          label="DITOLAK"
-          value="1"
-          icon={AlertTriangleIcon}
-          iconBg="bg-pink-50"
-          iconColor="text-pink-500"
-        />
-      </div>
-
-      {/* Dual Charts Grid: 2/3 Registration Progress Chart, 1/3 Verification Donut Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-        <div className="lg:col-span-2">
-          <RegistrationStatsChart />
-        </div>
-        <div className="lg:col-span-1">
-          <VerificationDonutChart />
-        </div>
-      </div>
-
-      <DivisiProgressSection divisions={divisions} />
-      <WeeklyReportProgressSection />
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      <StatBlock
+        label="TOTAL PENGGUNA"
+        value={String(overview.totalMembers || 21)}
+        icon={UsersIcon}
+        iconBg="bg-slate-100"
+        iconColor="text-slate-600"
+      />
+      <StatBlock
+        label="PENDING"
+        value="7"
+        icon={ClockIcon}
+        iconBg="bg-amber-50"
+        iconColor="text-amber-500"
+      />
+      <StatBlock
+        label="TERVERIFIKASI"
+        value="1"
+        icon={CheckCircleIcon}
+        iconBg="bg-emerald-50"
+        iconColor="text-emerald-500"
+      />
+      <StatBlock
+        label="DITOLAK"
+        value="1"
+        icon={AlertTriangleIcon}
+        iconBg="bg-pink-50"
+        iconColor="text-pink-500"
+      />
     </div>
   );
 }

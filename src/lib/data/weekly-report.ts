@@ -202,3 +202,36 @@ export async function getWeeklyReportsForAll() {
     reports: (reports || []).map(mapDbRowToReport)
   };
 }
+
+export async function getWeeklyReportProgressData() {
+  const { divisions, reports } = await getWeeklyReportsForAll();
+  const EXPECTED_WEEKS = 4;
+
+  const divisionStats = divisions.map((div: any) => {
+    const divReports = reports.filter((r) => r.divisionId === div.id || r.divisionSlug === div.slug);
+    const submittedCount = divReports.length;
+    const approvedCount = divReports.filter((r) => r.status === "approved").length;
+    const progress = Math.min(100, Math.round((submittedCount / EXPECTED_WEEKS) * 100));
+
+    return {
+      id: div.id,
+      name: div.name,
+      displayName: div.displayName,
+      submittedCount,
+      approvedCount,
+      totalExpected: EXPECTED_WEEKS,
+      progress,
+    };
+  });
+
+  const totalSubmitted = divisionStats.reduce((s, d) => s + d.submittedCount, 0);
+  const totalExpectedAll = (divisionStats.length || 1) * EXPECTED_WEEKS;
+  const overallProgress = Math.min(100, Math.round((totalSubmitted / totalExpectedAll) * 100));
+
+  return {
+    divisionStats,
+    totalSubmitted,
+    totalExpectedAll,
+    overallProgress,
+  };
+}
