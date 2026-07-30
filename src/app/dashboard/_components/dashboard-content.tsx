@@ -281,6 +281,7 @@ function BendaharaView({ assignmentId, greeting, profile }: { assignmentId: stri
 }
 
 async function KoordinatorWeeklyReportAlert({ divisionId, currentWeek }: { divisionId: string; currentWeek: string }) {
+  if (!divisionId) return null;
   const supabase = createAdminClient();
   
   const { data: report } = await supabase
@@ -340,9 +341,10 @@ async function KoordinatorWeeklyReportAlert({ divisionId, currentWeek }: { divis
 }
 
 async function KoordinatorView({ assignmentId, divisionId, divisionName, greeting, profile }: { assignmentId: string; divisionId: string; divisionName: string; greeting: string; profile: any }) {
+  const safeDivName = divisionName || "";
   return (
     <div className="flex flex-col gap-10">
-      <HeaderSection title={`DIVISI ${divisionName.toUpperCase()}`} greeting={greeting} subtitle="Pantau task dan progres divisi Anda." />
+      <HeaderSection title={`DIVISI ${safeDivName.toUpperCase()}`} greeting={greeting} subtitle="Pantau task dan progres divisi Anda." />
       
       <Suspense fallback={<div className="h-20 bg-slate-100 rounded-2xl animate-pulse" />}>
         <KoordinatorWeeklyReportAlert divisionId={divisionId} currentWeek="Agustus W1" />
@@ -382,9 +384,10 @@ async function KoordinatorView({ assignmentId, divisionId, divisionName, greetin
 }
 
 function AnggotaView({ assignmentId, divisionName, greeting, profile }: { assignmentId: string; divisionName: string; greeting: string; profile: any }) {
+  const safeDivName = divisionName || "";
   return (
     <div className="flex flex-col gap-10">
-      <HeaderSection title={`DASHBOARD ${divisionName.toUpperCase()}`} greeting={greeting} subtitle="Pantau task dan undangan rapat Anda di sini." />
+      <HeaderSection title={`DASHBOARD ${safeDivName.toUpperCase()}`} greeting={greeting} subtitle="Pantau task dan undangan rapat Anda di sini." />
       <Suspense fallback={<StatCardsSkeleton count={3} />}>
         <PersonalStats assignmentId={assignmentId} />
       </Suspense>
@@ -719,6 +722,7 @@ async function BendaharaStats() {
 }
 
 async function KoordinatorTasks({ divisionId }: { divisionId: string }) {
+  if (!divisionId) return null;
   const supabase = createAdminClient();
   const { data: tasks } = await supabase
     .from("tasks")
@@ -948,6 +952,7 @@ async function WeeklyReportProgressSection() {
 }
 
 async function KoordinatorPerformanceSection({ divisionId }: { divisionId: string }) {
+  if (!divisionId) return null;
   const supabase = createAdminClient();
 
   // 1. Fetch tasks for progress

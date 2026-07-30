@@ -47,7 +47,7 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
   const { data: assignment } = await admin
     .from("committee_assignments")
     .select(`
-      is_active, assigned_at,
+      id, is_active, assigned_at,
       division:divisions!committee_assignments_division_id_fkey(name),
       role:roles(name, level)
     `)
@@ -66,30 +66,32 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
     const a = assignment as any;
     const assignmentId = (assignment as any).id;
 
-    const [letterRes, meetingRes, taskRes] = await Promise.all([
-      admin
-        .from("letter_requests")
-        .select("*", { count: "exact", head: true })
-        .eq("requester_id", assignmentId),
-      admin
-        .from("meeting_invitees")
-        .select("*", { count: "exact", head: true })
-        .eq("committee_assignment_id", assignmentId),
-      admin
+    if (assignmentId) {
+      const [letterRes, meetingRes, taskRes] = await Promise.all([
+        admin
+          .from("letter_requests")
+          .select("*", { count: "exact", head: true })
+          .eq("requester_id", assignmentId),
+        admin
+          .from("meeting_invitees")
+          .select("*", { count: "exact", head: true })
+          .eq("committee_assignment_id", assignmentId),
+        admin
+          .from("tasks")
+          .select("*", { count: "exact", head: true })
+          .eq("assignee_id", assignmentId),
+      ]);
+
+      totalLetters = letterRes.count ?? 0;
+      totalMeetings = meetingRes.count ?? 0;
+
+      const { data: tasks } = await admin
         .from("tasks")
-        .select("*", { count: "exact", head: true })
-        .eq("assignee_id", assignmentId),
-    ]);
-
-    totalLetters = letterRes.count ?? 0;
-    totalMeetings = meetingRes.count ?? 0;
-
-    const { data: tasks } = await admin
-      .from("tasks")
-      .select("status")
-      .eq("assignee_id", assignmentId);
-    totalTasks = tasks?.length ?? 0;
-    doneTasks = tasks?.filter((t) => t.status === "done").length ?? 0;
+        .select("status")
+        .eq("assignee_id", assignmentId);
+      totalTasks = tasks?.length ?? 0;
+      doneTasks = tasks?.filter((t) => t.status === "done").length ?? 0;
+    }
   }
 
   return {
