@@ -19,6 +19,7 @@ vi.mock('@/lib/auth/authorize', () => ({
   requireSecretary: vi.fn(),
   requireRole: vi.fn(),
   requirePermission: vi.fn(),
+  SECRETARY_SLUGS: ['sekretaris', 'sekretaris-1', 'sekretaris-2', 'sekretaris-umum'],
 }));
 
 vi.mock('@/lib/supabase/admin', () => ({
@@ -191,7 +192,7 @@ describe('Letter Workflow Actions', () => {
       formData.append('id', 'letter-1');
       formData.append('note', 'Please revise');
       const result = await requestRevision(null, formData);
-      expect(result).toEqual({ error: 'Akses ditolak. Hanya pengaju asli surat yang dapat meminta revisi.' });
+      expect(result).toEqual({ error: 'Akses ditolak. Hanya pengaju surat atau Sekretaris yang dapat mengirim catatan revisi/masukan.' });
     });
 
     it('should process revision request successfully', async () => {

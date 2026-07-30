@@ -22,6 +22,7 @@ import {
   ChevronDown,
   Users,
   CheckSquare,
+  Shield,
 } from "lucide-react";
 import type { NotificationItem } from "@/lib/data/notifications";
 import type { ProfileData } from "@/lib/data/profile";
@@ -46,6 +47,7 @@ function getNavItems(level: number): NavItem[] {
 
   if (level >= 90 || level === 70) {
     items.push({ href: "/dashboard/finance", label: "KEUANGAN", icon: DollarSign });
+    items.push({ href: "/dashboard/finance/report", label: "LPJ", icon: FileText });
   }
 
   if (level >= 55) {
@@ -201,40 +203,41 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
   const ProfileCard = () => {
     if (!profile) {
       return (
-        <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-2xl border border-outline-variant/30">
-          <div className="w-10 h-10 rounded-full bg-block-lilac/30 flex items-center justify-center font-bold text-primary">
-            G
+        <div className="flex items-center gap-3 p-3.5 bg-[#0B0C10] rounded-2xl border border-slate-800 shadow-md mb-2">
+          <div className="w-10 h-10 rounded-2xl bg-[#D7F77B] flex items-center justify-center font-bold shrink-0">
+            <Shield className="size-5 text-[#0B0C10]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate text-on-surface">Tamu</p>
-            <p className="text-xs text-on-surface-variant truncate">Belum masuk</p>
+            <p className="text-sm font-bold text-[#D7F77B] font-sans leading-none">
+              Panitia Panel
+            </p>
+            <p className="text-xs font-mono text-slate-400 truncate mt-1">
+              Panitia IFEST
+            </p>
           </div>
-          <Link href="/login" className="text-xs text-accent-magenta hover:underline font-medium font-sans shrink-0">
+          <Link href="/login" className="text-xs text-pink-400 hover:underline font-bold font-mono shrink-0">
             Login
           </Link>
         </div>
       );
     }
 
+    const rawRole = profile.assignment?.roleName || profile.assignment?.role || "Panitia";
+    const formattedRole = rawRole.charAt(0).toUpperCase() + rawRole.slice(1);
+    const titleText = `${formattedRole} Panel`;
+    const subtitleText = profile.fullName ? profile.fullName : `${formattedRole} Panitia IFEST`;
+
     return (
-      <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-2xl border border-outline-variant/30">
-        {profile.avatarUrl ? (
-          <img
-            src={profile.avatarUrl}
-            alt={profile.fullName}
-            className="w-10 h-10 rounded-full object-cover shrink-0"
-          />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-block-lilac flex items-center justify-center font-bold text-primary shrink-0">
-            {getInitials(profile.fullName)}
-          </div>
-        )}
+      <div className="flex items-center gap-3 p-3.5 bg-[#0B0C10] rounded-2xl border border-slate-800 shadow-md mb-2">
+        <div className="w-10 h-10 rounded-2xl bg-[#D7F77B] flex items-center justify-center font-bold shrink-0">
+          <Shield className="size-5 text-[#0B0C10]" />
+        </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold truncate text-on-surface leading-tight">
-            {profile.fullName}
+          <p className="text-sm font-bold text-[#D7F77B] font-sans leading-none">
+            {titleText}
           </p>
-          <p className="text-xs font-mono text-on-surface-variant truncate mt-0.5">
-            {profile.email}
+          <p className="text-xs font-mono text-slate-400 truncate mt-1">
+            {subtitleText}
           </p>
         </div>
       </div>
@@ -242,7 +245,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
   };
 
   const NavLinks = () => (
-    <nav className="flex flex-col gap-2">
+    <nav className="flex flex-col gap-1.5">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = isItemActive(item.href);
@@ -256,22 +259,22 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
                 href={item.href}
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  "flex-1 flex items-center justify-between px-4 py-3.5 rounded-xl text-xs font-bold transition-all select-none group uppercase tracking-wider",
+                  "flex-1 flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all select-none group uppercase tracking-wider font-mono",
                   isActive
-                    ? "bg-black text-accent-lime border border-black/10 shadow-md shadow-black/5"
-                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                    ? "bg-[#0B0C10] text-white border border-slate-800 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
                 )}
               >
                 <div className="flex items-center gap-3">
                   <Icon 
                     className={cn(
-                      "size-5 shrink-0 transition-colors", 
-                      isActive ? "text-accent-lime" : "text-on-surface-variant group-hover:text-on-surface"
+                      "size-4 shrink-0 transition-colors", 
+                      isActive ? "text-white" : "text-slate-500 group-hover:text-slate-800"
                     )} 
                   />
-                  <span className="font-sans font-extrabold">{item.label}</span>
+                  <span className="font-mono font-extrabold">{item.label}</span>
                 </div>
-                {!hasSubItems && isActive && <ChevronRight className="size-4 shrink-0 text-accent-lime" />}
+                {!hasSubItems && isActive && <ChevronRight className="size-4 shrink-0 text-slate-400" />}
               </Link>
 
               {hasSubItems && (
@@ -282,8 +285,8 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
                     setIsLaporanExpanded(!isLaporanExpanded);
                   }}
                   className={cn(
-                    "p-2.5 rounded-xl hover:bg-surface-container-low transition-colors cursor-pointer mr-1",
-                    isActive ? "text-accent-lime hover:bg-neutral-900" : "text-on-surface-variant hover:text-on-surface"
+                    "p-2.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer mr-1",
+                    isActive ? "text-white hover:bg-slate-800" : "text-slate-500 hover:text-slate-900"
                   )}
                 >
                   {isExpanded ? (
@@ -297,7 +300,7 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
 
             {/* Sub-items rendering */}
             {hasSubItems && isExpanded && (
-              <div className="pl-6 ml-4 border-l border-outline-variant/30 flex flex-col gap-1 mt-1">
+              <div className="pl-6 ml-4 border-l border-slate-200 flex flex-col gap-1 mt-1">
                 {laporanSubItems.map((sub) => {
                   const isSubActive = searchParams.get("div") === sub.slug;
                   return (
@@ -306,10 +309,10 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
                       href={sub.href}
                       onClick={() => setIsOpen(false)}
                       className={cn(
-                        "pl-4 pr-3 py-2 rounded-lg text-[10px] font-bold tracking-wider transition-all select-none uppercase font-sans",
+                        "pl-4 pr-3 py-2 rounded-lg text-[10px] font-bold tracking-wider transition-all select-none uppercase font-mono",
                         isSubActive
-                          ? "bg-black/5 text-primary font-black border-l-2 border-primary pl-3"
-                          : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                          ? "bg-slate-900 text-white font-black border-l-2 border-pink-500 pl-3"
+                          : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
                       )}
                     >
                       {sub.label}
@@ -325,18 +328,17 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
   );
 
   const BottomActions = () => (
-    <div className="flex flex-col gap-1.5 pt-4 border-t border-outline-variant/40">
+    <div className="flex flex-col gap-1.5 pt-4 border-t border-slate-200/60">
       <button
         onClick={() => {
           setIsOpen(false);
           handleLogout();
         }}
-        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-error hover:bg-error-container/10 transition-colors cursor-pointer w-full text-left group"
+        className="flex items-center gap-2.5 px-4 py-3 rounded-2xl text-xs font-extrabold text-pink-500 hover:text-pink-600 hover:bg-pink-50/50 transition-colors cursor-pointer w-full text-left font-mono tracking-widest uppercase group"
       >
-        <LogOut className="size-5 shrink-0 text-on-surface-variant group-hover:text-error transition-colors" />
-        <span className="tracking-wide font-sans">KELUAR</span>
+        <LogOut className="size-4 shrink-0 text-pink-500 group-hover:text-pink-600 transition-colors" />
+        <span>KELUAR</span>
       </button>
-
     </div>
   );
 
@@ -391,9 +393,11 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
 
       <aside className="hidden lg:flex flex-col w-72 h-screen sticky top-0 bg-white border-r border-outline-variant/40 p-6 justify-between shrink-0 overflow-y-auto">
         <div className="flex flex-col gap-5">
-          <div className="flex items-center justify-center w-full border-b border-outline-variant/30 pb-5">
+          <div className="flex items-center justify-center w-full border-b border-slate-100 pb-4">
             <LogoSection />
           </div>
+
+          <ProfileCard />
 
           <NavLinks />
         </div>

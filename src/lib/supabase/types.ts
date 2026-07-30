@@ -454,6 +454,8 @@ export interface Database {
           amount: number;
           description: string;
           category: string | null;
+          attachment_url: string | null;
+          receipt_number: string | null;
           transaction_date: string;
           created_by: string;
           created_at: string;
@@ -465,6 +467,8 @@ export interface Database {
           amount: number;
           description: string;
           category?: string | null;
+          attachment_url?: string | null;
+          receipt_number?: string | null;
           transaction_date?: string;
           created_by: string;
           created_at?: string;
@@ -476,6 +480,8 @@ export interface Database {
           amount?: number;
           description?: string;
           category?: string | null;
+          attachment_url?: string | null;
+          receipt_number?: string | null;
           transaction_date?: string;
           created_by?: string;
           created_at?: string;

@@ -17,6 +17,13 @@ import { SekretarisStats } from "./sections/sekretaris-stats";
 import { PersonalTasks } from "./sections/personal-tasks";
 import { PersonalMeetings } from "./sections/personal-meetings";
 import { PersonalLetters } from "./sections/personal-letters";
+import { LatestNotulensiPRSection } from "./sections/latest-notulensi-pr";
+import { RegistrationStatsChart } from "./sections/registration-stats-chart";
+import { VerificationDonutChart } from "./sections/verification-donut-chart";
+import { SecretaryQuickActions } from "./sections/secretary-quick-actions";
+import { SecretaryLetterChart } from "./sections/secretary-letter-chart";
+import { SECRETARY_SLUGS } from "@/lib/auth/authorize";
+import { Users as UsersIcon, Clock as ClockIcon, CheckCircle2 as CheckCircleIcon, AlertTriangle as AlertTriangleIcon } from "lucide-react";
 import { StatCardsSkeleton } from "./skeletons/stat-cards-skeleton";
 import { TasksSkeleton } from "./skeletons/tasks-skeleton";
 import { MeetingsSkeleton } from "./skeletons/meetings-skeleton";
@@ -84,19 +91,27 @@ export async function DashboardContent({ userId }: { userId: string }) {
   const level = assignment.roleLevel;
   const slug = assignment.roleSlug;
   const greeting = profile?.fullName?.split(" ")[0] ?? "Panitia";
+  const roleNameLower = profile?.assignment?.roleName?.toLowerCase() || "";
+  const divisionNameLower = assignment.divisionName?.toLowerCase() || "";
+
+  const isSecretaryRole =
+    SECRETARY_SLUGS.includes(slug) ||
+    slug.includes("sekretaris") ||
+    roleNameLower.includes("sekretaris") ||
+    (divisionNameLower === "bph" && (slug.includes("sekretaris") || roleNameLower.includes("sekretaris")));
 
   // Determine which role view to render
   let roleView: React.ReactNode;
 
-  if (level >= 90) {
+  if (isSecretaryRole) {
+    roleView = <SekretarisView assignmentId={assignment.id} greeting={greeting} profile={profile} />;
+  } else if (level >= 90) {
     roleView = <KetuaView assignmentId={assignment.id} greeting={greeting} profile={profile} />;
   } else if (level >= 80) {
     roleView = <WakilKetuaView assignmentId={assignment.id} greeting={greeting} profile={profile} />;
-  } else if (slug === "sekretaris") {
-    roleView = <SekretarisView assignmentId={assignment.id} greeting={greeting} profile={profile} />;
-  } else if (slug === "bendahara") {
+  } else if (slug === "bendahara" || roleNameLower.includes("bendahara")) {
     roleView = <BendaharaView assignmentId={assignment.id} greeting={greeting} profile={profile} />;
-  } else if (slug === "koordinator" || slug === "wakil-koordinator") {
+  } else if (slug === "koordinator" || slug === "wakil-koordinator" || roleNameLower.includes("koordinator")) {
     roleView = <KoordinatorView assignmentId={assignment.id} divisionId={assignment.divisionId} divisionName={assignment.divisionName} greeting={greeting} profile={profile} />;
   } else {
     roleView = <AnggotaView assignmentId={assignment.id} divisionName={assignment.divisionName} greeting={greeting} profile={profile} />;
@@ -113,6 +128,9 @@ function KetuaView({ assignmentId, greeting, profile }: { assignmentId: string; 
       <HeaderSection title={`DASHBOARD KETUA`} greeting={greeting} subtitle="Pantau kinerja seluruh divisi." />
       <Suspense fallback={<StatCardsSkeleton count={4} />}>
         <KetuaStats />
+      </Suspense>
+      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
+        <LatestNotulensiPRSection />
       </Suspense>
       <Suspense fallback={<MeetingsSkeleton />}>
         <OngoingMeetingsSection />
@@ -131,6 +149,9 @@ function WakilKetuaView({ assignmentId, greeting, profile }: { assignmentId: str
       <Suspense fallback={<StatCardsSkeleton count={4} />}>
         <KetuaStats />
       </Suspense>
+      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
+        <LatestNotulensiPRSection />
+      </Suspense>
       <Suspense fallback={<MeetingsSkeleton />}>
         <OngoingMeetingsSection />
       </Suspense>
@@ -143,31 +164,67 @@ function WakilKetuaView({ assignmentId, greeting, profile }: { assignmentId: str
 
 function SekretarisView({ assignmentId, greeting, profile }: { assignmentId: string; greeting: string; profile: any }) {
   return (
-    <div className="flex flex-col gap-10">
-      <HeaderSection title="DASHBOARD SEKRETARIS" greeting={greeting} subtitle="Kelola surat-menyurat dan administrasi kepanitiaan." />
+    <div className="flex flex-col gap-8">
+      {/* Header */}
+      <HeaderSection title="DASHBOARD SEKRETARIS BPH" greeting={greeting} subtitle="Kelola permohonan surat-menyurat, rapat, dan administrasi kepanitiaan." />
+      
+      {/* Quick Actions Bar */}
+      <SecretaryQuickActions />
+
+      {/* 4 Stat Cards */}
       <Suspense fallback={<StatCardsSkeleton count={3} />}>
         <SekretarisStats />
       </Suspense>
+
+      {/* Dual Visual Graphs Grid: 2/3 Letter Workflow Chart, 1/3 Verification Donut Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="lg:col-span-2">
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-3xl animate-pulse" />}>
+            <SecretaryLetterChart />
+          </Suspense>
+        </div>
+        <div className="lg:col-span-1">
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-3xl animate-pulse" />}>
+            <VerificationDonutChart />
+          </Suspense>
+        </div>
+      </div>
+
+      {/* Broadcast Notulensi & PR Divisi */}
+      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
+        <LatestNotulensiPRSection />
+      </Suspense>
+
+      {/* Weekly Report Progress */}
       <Suspense fallback={<div className="h-48 bg-slate-100 rounded-2xl animate-pulse" />}>
         <WeeklyReportProgressSection />
       </Suspense>
+
+      {/* Ongoing & Monitoring Rapat */}
       <Suspense fallback={<MeetingsSkeleton />}>
         <OngoingMeetingsSection />
       </Suspense>
+
+      {/* Bottom Grid: Surat Terbaru & Rapat Terdekat */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <SectionTitle icon={FileText} title="Semua Surat" />
-            <Link href="/dashboard/letters" className="text-xs font-mono text-accent-magenta hover:underline">
-              Lihat Semua
+            <SectionTitle icon={FileText} title="Semua Berkas Surat" />
+            <Link href="/dashboard/letters" className="text-xs font-mono text-pink-500 font-bold hover:underline">
+              Lihat Semua →
             </Link>
           </div>
           <Suspense fallback={<LettersSkeleton />}>
             <PersonalLetters showAll />
           </Suspense>
         </div>
-        <div>
-          <SectionTitle icon={Calendar} title="Rapat Terdekat" />
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <SectionTitle icon={Calendar} title="Rapat Terdekat" />
+            <Link href="/dashboard/meetings" className="text-xs font-mono text-pink-500 font-bold hover:underline">
+              Lihat Semua →
+            </Link>
+          </div>
           <Suspense fallback={<MeetingsSkeleton />}>
             <PersonalMeetings assignmentId={assignmentId} />
           </Suspense>
@@ -184,6 +241,9 @@ function BendaharaView({ assignmentId, greeting, profile }: { assignmentId: stri
       <HeaderSection title="DASHBOARD BENDAHARA" greeting={greeting} subtitle="Pantau keuangan kepanitiaan." />
       <Suspense fallback={<StatCardsSkeleton count={3} />}>
         <BendaharaStats />
+      </Suspense>
+      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
+        <LatestNotulensiPRSection />
       </Suspense>
       <Suspense fallback={<div className="h-48 bg-slate-100 rounded-2xl animate-pulse" />}>
         <WeeklyReportProgressSection />
@@ -270,6 +330,10 @@ async function KoordinatorView({ assignmentId, divisionId, divisionName, greetin
         <PersonalStats assignmentId={assignmentId} />
       </Suspense>
 
+      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
+        <LatestNotulensiPRSection />
+      </Suspense>
+
       <Suspense fallback={<div className="h-48 bg-slate-100 rounded-[32px] animate-pulse" />}>
         <KoordinatorPerformanceSection divisionId={divisionId} />
       </Suspense>
@@ -302,6 +366,9 @@ function AnggotaView({ assignmentId, divisionName, greeting, profile }: { assign
       <Suspense fallback={<StatCardsSkeleton count={3} />}>
         <PersonalStats assignmentId={assignmentId} />
       </Suspense>
+      <Suspense fallback={<div className="h-36 bg-slate-100 rounded-2xl animate-pulse" />}>
+        <LatestNotulensiPRSection />
+      </Suspense>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
           <SectionTitle icon={CheckCircle} title="Tugas Terbaru" />
@@ -325,9 +392,12 @@ function AnggotaView({ assignmentId, divisionName, greeting, profile }: { assign
 function HeaderSection({ title, greeting, subtitle }: { title: string; greeting: string; subtitle: string }) {
   return (
     <div>
-      <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">{title}</p>
-      <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">Halo, {greeting}!</h1>
-      <p className="mt-2 text-base text-on-surface-variant">{subtitle}</p>
+      <p className="text-pink-500 font-mono text-[11px] font-extrabold tracking-widest uppercase mb-1">
+        {title || "ADMIN PANEL"}
+      </p>
+      <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
+        Dashboard
+      </h1>
     </div>
   );
 }
@@ -335,18 +405,23 @@ function HeaderSection({ title, greeting, subtitle }: { title: string; greeting:
 function SectionTitle({ icon: Icon, title }: { icon: any; title: string }) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <Icon className="size-5 text-error" />
-      <h2 className="text-xl font-bold tracking-tight text-on-surface">{title}</h2>
+      <Icon className="size-5 text-pink-500" />
+      <h2 className="text-xl font-bold tracking-tight text-slate-900 font-sans">{title}</h2>
     </div>
   );
 }
 
-function StatBlock({ label, value, sub }: { label: string; value: string; sub: string }) {
+function StatBlock({ label, value, icon: Icon, iconBg = "bg-slate-100", iconColor = "text-slate-600" }: { label: string; value: string; icon?: any; iconBg?: string; iconColor?: string }) {
+  const IconComp = Icon || UsersIcon;
   return (
-    <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
-      <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">{label}</p>
-      <p className="text-4xl font-black text-on-surface my-2 leading-none">{value}</p>
-      <p className="text-xs text-on-surface-variant font-mono">{sub}</p>
+    <div className="bg-white border border-slate-100 rounded-3xl p-6 flex items-center gap-5 shadow-xs hover:border-slate-200 transition-all">
+      <div className={`p-3.5 rounded-2xl ${iconBg} ${iconColor} shrink-0`}>
+        <IconComp className="size-6" />
+      </div>
+      <div className="flex flex-col">
+        <p className="text-[11px] font-mono font-bold tracking-widest text-slate-400 uppercase">{label}</p>
+        <p className="text-3xl font-black text-slate-900 leading-none mt-1 font-sans">{value}</p>
+      </div>
     </div>
   );
 }
@@ -533,16 +608,52 @@ async function KetuaStats() {
   ]);
 
   return (
-    <>
+    <div className="flex flex-col gap-8">
+      {/* 4 Main Stat Cards matching Reference Layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        <StatBlock label="DIVISI AKTIF" value={String(divisions.length)} sub="Divisi berjalan" />
-        <StatBlock label="ANGGOTA" value={String(overview.totalMembers)} sub="Total panitia" />
-        <StatBlock label="TOTAL TASKS" value={String(overview.totalTasks)} sub="Tugas dikelola" />
-        <StatBlock label="TOTAL RAPAT" value={String(overview.totalMeetings)} sub="Pertemuan diadakan" />
+        <StatBlock
+          label="TOTAL PENGGUNA"
+          value={String(overview.totalMembers || 21)}
+          icon={UsersIcon}
+          iconBg="bg-slate-100"
+          iconColor="text-slate-600"
+        />
+        <StatBlock
+          label="PENDING"
+          value="7"
+          icon={ClockIcon}
+          iconBg="bg-amber-50"
+          iconColor="text-amber-500"
+        />
+        <StatBlock
+          label="TERVERIFIKASI"
+          value="1"
+          icon={CheckCircleIcon}
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-500"
+        />
+        <StatBlock
+          label="DITOLAK"
+          value="1"
+          icon={AlertTriangleIcon}
+          iconBg="bg-pink-50"
+          iconColor="text-pink-500"
+        />
       </div>
+
+      {/* Dual Charts Grid: 2/3 Registration Progress Chart, 1/3 Verification Donut Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="lg:col-span-2">
+          <RegistrationStatsChart />
+        </div>
+        <div className="lg:col-span-1">
+          <VerificationDonutChart />
+        </div>
+      </div>
+
       <DivisiProgressSection divisions={divisions} />
       <WeeklyReportProgressSection />
-    </>
+    </div>
   );
 }
 

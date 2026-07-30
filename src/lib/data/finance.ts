@@ -19,6 +19,8 @@ export interface TransactionData {
   amount: number;
   description: string;
   category: string | null;
+  attachment_url: string | null;
+  receipt_number: string | null;
   transaction_date: string;
   created_by_name: string;
   created_at: string;
@@ -109,7 +111,7 @@ export async function getBudgets(): Promise<BudgetWithDivision[]> {
   }
 
   // Batch fetch all transactions
-  let transactionsByBudget: Record<string, { amount: number; type: string }[]> = {};
+  const transactionsByBudget: Record<string, { amount: number; type: string }[]> = {};
   if (budgetIds.length > 0) {
     const { data: allTx } = await supabase
       .from("budget_transactions")
@@ -182,7 +184,7 @@ export async function getBudgetDetail(divisionId: string): Promise<{
 
   // Batch fetch creator names
   const creatorIds = transactions.map((tx: any) => tx.created_by).filter(Boolean);
-  let creatorNames: Record<string, string> = {};
+  const creatorNames: Record<string, string> = {};
   if (creatorIds.length > 0) {
     const { data: creators } = await supabase
       .from("committee_assignments")
@@ -201,6 +203,8 @@ export async function getBudgetDetail(divisionId: string): Promise<{
     amount: Number(tx.amount),
     description: tx.description,
     category: tx.category,
+    attachment_url: tx.attachment_url ?? null,
+    receipt_number: tx.receipt_number ?? null,
     transaction_date: tx.transaction_date,
     created_by_name: creatorNames[tx.created_by] ?? "Unknown",
     created_at: tx.created_at,
@@ -222,6 +226,67 @@ export async function getBudgetDetail(divisionId: string): Promise<{
       transaction_count: txWithNames.length,
     },
     transactions: txWithNames,
+  };
+}
+
+export interface FinanceReportData {
+  committee: string;
+  generatedAt: string;
+  overview: FinanceOverview;
+  divisions: (BudgetWithDivision & { transactions: TransactionData[] })[];
+}
+
+export async function getFinanceReport(): Promise<FinanceReportData> {
+  const overview = await getFinanceOverview();
+  const budgets = await getBudgets();
+
+  const divisionsWithTx = await Promise.all(
+    budgets.map(async (b) => {
+      const detail = await getBudgetDetail(b.division_id);
+      return {
+        ...b,
+        transactions: detail.transactions,
+      };
+    })
+  );
+
+  return {
+    committee: "I-FEST 2026",
+    generatedAt: new Date().toISOString(),
+    overview,
+    divisions: divisionsWithTx,
+  };
+}
+
+export async function getTransactionById(id: string): Promise<TransactionData | null> {
+  const supabase = createAdminClient();
+
+  const { data: tx } = await supabase
+    .from("budget_transactions")
+    .select("*, created_by")
+    .eq("id", id)
+    .single();
+
+  if (!tx) return null;
+
+  const { data: creator } = await supabase
+    .from("committee_assignments")
+    .select("user:profiles(full_name)")
+    .eq("id", (tx as any).created_by)
+    .single();
+
+  const t = tx as any;
+  return {
+    id: t.id,
+    type: t.type,
+    amount: Number(t.amount),
+    description: t.description,
+    category: t.category,
+    attachment_url: t.attachment_url ?? null,
+    receipt_number: t.receipt_number ?? null,
+    transaction_date: t.transaction_date,
+    created_by_name: (creator as any)?.user?.full_name ?? "Unknown",
+    created_at: t.created_at,
   };
 }
 

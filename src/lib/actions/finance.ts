@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { createNotification, notifyDivision } from "@/lib/internal-notifications";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
@@ -67,6 +68,9 @@ export async function addTransaction(prevState: ActionState, formData: FormData)
   const amount = parseFloat(formData.get("amount") as string);
   const description = formData.get("description") as string;
   const category = formData.get("category") as string;
+  const receiptNumber = formData.get("receipt_number") as string;
+  const transactionDate = formData.get("transaction_date") as string;
+  const attachmentUrl = formData.get("attachment_url") as string;
 
   if (!budgetId || !type || isNaN(amount) || amount <= 0 || !description) {
     return { error: "Semua field harus diisi" };
@@ -81,11 +85,15 @@ export async function addTransaction(prevState: ActionState, formData: FormData)
     amount,
     description,
     category: category || null,
+    receipt_number: receiptNumber || null,
+    attachment_url: attachmentUrl || null,
+    transaction_date: transactionDate ? new Date(transactionDate + "+08:00").toISOString() : undefined,
     created_by: assignment.id,
   });
 
   if (error) return { error: error.message };
   revalidatePath("/dashboard/finance");
+  revalidatePath("/dashboard/finance/report");
   return { success: true };
 }
 
@@ -97,6 +105,7 @@ export async function deleteTransaction(id: string) {
   const { error } = await supabase.from("budget_transactions").delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/dashboard/finance");
+  revalidatePath("/dashboard/finance/report");
   return { success: true };
 }
 
@@ -127,6 +136,35 @@ export async function createBudgetRequest(prevState: ActionState, formData: Form
   });
 
   if (error) return { error: error.message };
+
+  // Notify bendahara (level 70) about new request
+  const { data: bendaharaAssignments } = await supabase
+    .from("committee_assignments")
+    .select("id")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("is_active", true);
+
+  if (Array.isArray(bendaharaAssignments)) {
+    const { data: bendaharaRoles } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("committee_year_id", YEAR_ID)
+      .eq("level", 70);
+
+    const bendaharaRoleIds = new Set((bendaharaRoles ?? []).map((r) => r.id));
+    const bendaharaMembers = (bendaharaAssignments ?? []).filter((a) => bendaharaRoleIds.has((a as any).role_id));
+
+    for (const m of bendaharaMembers) {
+      await createNotification(
+        m.id,
+        "system",
+        `Pengajuan dana baru: Rp${amount.toLocaleString("id-ID")}`,
+        `Tujuan: ${purpose}`,
+        true,
+      );
+    }
+  }
+
   revalidatePath("/dashboard/finance");
   return { success: true };
 }
@@ -151,6 +189,35 @@ export async function handleBudgetRequest(
     .eq("id", requestId);
 
   if (error) return { error: error.message };
+
+  // Notify the requester
+  const { data: request } = await supabase
+    .from("budget_requests")
+    .select("requester_id, amount, division_id")
+    .eq("id", requestId)
+    .single();
+
+  if (request) {
+    const r = request as any;
+    const statusLabel = status === "approved" ? "disetujui" : "ditolak";
+    await createNotification(
+      r.requester_id,
+      "system",
+      `Pengajuan dana ${statusLabel}: Rp${Number(r.amount).toLocaleString("id-ID")}`,
+      notes ? `Catatan: ${notes}` : undefined,
+      true,
+    );
+    if (status === "approved") {
+      await notifyDivision(
+        r.division_id,
+        "system",
+        `Pengajuan dana disetujui: Rp${Number(r.amount).toLocaleString("id-ID")}`,
+        undefined,
+        false,
+      );
+    }
+  }
+
   revalidatePath("/dashboard/finance");
   return { success: true };
 }
@@ -181,6 +248,39 @@ export async function exportFinanceCSV() {
       String(used),
       String(Number(b.total_budget) - used),
     ]);
+  }
+
+  return rows.map((r) => r.join(",")).join("\n");
+}
+
+export async function exportFinanceCSVDetail() {
+  const supabase = createAdminClient();
+  const { data: budgets } = await supabase
+    .from("budgets")
+    .select("*, division:divisions(name)")
+    .eq("committee_year_id", YEAR_ID);
+
+  if (!budgets) return "";
+
+  const rows = [["Tanggal", "Divisi", "Tipe", "Kategori", "Deskripsi", "Jumlah", "Nomor Bukti"]];
+  for (const b of budgets) {
+    const { data: tx } = await supabase
+      .from("budget_transactions")
+      .select("transaction_date, type, category, description, amount, receipt_number")
+      .eq("budget_id", b.id)
+      .order("transaction_date", { ascending: false });
+
+    for (const t of tx ?? []) {
+      rows.push([
+        new Date((t as any).transaction_date).toLocaleDateString("id-ID"),
+        (b as any).division?.name ?? "",
+        (t as any).type === "income" ? "Pemasukan" : "Pengeluaran",
+        (t as any).category ?? "-",
+        (t as any).description,
+        String(Number((t as any).amount)),
+        (t as any).receipt_number ?? "-",
+      ]);
+    }
   }
 
   return rows.map((r) => r.join(",")).join("\n");

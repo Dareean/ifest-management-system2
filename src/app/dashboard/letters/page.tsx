@@ -60,17 +60,17 @@ export default async function LettersPage(props: {
   }
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
-            Sistem Surat
+          <p className="text-pink-500 font-mono text-[11px] font-extrabold tracking-widest uppercase mb-1">
+            SISTEM SURAT
           </p>
-          <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
             Permohonan Surat
           </h1>
-          <p className="mt-2 text-base text-on-surface-variant">
+          <p className="mt-1 text-sm text-slate-400 font-sans">
             {isSecretary
               ? "Kelola dan pantau seluruh permohonan surat kepanitiaan."
               : "Ajukan dan pantau status permohonan surat Anda."}
@@ -79,7 +79,7 @@ export default async function LettersPage(props: {
         <div className="flex items-center gap-3 shrink-0 sm:self-end">
           <ExportButton label="Export CSV" filename="surat" fetchCsv={exportLettersCSV} />
           <Link href="/dashboard/letters/new">
-            <Button className="cursor-pointer">
+            <Button size="sm" className="h-9 font-mono font-bold text-xs uppercase cursor-pointer bg-slate-900 text-white hover:bg-black rounded-2xl gap-1.5 px-4 shadow-xs">
               <Plus className="size-4" />
               Ajukan Surat
             </Button>
@@ -87,30 +87,9 @@ export default async function LettersPage(props: {
         </div>
       </div>
 
-      {/* Main List */}
+      {/* Main List & Client Section */}
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <Mail className="size-5 text-error" />
-          <h2 className="text-xl font-bold tracking-tight text-on-surface">Daftar Permohonan</h2>
-          <span className="text-xs font-mono text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">
-            {letters.length}
-          </span>
-        </div>
-
-        {letters.length === 0 ? (
-          <div className="bg-white border border-outline-variant/60 rounded-2xl p-10 text-center">
-            <p className="text-sm font-mono text-on-surface-variant mb-4">
-              Belum ada permohonan surat.
-            </p>
-            <Link href="/dashboard/letters/new">
-              <Button variant="outline" className="cursor-pointer">
-                <Plus className="size-4" /> Ajukan Sekarang
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <LettersClient initialLetters={letters} isApprover={isSecretary} divisions={divisions} />
-        )}
+        <LettersClient initialLetters={letters} isApprover={isSecretary} divisions={divisions} />
       </div>
     </div>
   );

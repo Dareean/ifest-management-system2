@@ -4,6 +4,7 @@ const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
 export interface LetterData {
   id: string;
+  trackingNo: string;
   letterType: string;
   subject: string;
   status: string;
@@ -52,6 +53,7 @@ export async function getLetters(requesterId?: string): Promise<LetterData[]> {
 
   return data.map((l: any) => ({
     id: l.id,
+    trackingNo: `SRT-2026-${l.id.slice(0, 6).toUpperCase()}`,
     letterType: l.letter_type,
     subject: l.subject,
     status: l.status,

@@ -138,122 +138,173 @@ export function LettersClient({ initialLetters, isApprover, divisions }: Letters
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ── Toolbar: Tabs on Left, Dropdowns on Right ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/20 pb-4 mb-2">
-        {isApprover ? (
-          <div className="flex items-center gap-1 bg-surface-container p-1 rounded-xl w-fit">
-            {SECRETARY_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setSecretaryTab(tab.key)}
-                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                  secretaryTab === tab.key
-                    ? "bg-white shadow-sm text-on-surface"
-                    : "text-on-surface-variant hover:text-on-surface hover:bg-white/50"
-                }`}
-              >
-                {tab.label}
-                {secretaryCounts[tab.key] > 0 && (
-                  <span
-                    className={`text-[10px] font-bold font-mono min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 ${
-                      secretaryTab === tab.key
-                        ? tab.key === "needs_action"
-                          ? "bg-error/10 text-error"
-                          : "bg-primary/10 text-primary"
-                        : "bg-outline-variant/40 text-on-surface-variant"
-                    }`}
-                  >
-                    {secretaryCounts[tab.key]}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="flex items-center gap-1 bg-surface-container p-1 rounded-xl w-fit">
-            {REQUESTER_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setRequesterTab(tab.key)}
-                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                  requesterTab === tab.key
-                    ? "bg-white shadow-sm text-on-surface"
-                    : "text-on-surface-variant hover:text-on-surface hover:bg-white/50"
-                }`}
-              >
-                {tab.label}
-                {requesterCounts[tab.key] > 0 && (
-                  <span
-                    className={`text-[10px] font-bold font-mono min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 ${
-                      requesterTab === tab.key
-                        ? "bg-primary/10 text-primary"
-                        : "bg-outline-variant/40 text-on-surface-variant"
-                    }`}
-                  >
-                    {requesterCounts[tab.key]}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
+      {/* ── Top Stat Summary Bar ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
+          <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 uppercase">
+            TOTAL PERMOHONAN
+          </span>
+          <span className="text-2xl font-black text-slate-900 font-sans mt-1">
+            {baseFilteredLetters.length}
+          </span>
+        </div>
 
-        {/* Dropdown Filters (Sekretaris only) */}
-        {isApprover && divisions && divisions.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Division dropdown */}
-            <select
-              value={selectedDivision}
-              onChange={(e) => setSelectedDivision(e.target.value)}
-              className="h-9 rounded-lg border border-outline-variant/60 bg-surface-bright px-3 text-xs font-bold text-on-surface focus:border-primary focus:outline-none cursor-pointer"
-            >
-              <option value="">Semua Divisi</option>
-              {divisions.map((d) => (
-                <option key={d.slug} value={d.slug}>
-                  {d.name}
-                </option>
+        <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
+          <span className="text-[10px] font-mono font-bold tracking-widest text-amber-500 uppercase">
+            BUTUH TINDAKAN
+          </span>
+          <span className="text-2xl font-black text-amber-600 font-sans mt-1">
+            {secretaryCounts.needs_action}
+          </span>
+        </div>
+
+        <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
+          <span className="text-[10px] font-mono font-bold tracking-widest text-blue-500 uppercase">
+            SEDANG DIPROSES
+          </span>
+          <span className="text-2xl font-black text-blue-600 font-sans mt-1">
+            {secretaryCounts.processing}
+          </span>
+        </div>
+
+        <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
+          <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-500 uppercase">
+            SELESAI / TTD
+          </span>
+          <span className="text-2xl font-black text-emerald-600 font-sans mt-1">
+            {secretaryCounts.sent}
+          </span>
+        </div>
+      </div>
+
+      {/* ── Section Title & Toolbar ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 bg-pink-50 text-pink-500 rounded-xl">
+            <Mail className="size-4" />
+          </div>
+          <h2 className="text-lg font-extrabold tracking-tight text-slate-900 font-sans">
+            Daftar Permohonan
+          </h2>
+          <span className="text-xs font-mono font-extrabold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+            {displayed.length}
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Tabs Pill Container */}
+          {isApprover ? (
+            <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-2xl w-fit">
+              {SECRETARY_TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setSecretaryTab(tab.key)}
+                  className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer ${
+                    secretaryTab === tab.key
+                      ? "bg-white shadow-xs text-slate-900"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-white/50"
+                  }`}
+                >
+                  {tab.label}
+                  {secretaryCounts[tab.key] > 0 && (
+                    <span
+                      className={`text-[9px] font-bold font-mono min-w-[16px] h-[16px] flex items-center justify-center rounded-full px-1 ${
+                        secretaryTab === tab.key
+                          ? tab.key === "needs_action"
+                            ? "bg-pink-100 text-pink-600"
+                            : "bg-slate-900 text-white"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {secretaryCounts[tab.key]}
+                    </span>
+                  )}
+                </button>
               ))}
-            </select>
-
-            {/* Priority dropdown */}
-            <select
-              value={selectedPriority}
-              onChange={(e) => setSelectedPriority(e.target.value)}
-              className="h-9 rounded-lg border border-outline-variant/60 bg-surface-bright px-3 text-xs font-bold text-on-surface focus:border-primary focus:outline-none cursor-pointer"
-            >
-              {PRIORITIES.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-2xl w-fit">
+              {REQUESTER_TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setRequesterTab(tab.key)}
+                  className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer ${
+                    requesterTab === tab.key
+                      ? "bg-white shadow-xs text-slate-900"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-white/50"
+                  }`}
+                >
+                  {tab.label}
+                  {requesterCounts[tab.key] > 0 && (
+                    <span
+                      className={`text-[9px] font-bold font-mono min-w-[16px] h-[16px] flex items-center justify-center rounded-full px-1 ${
+                        requesterTab === tab.key
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {requesterCounts[tab.key]}
+                    </span>
+                  )}
+                </button>
               ))}
-            </select>
+            </div>
+          )}
 
-            {/* Reset button */}
-            {(selectedDivision || selectedPriority) && (
-              <button
-                onClick={() => {
-                  setSelectedDivision("");
-                  setSelectedPriority("");
-                }}
-                className="h-9 px-3 flex items-center gap-1 text-xs font-bold text-on-surface-variant hover:text-error hover:bg-error/5 border border-outline-variant/40 rounded-lg transition-colors cursor-pointer"
+          {/* Dropdown Filters (Sekretaris only) */}
+          {isApprover && divisions && divisions.length > 0 && (
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedDivision}
+                onChange={(e) => setSelectedDivision(e.target.value)}
+                className="h-8 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold font-mono text-slate-700 focus:border-slate-900 focus:outline-none cursor-pointer shadow-xs"
               >
-                Reset
-              </button>
-            )}
-          </div>
-        )}
+                <option value="">Semua Divisi</option>
+                {divisions.map((d) => (
+                  <option key={d.slug} value={d.slug}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedPriority}
+                onChange={(e) => setSelectedPriority(e.target.value)}
+                className="h-8 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold font-mono text-slate-700 focus:border-slate-900 focus:outline-none cursor-pointer shadow-xs"
+              >
+                {PRIORITIES.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
+
+              {(selectedDivision || selectedPriority) && (
+                <button
+                  onClick={() => {
+                    setSelectedDivision("");
+                    setSelectedPriority("");
+                  }}
+                  className="h-8 px-2.5 flex items-center gap-1 text-[11px] font-bold font-mono text-pink-500 hover:bg-pink-50 border border-pink-200 rounded-xl transition-colors cursor-pointer"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Empty State ── */}
       {displayed.length === 0 && (
-        <div className="bg-white border border-outline-variant/60 rounded-2xl p-12 text-center">
-          <Mail className="size-10 text-on-surface-variant/20 mx-auto mb-3" />
-          <p className="text-sm font-medium text-on-surface-variant">
+        <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center shadow-xs">
+          <Mail className="size-10 text-slate-300 mx-auto mb-3" />
+          <p className="text-sm font-medium text-slate-500 font-sans">
             {isApprover
-              ? "Tidak ada surat yang sesuai filter."
+              ? "Tidak ada surat yang sesuai dengan filter."
               : "Belum ada permohonan surat di kategori ini."}
           </p>
           {!isApprover && (
             <Link href="/dashboard/letters/new">
-              <Button variant="outline" className="mt-4 cursor-pointer">
+              <Button variant="outline" size="sm" className="mt-4 cursor-pointer rounded-xl font-mono text-xs">
                 <Plus className="size-4" /> Ajukan Sekarang
               </Button>
             </Link>
@@ -261,9 +312,9 @@ export function LettersClient({ initialLetters, isApprover, divisions }: Letters
         </div>
       )}
 
-      {/* ── Card Grid ── */}
+      {/* ── Card Grid (2 Columns) ── */}
       {displayed.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {displayed.map((letter) => {
             const status = getStatusDisplay(letter.status);
             const prio = getPriorityDisplay(letter.priority);
@@ -272,21 +323,21 @@ export function LettersClient({ initialLetters, isApprover, divisions }: Letters
             return (
               <div
                 key={letter.id}
-                className="bg-white border border-outline-variant/60 rounded-2xl flex flex-col hover:border-accent-magenta/50 hover:shadow-sm transition-all shadow-xs"
+                className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col justify-between hover:border-pink-300 hover:shadow-md transition-all shadow-xs group"
               >
-                {/* Card Clickable Content */}
-                <Link href={`/dashboard/letters/${letter.id}`} className="block p-6 flex-1">
-                  {/* Status & Priority Row */}
-                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant={prio.variant} className="text-[10px] font-mono px-2 py-0.5">
+                {/* Main Card Link Area */}
+                <Link href={`/dashboard/letters/${letter.id}`} className="block flex-1">
+                  {/* Status & Priority Header */}
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={prio.variant} className="text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold">
                         {prio.label}
                       </Badge>
-                      <Badge variant={status.variant} className="text-[10px] font-mono px-2 py-0.5 uppercase tracking-wide">
+                      <Badge variant={status.variant} className="text-[10px] font-mono px-2.5 py-0.5 uppercase tracking-wide rounded-full font-bold">
                         {status.label}
                       </Badge>
                     </div>
-                    <span className="text-[10px] font-mono text-on-surface-variant">
+                    <span className="text-[11px] font-mono text-slate-400 font-medium">
                       {(() => {
                         const date = new Date(letter.createdAt);
                         const dStr = date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
@@ -296,36 +347,44 @@ export function LettersClient({ initialLetters, isApprover, divisions }: Letters
                     </span>
                   </div>
 
-                  {/* Subject */}
-                  <h3 className="font-sans text-base font-bold text-on-surface group-hover:text-accent-magenta leading-snug mb-3 line-clamp-2">
+                  {/* Subject Title */}
+                  <h3 className="font-sans text-lg font-black text-slate-900 group-hover:text-pink-500 transition-colors leading-snug mb-3 line-clamp-2">
                     {letter.subject}
                   </h3>
 
-                  {/* Metadata */}
-                  <div className="flex flex-col gap-1.5 text-xs font-mono text-on-surface-variant">
+                  {/* Metadata List */}
+                  <div className="flex flex-col gap-2 text-xs font-mono text-slate-500 bg-slate-50/70 p-3.5 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-2 text-slate-900 font-bold border-b border-slate-200/50 pb-1.5">
+                      <FileText className="size-4 shrink-0 text-pink-500" />
+                      <span>No. Surat: <strong className="font-mono text-pink-600 font-black">#{letter.trackingNo || `SRT-2026-${letter.id.slice(0, 6).toUpperCase()}`}</strong></span>
+                    </div>
+
                     <div className="flex items-center gap-2">
-                      <User className="size-3.5 shrink-0 opacity-60" />
+                      <User className="size-4 shrink-0 text-slate-400" />
                       <span className="truncate">
                         {letter.requester}
-                        {isApprover && <> &middot; <strong className="text-on-surface font-semibold">{letter.division}</strong></>}
+                        {isApprover && <> &middot; <strong className="text-slate-800 font-bold">{letter.division}</strong></>}
                       </span>
                     </div>
+
                     <div className="flex items-center gap-2">
-                      <Tag className="size-3.5 shrink-0 opacity-60" />
+                      <Tag className="size-4 shrink-0 text-slate-400" />
                       <span className="truncate">
                         {letter.letterType.toUpperCase()}
                         {letter.category && ` — ${letter.category}`}
                       </span>
                     </div>
+
                     {letter.targetInstitution && (
                       <div className="flex items-center gap-2">
-                        <Building2 className="size-3.5 shrink-0 opacity-60" />
-                        <span className="truncate">{letter.targetInstitution}</span>
+                        <Building2 className="size-4 shrink-0 text-slate-400" />
+                        <span className="truncate text-slate-700 font-semibold">{letter.targetInstitution}</span>
                       </div>
                     )}
+
                     {letter.deadlineAt && (
-                      <div className="flex items-center gap-2 text-error font-medium">
-                        <Clock className="size-3.5 shrink-0" />
+                      <div className="flex items-center gap-2 text-pink-600 font-bold pt-1 border-t border-slate-200/50">
+                        <Clock className="size-4 shrink-0 text-pink-500" />
                         <span>
                           Tenggat:{" "}
                           {(() => {
@@ -340,92 +399,53 @@ export function LettersClient({ initialLetters, isApprover, divisions }: Letters
                   </div>
                 </Link>
 
-                {/* ── Secretary Quick Action Bar ── */}
-                {isApprover && (
-                  <div className="border-t border-outline-variant/30 px-6 py-3 flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-mono text-on-surface-variant font-semibold uppercase tracking-wider">
-                      Aksi Cepat
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {(letter.status === "requested" || letter.status === "in_revision") && (
-                        <Button
-                          onClick={(e) => handleStartProcessing(letter.id, e)}
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs font-mono border-primary/30 text-primary hover:bg-primary/5 cursor-pointer gap-1.5"
-                          disabled={isCurrentAction && isPending}
-                        >
-                          {isCurrentAction && isPending ? (
-                            <Loader2 className="size-3 animate-spin" />
-                          ) : (
-                            <Send className="size-3" />
-                          )}
-                          Proses Surat
-                        </Button>
-                      )}
-                      {letter.status === "processing" && (
-                        <span className="text-[11px] font-sans font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
-                          Sedang Diproses
-                        </span>
-                      )}
-                      {letter.status === "sent" && (
-                        <span className="text-[11px] font-sans font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1">
-                          <Check className="size-3.5" /> Selesai
-                        </span>
-                      )}
-                      <Link href={`/dashboard/letters/${letter.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs font-mono text-on-surface-variant hover:text-on-surface cursor-pointer"
-                        >
-                          Detail →
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                )}
+                {/* ── Card Action Footer ── */}
+                <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider">
+                    AKSI CEPAT
+                  </span>
 
-                {/* ── Requester Status Indicator ── */}
-                {!isApprover && (
-                  <div className="border-t border-outline-variant/30 px-6 py-3 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      {letter.status === "requested" && (
-                        <>
-                          <div className="w-1.5 h-1.5 rounded-full bg-on-surface-variant/40 animate-pulse" />
-                          <span className="text-[11px] font-mono text-on-surface-variant">Menunggu diproses sekretaris</span>
-                        </>
-                      )}
-                      {letter.status === "processing" && (
-                        <>
-                          <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                          <span className="text-[11px] font-mono text-amber-700 font-semibold">Sedang diproses sekretaris</span>
-                        </>
-                      )}
-                      {letter.status === "in_revision" && (
-                        <>
-                          <div className="w-1.5 h-1.5 rounded-full bg-accent-coral" />
-                          <span className="text-[11px] font-mono text-accent-coral font-semibold">Dalam revisi</span>
-                        </>
-                      )}
-                      {letter.status === "sent" && (
-                        <>
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                          <span className="text-[11px] font-mono text-primary font-semibold">Dokumen siap diunduh</span>
-                        </>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-2">
+                    {isApprover && (letter.status === "requested" || letter.status === "in_revision") && (
+                      <Button
+                        onClick={(e) => handleStartProcessing(letter.id, e)}
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs font-mono font-bold border-slate-300 text-slate-800 hover:bg-slate-900 hover:text-white rounded-xl cursor-pointer gap-1.5 shadow-xs"
+                        disabled={isCurrentAction && isPending}
+                      >
+                        {isCurrentAction && isPending ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : (
+                          <Send className="size-3 text-pink-500" />
+                        )}
+                        Proses Surat
+                      </Button>
+                    )}
+
+                    {letter.status === "processing" && (
+                      <span className="text-[11px] font-mono font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
+                        Sedang Diproses
+                      </span>
+                    )}
+
+                    {letter.status === "sent" && (
+                      <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200 flex items-center gap-1">
+                        <Check className="size-3.5" /> Selesai
+                      </span>
+                    )}
+
                     <Link href={`/dashboard/letters/${letter.id}`}>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs font-mono text-on-surface-variant hover:text-on-surface cursor-pointer"
+                        className="h-7 text-xs font-mono font-bold text-slate-500 hover:text-slate-900 cursor-pointer"
                       >
-                        Lihat Status →
+                        Detail →
                       </Button>
                     </Link>
                   </div>
-                )}
+                </div>
               </div>
             );
           })}

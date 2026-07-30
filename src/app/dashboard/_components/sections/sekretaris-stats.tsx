@@ -34,14 +34,14 @@ export async function SekretarisStats() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
       {cards.map((card) => (
-        <div key={card.label} className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 flex items-start gap-4">
-          <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}>
+        <div key={card.label} className="bg-white border border-slate-100 rounded-3xl p-6 flex items-start gap-4 shadow-xs">
+          <div className={`size-10 rounded-2xl flex items-center justify-center shrink-0 ${card.iconBg}`}>
             <card.icon className={`size-5 ${card.iconColor}`} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">{card.label}</p>
-            <p className="text-3xl font-black text-on-surface my-1 leading-none">{card.value}</p>
-            <p className="text-xs text-on-surface-variant font-mono truncate">{card.sub}</p>
+            <p className="text-[11px] font-mono font-bold tracking-widest text-slate-400 uppercase">{card.label}</p>
+            <p className="text-3xl font-black text-slate-900 my-1 leading-none font-sans">{card.value}</p>
+            <p className="text-xs text-slate-400 font-sans truncate">{card.sub}</p>
           </div>
         </div>
       ))}

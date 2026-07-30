@@ -95,3 +95,62 @@ export const getMeetings = cache(async (): Promise<MeetingData[]> => {
 
   return meetingsWithCounts;
 });
+
+export interface LatestNotulensiData {
+  id: string;
+  meetingId: string;
+  meetingTitle: string;
+  meetingDate: string;
+  writerName: string;
+  content: string;
+  decisionPoints: string[];
+  actionItems: string[];
+  publishedAt: string;
+}
+
+export const getLatestPublishedNotulensi = cache(async (): Promise<LatestNotulensiData | null> => {
+  const supabase = createAdminClient();
+
+  const { data } = await supabase
+    .from("meeting_notes")
+    .select(`
+      id,
+      meeting_id,
+      content,
+      decision_points,
+      action_items,
+      published_at,
+      meeting:meetings!meeting_id(
+        id,
+        title,
+        started_at,
+        committee_year_id
+      ),
+      writer:committee_assignments!writer_id(
+        user:profiles(full_name)
+      )
+    `)
+    .not("published_at", "is", null)
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data || !data.meeting || (data.meeting as any).committee_year_id !== YEAR_ID) {
+    return null;
+  }
+
+  const m = data.meeting as any;
+  const w = data.writer as any;
+
+  return {
+    id: data.id,
+    meetingId: data.meeting_id,
+    meetingTitle: m.title,
+    meetingDate: m.started_at,
+    writerName: w?.user?.full_name ?? "Sekretaris",
+    content: data.content ?? "",
+    decisionPoints: Array.isArray(data.decision_points) ? data.decision_points : [],
+    actionItems: Array.isArray(data.action_items) ? data.action_items : [],
+    publishedAt: data.published_at,
+  };
+});

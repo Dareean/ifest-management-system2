@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { createMeeting } from "@/lib/actions/meetings";
 import { useRouter } from "next/navigation";
 import type { DivisionGroup } from "@/lib/data/members";
+import { Calendar, MapPin, Link as LinkIcon, Users, Search, Check, X, AlertCircle, Loader2 } from "lucide-react";
 
 interface Props {
   divisions: DivisionGroup[];
@@ -91,15 +92,16 @@ export function NewMeetingForm({
   }, [search, divisions]);
 
   return (
-    <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+    <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-10 shadow-xs relative overflow-hidden">
       {pending && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm gap-3">
-          <Spinner size="lg" />
-          <p className="text-sm font-mono text-accent-magenta font-bold animate-pulse">
-            Membuat rapat...
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/85 backdrop-blur-sm gap-3">
+          <Loader2 className="size-8 text-pink-500 animate-spin" />
+          <p className="text-sm font-mono text-slate-900 font-extrabold animate-pulse uppercase tracking-wider">
+            Membuat rapat & mengunggah undangan...
           </p>
         </div>
       )}
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -107,52 +109,65 @@ export function NewMeetingForm({
           fd.set("invitee_ids", JSON.stringify(Array.from(selectedIds)));
           startTransition(() => formAction(fd));
         }}
-        className={`flex flex-col gap-6 ${pending ? "pointer-events-none select-none" : ""}`}
+        className={`flex flex-col gap-7 ${pending ? "pointer-events-none select-none" : ""}`}
       >
-
         {state?.error && (
-          <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono">
-            {state.error}
+          <div className="flex items-center gap-3 text-sm text-pink-700 bg-pink-50 border border-pink-200 rounded-2xl p-4 font-mono font-bold">
+            <AlertCircle className="size-5 text-pink-500 shrink-0" />
+            <span>{state.error}</span>
           </div>
         )}
 
+        {/* Title & Meeting Type */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
-            <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
-              Judul Rapat
+            <label className="block mb-2 text-xs font-mono font-extrabold uppercase text-slate-800 tracking-wider">
+              Judul Rapat <span className="text-pink-500">*</span>
             </label>
-            <Input name="title" placeholder="Contoh: Rapat Koordinasi Divisi Acara" required />
+            <Input
+              name="title"
+              placeholder="Contoh: Rapat Koordinasi Divisi Acara"
+              required
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-sans font-medium text-slate-900 focus:border-slate-900 transition-all placeholder:text-slate-400"
+            />
           </div>
+
           <div>
-            <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+            <label className="block mb-2 text-xs font-mono font-extrabold uppercase text-slate-800 tracking-wider">
               Tipe Rapat
             </label>
             <select
               name="meetingType"
-              className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231d1b1d%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10"
+              className="flex h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-sans font-bold text-slate-900 focus:border-slate-900 focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10 shadow-xs"
             >
               <option value="scheduled">Terjadwal</option>
-              <option value="adhoc">Kondisional</option>
+              <option value="adhoc">Kondisional / Insidental</option>
             </select>
           </div>
         </div>
 
+        {/* Date/Time & Format */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
-              Tanggal & Waktu Mulai
+            <label className="block mb-2 text-xs font-mono font-extrabold uppercase text-slate-800 tracking-wider">
+              Tanggal & Waktu Mulai <span className="text-pink-500">*</span>
             </label>
-            <Input name="startedAt" type="datetime-local" required />
+            <input
+              type="datetime-local"
+              name="startedAt"
+              required
+              className="flex h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-sans font-medium text-slate-900 focus:border-slate-900 focus:outline-none cursor-pointer transition-all"
+            />
           </div>
 
           <div>
-            <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+            <label className="block mb-2 text-xs font-mono font-extrabold uppercase text-slate-800 tracking-wider">
               Format Pertemuan
             </label>
             <select
               value={format}
               onChange={(e) => setFormat(e.target.value as any)}
-              className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231d1b1d%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10"
+              className="flex h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-sans font-bold text-slate-900 focus:border-slate-900 focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231e293b%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10 shadow-xs"
             >
               <option value="offline">Offline (Tatap Muka)</option>
               <option value="online">Online (Daring)</option>
@@ -161,57 +176,71 @@ export function NewMeetingForm({
           </div>
         </div>
 
+        {/* Dynamic Location/Link inputs */}
         {format !== "offline" && (
           <div>
-            <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
-              Tautan Pertemuan (Online - Zoom/GMeet)
+            <label className="block mb-2 text-xs font-mono font-extrabold uppercase text-slate-800 tracking-wider">
+              Tautan Pertemuan (Online Zoom / GMeet)
             </label>
-            <Input name="meetingLink" placeholder="https://meet.google.com/... (opsional)" />
+            <Input
+              name="meetingLink"
+              placeholder="https://meet.google.com/... (opsional)"
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-sans font-medium text-slate-900 focus:border-slate-900 transition-all placeholder:text-slate-400"
+            />
           </div>
         )}
 
         {format !== "online" && (
           <div>
-            <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
-              Lokasi / Ruangan (Offline - opsional)
+            <label className="block mb-2 text-xs font-mono font-extrabold uppercase text-slate-800 tracking-wider">
+              Lokasi / Ruangan (Offline)
             </label>
-            <Input name="location" placeholder="Contoh: Sekretariat HMTI / Ruang Rapat Teknik" />
+            <Input
+              name="location"
+              placeholder="Contoh: Sekretariat HMTI / Ruang Rapat Dekanat FT"
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-sans font-medium text-slate-900 focus:border-slate-900 transition-all placeholder:text-slate-400"
+            />
           </div>
         )}
 
+        {/* Agenda */}
         <div>
-          <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
-            Agenda Rapat
+          <label className="block mb-2 text-xs font-mono font-extrabold uppercase text-slate-800 tracking-wider">
+            Agenda & Poin Bahasan Rapat
           </label>
           <textarea
             name="agenda"
-            className="flex min-h-[140px] w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface placeholder:text-on-surface-variant focus:border-accent-magenta focus:outline-none resize-y"
-            placeholder="Tulis poin-poin bahasan rapat di sini..."
+            className="flex min-h-[140px] w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm font-sans font-medium text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:outline-none resize-y transition-all"
+            placeholder="Tulis poin-poin bahasan rapat secara mendetail di sini..."
           />
         </div>
 
         {/* Invitee Selection */}
-        <div className="border-t border-outline-variant/20 pt-6">
+        <div className="border-t border-slate-100 pt-7">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-on-surface">
-              Peserta Undangan
-            </h2>
+            <div className="flex items-center gap-2">
+              <Users className="size-5 text-pink-500" />
+              <h2 className="text-base font-extrabold text-slate-900 font-sans">
+                Peserta Undangan Rapat
+              </h2>
+            </div>
+
             {selectedIds.size > 0 && (
               <button
                 type="button"
                 onClick={() => setSelectedIds(new Set())}
-                className="text-xs font-mono text-accent-magenta hover:underline cursor-pointer"
+                className="text-xs font-mono font-bold text-pink-500 hover:underline cursor-pointer"
               >
-                Hapus semua ({selectedIds.size})
+                Hapus Semua ({selectedIds.size})
               </button>
             )}
           </div>
 
-          {/* Selected badges */}
+          {/* Selected Member Badges Pill Container */}
           {selectedIds.size > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-surface-container rounded-xl">
-              <span className="text-xs font-mono text-on-surface-variant self-center mr-1">
-                Terpilih:
+            <div className="flex flex-wrap gap-2 mb-5 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <span className="text-xs font-mono font-extrabold text-slate-400 self-center mr-1 uppercase tracking-wider">
+                TERPILIH ({selectedIds.size}):
               </span>
               {Array.from(selectedIds).map((id) => {
                 const member = divisions
@@ -222,15 +251,15 @@ export function NewMeetingForm({
                   <Badge
                     key={id}
                     variant="secondary"
-                    className="text-xs font-mono gap-1 pr-1"
+                    className="text-xs font-mono font-bold bg-white text-slate-900 border border-slate-200 rounded-full px-3 py-1 gap-1.5 shadow-xs"
                   >
                     {member.name}
                     <button
                       type="button"
                       onClick={() => toggleMember(id)}
-                      className="ml-0.5 hover:text-error cursor-pointer"
+                      className="ml-0.5 text-slate-400 hover:text-pink-500 cursor-pointer"
                     >
-                      ×
+                      <X className="size-3.5" />
                     </button>
                   </Badge>
                 );
@@ -238,16 +267,19 @@ export function NewMeetingForm({
             </div>
           )}
 
-          {/* Search */}
-          <Input
-            placeholder="Cari anggota berdasarkan nama..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="mb-4"
-          />
+          {/* Search Bar */}
+          <div className="relative mb-5">
+            <Search className="size-4 text-slate-400 absolute left-4 top-3.5 pointer-events-none" />
+            <Input
+              placeholder="Cari anggota panitia berdasarkan nama..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-11 pl-11 rounded-2xl border border-slate-200 bg-white text-sm font-sans font-medium text-slate-900 focus:border-slate-900 transition-all placeholder:text-slate-400"
+            />
+          </div>
 
-          {/* Division groups */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Division Groups Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {filteredDivisions.map((div) => {
               const selectableMembers = div.members.filter((m) => canSelect(m));
               const fullySelected = isDivisionFullySelected(div.divisionId);
@@ -256,23 +288,23 @@ export function NewMeetingForm({
               return (
                 <div
                   key={div.divisionId}
-                  className="border border-outline-variant/30 rounded-xl overflow-hidden"
+                  className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-xs"
                 >
-                  <div className="bg-surface-container/50 px-4 py-2.5 flex items-center justify-between border-b border-outline-variant/20">
-                    <span className="text-sm font-bold text-on-surface">
+                  <div className="bg-slate-50/80 px-4 py-3 flex items-center justify-between border-b border-slate-100">
+                    <span className="text-xs font-extrabold text-slate-900 font-sans tracking-wide">
                       {div.divisionName}
                     </span>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-mono text-on-surface-variant">
-                        {selectableMembers.length} anggota
+                      <span className="text-[11px] font-mono font-bold text-slate-400">
+                        {selectableMembers.length} Anggota
                       </span>
                       {showSelectAll && selectableMembers.length > 0 && (
-                        <label className="flex items-center gap-1.5 text-xs font-mono cursor-pointer">
+                        <label className="flex items-center gap-1.5 text-xs font-mono font-bold text-slate-700 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={fullySelected}
                             onChange={() => toggleDivision(div.divisionId)}
-                            className="accent-accent-magenta size-3.5"
+                            className="accent-slate-900 size-3.5 rounded"
                           />
                           Pilih Semua
                         </label>
@@ -280,7 +312,7 @@ export function NewMeetingForm({
                     </div>
                   </div>
 
-                  <div className="divide-y divide-outline-variant/10">
+                  <div className="divide-y divide-slate-100">
                     {div.members.map((member) => {
                       const isSelected = selectedIds.has(member.assignmentId);
                       const selectable = canSelect(member);
@@ -288,8 +320,8 @@ export function NewMeetingForm({
                       return (
                         <label
                           key={member.assignmentId}
-                          className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${
-                            !selectable ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-surface-container/50"
+                          className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                            !selectable ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-slate-50/60"
                           }`}
                         >
                           <input
@@ -297,14 +329,14 @@ export function NewMeetingForm({
                             checked={isSelected}
                             disabled={!selectable}
                             onChange={() => selectable && toggleMember(member.assignmentId)}
-                            className="accent-accent-magenta size-4 shrink-0"
+                            className="accent-slate-900 size-4 shrink-0 rounded"
                           />
                           <div className="min-w-0 flex-1">
-                            <span className="text-sm text-on-surface font-medium">
+                            <span className="text-xs text-slate-900 font-bold font-sans block truncate">
                               {member.name}
                             </span>
                           </div>
-                          <span className="text-xs font-mono text-on-surface-variant shrink-0">
+                          <span className="text-[10px] font-mono font-bold text-slate-400 shrink-0 bg-slate-100 px-2 py-0.5 rounded-full">
                             {member.roleName}
                           </span>
                         </label>
@@ -317,20 +349,39 @@ export function NewMeetingForm({
           </div>
 
           {filteredDivisions.length === 0 && (
-            <div className="text-center py-8 text-sm font-mono text-on-surface-variant">
+            <div className="text-center py-10 text-xs font-mono font-bold text-slate-400">
               Tidak ada anggota ditemukan.
             </div>
           )}
         </div>
 
-        <div className="flex gap-2 justify-end mt-2">
-          <Button type="button" variant="ghost" onClick={() => router.back()} className="cursor-pointer">
+        {/* Footer Actions */}
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => router.back()}
+            className="h-11 px-5 rounded-2xl font-mono text-xs font-bold text-slate-500 hover:text-slate-900 cursor-pointer"
+          >
             Batal
           </Button>
-          <Button type="submit" disabled={pending || selectedIds.size === 0} className="cursor-pointer">
-            {pending
-              ? "Membuat..."
-              : `Buat Rapat & Undang ${selectedIds.size} Orang`}
+
+          <Button
+            type="submit"
+            disabled={pending || selectedIds.size === 0}
+            className="h-11 px-7 rounded-2xl bg-slate-900 text-white hover:bg-black font-mono text-xs font-bold uppercase tracking-wider cursor-pointer gap-2 shadow-xs disabled:opacity-50"
+          >
+            {pending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Membuat...
+              </>
+            ) : (
+              <>
+                <Calendar className="size-4 text-pink-400" />
+                Buat Rapat & Undang {selectedIds.size} Orang
+              </>
+            )}
           </Button>
         </div>
       </form>

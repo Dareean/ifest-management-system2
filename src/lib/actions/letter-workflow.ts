@@ -3,7 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { createNotification, notifyDivision } from "@/lib/internal-notifications";
-import { requirePermission, requireRole, requireSecretary } from "@/lib/auth/authorize";
+import { requirePermission, requireRole, requireSecretary, SECRETARY_SLUGS } from "@/lib/auth/authorize";
 import {
   getGoogleAccessToken,
   getGoogleAccessTokenFromRefreshToken,
@@ -174,12 +174,22 @@ export async function requestRevision(prevState: unknown, formData: FormData) {
 
   if (!letter) return { error: "Surat tidak ditemukan" };
 
-  // Verify that the user is the requester of this letter
-  if (letter.requester_id !== assignmentId) {
-    return { error: "Akses ditolak. Hanya pengaju asli surat yang dapat meminta revisi." };
+  const { data: callerAssignment } = await supabase
+    .from("committee_assignments")
+    .select("id, role:roles(is_approver, slug)")
+    .eq("id", assignmentId)
+    .single();
+
+  const isSecretaryOrApprover =
+    !!(callerAssignment as any)?.role?.is_approver ||
+    SECRETARY_SLUGS.includes((callerAssignment as any)?.role?.slug ?? "");
+  const isRequester = letter.requester_id === assignmentId;
+
+  if (!isRequester && !isSecretaryOrApprover) {
+    return { error: "Akses ditolak. Hanya pengaju surat atau Sekretaris yang dapat mengirim catatan revisi/masukan." };
   }
 
-  // Insert revision note with requester's assignment ID as author (reviewer_id)
+  // Insert revision note with caller's assignment ID as author (reviewer_id)
   const { error: revisionErr } = await supabase.from("letter_revisions").insert({
     letter_request_id: id,
     reviewer_id: assignmentId,
@@ -198,21 +208,31 @@ export async function requestRevision(prevState: unknown, formData: FormData) {
 
   if (updateErr) return { error: updateErr.message };
 
-  // Notify the BPH / Sekretaris panitia about the revision request
-  const { data: bphDivision } = await supabase
-    .from("divisions")
-    .select("id")
-    .eq("slug", "bph")
-    .maybeSingle();
-
-  if (bphDivision) {
-    await notifyDivision(
-      bphDivision.id,
+  if (isSecretaryOrApprover && letter.requester_id) {
+    await createNotification(
+      letter.requester_id,
       "letter",
-      `Permohonan revisi surat: ${letter.subject}`,
-      `Catatan: ${note}`,
-      true, // urgent: send email
+      `Catatan Revisi Sekretaris: ${letter.subject}`,
+      `Sekretaris memberikan catatan/masukan: ${note}`,
+      true
     );
+  } else {
+    // Notify the BPH / Sekretaris panitia about the revision request from requester
+    const { data: bphDivision } = await supabase
+      .from("divisions")
+      .select("id")
+      .eq("slug", "bph")
+      .maybeSingle();
+
+    if (bphDivision) {
+      await notifyDivision(
+        bphDivision.id,
+        "letter",
+        `Permohonan revisi surat: ${letter.subject}`,
+        `Catatan: ${note}`,
+        true, // urgent: send email
+      );
+    }
   }
 
   await sendStatusNotification(id, "in_revision");

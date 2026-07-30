@@ -15,6 +15,7 @@ export interface ProfileData {
   assignment: {
     division: string;
     role: string;
+    roleName: string;
     level: number;
     isActive: boolean;
     assignedAt: string;
@@ -103,6 +104,7 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
       ? {
           division: (assignment as any).division?.name ?? "",
           role: (assignment as any).role?.name ?? "",
+          roleName: (assignment as any).role?.name ?? "",
           level: (assignment as any).role?.level ?? 0,
           isActive: (assignment as any).is_active,
           assignedAt: (assignment as any).assigned_at,
