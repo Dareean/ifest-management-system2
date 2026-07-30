@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface LetterDetail {
   id: string;
+  trackingNo: string;
   letterType: string;
   subject: string;
   body: string;
@@ -33,6 +34,7 @@ export async function getLetterDetail(id: string): Promise<LetterDetail | null> 
     .from("letter_requests")
     .select(`
       id,
+      letter_number,
       letter_type,
       subject,
       body,
@@ -70,6 +72,7 @@ export async function getLetterDetail(id: string): Promise<LetterDetail | null> 
 
   return {
     id: l.id,
+    trackingNo: l.letter_number || `SRT-2026-${l.id.slice(0, 6).toUpperCase()}`,
     letterType: l.letter_type,
     subject: l.subject,
     body: l.body,

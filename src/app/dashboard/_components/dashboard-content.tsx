@@ -106,9 +106,9 @@ export async function DashboardContent({ userId }: { userId: string }) {
   if (isSecretaryRole) {
     roleView = <SekretarisView assignmentId={assignment.id} greeting={greeting} profile={profile} />;
   } else if (level >= 90) {
-    roleView = <KetuaView assignmentId={assignment.id} greeting={greeting} profile={profile} />;
+    roleView = <KetuaView assignmentId={assignment.id} divisionId={assignment.divisionId} greeting={greeting} profile={profile} />;
   } else if (level >= 80) {
-    roleView = <WakilKetuaView assignmentId={assignment.id} greeting={greeting} profile={profile} />;
+    roleView = <WakilKetuaView assignmentId={assignment.id} divisionId={assignment.divisionId} greeting={greeting} profile={profile} />;
   } else if (slug === "bendahara" || roleNameLower.includes("bendahara")) {
     roleView = <BendaharaView assignmentId={assignment.id} greeting={greeting} profile={profile} />;
   } else if (slug === "koordinator" || slug === "wakil-koordinator" || roleNameLower.includes("koordinator")) {
@@ -122,10 +122,15 @@ export async function DashboardContent({ userId }: { userId: string }) {
 
 // ── Role View Components ──
 
-function KetuaView({ assignmentId, greeting, profile }: { assignmentId: string; greeting: string; profile: any }) {
+function KetuaView({ assignmentId, divisionId, greeting, profile }: { assignmentId: string; divisionId: string; greeting: string; profile: any }) {
   return (
     <div className="flex flex-col gap-10">
       <HeaderSection title={`DASHBOARD KETUA`} greeting={greeting} subtitle="Pantau kinerja dan progres seluruh divisi kepanitiaan." />
+      
+      <Suspense fallback={<div className="h-20 bg-slate-100 rounded-2xl animate-pulse" />}>
+        <KoordinatorWeeklyReportAlert divisionId={divisionId} currentWeek="Agustus W1" />
+      </Suspense>
+
       <Suspense fallback={<StatCardsSkeleton count={4} />}>
         <KetuaStats />
       </Suspense>
@@ -154,10 +159,15 @@ function KetuaView({ assignmentId, greeting, profile }: { assignmentId: string; 
   );
 }
 
-function WakilKetuaView({ assignmentId, greeting, profile }: { assignmentId: string; greeting: string; profile: any }) {
+function WakilKetuaView({ assignmentId, divisionId, greeting, profile }: { assignmentId: string; divisionId: string; greeting: string; profile: any }) {
   return (
     <div className="flex flex-col gap-10">
       <HeaderSection title={`DASHBOARD WAKIL KETUA`} greeting={greeting} subtitle="Pantau kinerja seluruh divisi." />
+      
+      <Suspense fallback={<div className="h-20 bg-slate-100 rounded-2xl animate-pulse" />}>
+        <KoordinatorWeeklyReportAlert divisionId={divisionId} currentWeek="Agustus W1" />
+      </Suspense>
+
       <Suspense fallback={<StatCardsSkeleton count={4} />}>
         <KetuaStats />
       </Suspense>
@@ -284,6 +294,17 @@ function BendaharaView({ assignmentId, greeting, profile }: { assignmentId: stri
 async function KoordinatorWeeklyReportAlert({ divisionId, currentWeek }: { divisionId: string; currentWeek: string }) {
   if (!divisionId) return null;
   const supabase = createAdminClient();
+  
+  // Check if this division is BPH (which shouldn't submit weekly reports)
+  const { data: division } = await supabase
+    .from("divisions")
+    .select("slug")
+    .eq("id", divisionId)
+    .maybeSingle();
+
+  if (division?.slug === "bph") {
+    return null;
+  }
   
   const { data: report } = await supabase
     .from("weekly_reports")

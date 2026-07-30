@@ -26,6 +26,7 @@ export async function getLetters(requesterId?: string): Promise<LetterData[]> {
     .from("letter_requests")
     .select(`
       id,
+      letter_number,
       letter_type,
       subject,
       status,
@@ -53,7 +54,7 @@ export async function getLetters(requesterId?: string): Promise<LetterData[]> {
 
   return data.map((l: any) => ({
     id: l.id,
-    trackingNo: `SRT-2026-${l.id.slice(0, 6).toUpperCase()}`,
+    trackingNo: l.letter_number || `SRT-2026-${l.id.slice(0, 6).toUpperCase()}`,
     letterType: l.letter_type,
     subject: l.subject,
     status: l.status,

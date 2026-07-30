@@ -9,7 +9,7 @@ import {
   ArrowLeft, Check, Send, RotateCcw, FileText,
   Clock, Building2, Tag, AlertTriangle, ExternalLink,
   User, CheckCircle2, AlertCircle, Calendar, Layers, ClipboardList,
-  Edit2, UploadCloud, Loader2
+  Edit2, UploadCloud, Loader2, Hash
 } from "lucide-react";
 import { startProcessingLetter, completeLetter, requestRevision } from "@/lib/actions/letter-workflow";
 import { getStatusDisplay, getPriorityDisplay } from "@/lib/data/letters";
@@ -519,6 +519,17 @@ export function LetterDetailClient({ letter, isApprover }: { letter: LetterDetai
                   <p className="text-[10px] font-extrabold text-on-surface-variant/70 tracking-wider uppercase">INSTANSI TUJUAN</p>
                   <p className="text-sm font-semibold text-on-surface break-words">
                     {letter.targetInstitution || "-"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Nomor Surat */}
+              <div className="flex items-start gap-3">
+                <Hash className="size-4.5 text-pink-500 shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-extrabold text-on-surface-variant/70 tracking-wider uppercase">NOMOR SURAT</p>
+                  <p className="text-sm font-mono font-bold text-pink-600">
+                    {letter.trackingNo}
                   </p>
                 </div>
               </div>

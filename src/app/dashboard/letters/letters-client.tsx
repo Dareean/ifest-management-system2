@@ -356,7 +356,7 @@ export function LettersClient({ initialLetters, isApprover, divisions }: Letters
                   <div className="flex flex-col gap-2 text-xs font-mono text-slate-500 bg-slate-50/70 p-3.5 rounded-2xl border border-slate-100">
                     <div className="flex items-center gap-2 text-slate-900 font-bold border-b border-slate-200/50 pb-1.5">
                       <FileText className="size-4 shrink-0 text-pink-500" />
-                      <span>No. Surat: <strong className="font-mono text-pink-600 font-black">#{letter.trackingNo || `SRT-2026-${letter.id.slice(0, 6).toUpperCase()}`}</strong></span>
+                      <span>No. Surat: <strong className="font-mono text-pink-600 font-black">{letter.trackingNo.includes('/') ? '' : '#'}{letter.trackingNo}</strong></span>
                     </div>
 
                     <div className="flex items-center gap-2">
