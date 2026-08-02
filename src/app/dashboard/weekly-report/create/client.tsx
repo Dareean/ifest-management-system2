@@ -14,6 +14,7 @@ interface WeeklyReportCreateClientProps {
 }
 
 const WEEKS = [
+  "Juli W4",
   "Agustus W1",
   "Agustus W2",
   "Agustus W3",
