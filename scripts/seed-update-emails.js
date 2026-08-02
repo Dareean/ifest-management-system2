@@ -19,7 +19,7 @@ const updates = [
   { nim: 'F52124044', newEmail: 'ansyahfebri713@gmail.com', name: 'Febriansyah .H' },
   { nim: 'F52124052', newEmail: 'fauzi@ifest.com', name: 'Moh. Fauzi R.' },
   { nim: 'F52124017', newEmail: 'melziielll@gmail.com', name: 'Nur Amelia' },
-  { nim: 'F52124023', newEmail: 'gaidamuthmainnah@gmail.com', name: 'Gaida Muthmainnah' },
+  { nim: 'F52124023', newEmail: 'gaidamuthmainnah10@gmail.com', name: 'Gaida Muthmainnah' },
   { nim: 'F55124044', newEmail: 'salsabilabilasalsa443@gmail.com', name: 'Salsabila' },
   { nim: 'F55124104', newEmail: 'moh.magribi13@gmail.com', name: 'Moh. Magribi R.' },
   { nim: 'F55124079', newEmail: 'nabilsmpit@gmail.com', name: 'Moh. Nabil S.' },
