@@ -2,13 +2,27 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { setBudget, addTransaction, createBudgetRequest, handleBudgetRequest, exportFinanceCSV, exportFinanceCSVDetail } from "@/lib/actions/finance";
-import { DollarSign, TrendingUp, TrendingDown, FileDown, Plus, CheckCircle, XCircle, FileText, Upload, ExternalLink, Eye, Loader2, Receipt } from "lucide-react";
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  FileDown,
+  Plus,
+  CheckCircle,
+  XCircle,
+  FileText,
+  Upload,
+  ExternalLink,
+  Eye,
+  Loader2,
+  Download,
+  ArrowUpRight,
+} from "lucide-react";
 import type { BudgetWithDivision, BudgetRequestData, FinanceOverview } from "@/lib/data/finance";
 
 const CATEGORY_OPTIONS = [
@@ -122,254 +136,322 @@ export function FinanceClient({
   };
 
   return (
-    <div className="flex flex-col gap-10">
-      {/* Header Bar */}
+    <div className="w-full flex flex-col gap-6 md:gap-8">
+      {/* Header — Section 3 DESIGN.md Eyebrow + H1 Pattern */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
-            Keuangan Panitia
-          </p>
-          <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
-            Overview & Pelaporan Keuangan
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent-magenta">
+            Manajemen Keuangan
+          </span>
+          <h1 className="font-extrabold text-3xl md:text-4xl tracking-tight text-on-surface">
+            Overview Anggaran & Transaksi
           </h1>
-          <p className="mt-2 text-base text-on-surface-variant">
-            Setor laporan pengeluaran, upload nota kwitansi, dan pantau penggunaan anggaran.
-          </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0 sm:self-end flex-wrap">
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
           <Button
-            variant="primary"
             onClick={() => setShowAddTx("SETOR")}
-            className="cursor-pointer font-bold gap-2 px-5 py-2.5 rounded-xl shadow-md"
+            className="cursor-pointer font-bold bg-[#FF3D8B] text-white hover:bg-[#e03479] text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all"
           >
             <Upload className="size-4" /> Setor Laporan & Nota
           </Button>
 
-          <Button variant="outline" onClick={() => setShowRequest(true)} className="cursor-pointer text-xs font-bold gap-1.5">
+          <Button
+            variant="outline"
+            onClick={() => setShowRequest(true)}
+            className="cursor-pointer text-xs font-bold rounded-xl border-[#04000D]/10 hover:bg-slate-50"
+          >
             <Plus className="size-4" /> Ajukan Dana
           </Button>
-
-          <Link href="/dashboard/finance/report">
-            <Button variant="outline" className="cursor-pointer text-xs font-bold gap-1.5">
-              <FileText className="size-4" /> LPJ
-            </Button>
-          </Link>
-
-          {isTreasurerOrBPH && (
-            <Button variant="ghost" onClick={handleExport} disabled={exporting} className="cursor-pointer text-xs font-mono">
-              <FileDown className="size-4" /> {exporting ? "..." : "CSV"}
-            </Button>
-          )}
         </div>
       </div>
 
       {actionMsg && (
-        <div className="text-sm text-error bg-error-container rounded-xl p-4 font-mono border border-error/20 shadow-sm">
+        <div className="text-xs font-mono text-error bg-error-container/20 rounded-xl p-4 border border-error/20">
           {actionMsg}
         </div>
       )}
 
-      {/* Finance Overview Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Card 1: Total Anggaran */}
-        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
-          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center gap-1.5">
-            <DollarSign className="size-3.5" /> TOTAL ANGGARAN
-          </p>
-          <p className="text-2xl font-black text-on-surface my-2 leading-none">{formatRp(overview.total_budget)}</p>
-          <p className="text-xs text-on-surface-variant font-mono">Anggaran teralokasi</p>
-        </div>
+      {/* Main Grid Layout (DESIGN.md Grid Pattern: lg:col-span-2 left, 1 column right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 items-start">
+        {/* Left Column (2/3 Width): Division Budgets & Requests */}
+        <div className="lg:col-span-2 flex flex-col gap-5 md:gap-6">
+          {/* Card 1: Anggaran Per Divisi (DESIGN.md Standard Card Recipe) */}
+          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6">
+            <div className="flex items-center justify-between border-b border-[#04000D]/5 pb-4 mb-5">
+              <div>
+                <h2 className="font-extrabold text-xl text-on-surface flex items-center gap-2">
+                  <DollarSign className="size-5 text-accent-magenta" /> Realisasi Anggaran Per Divisi
+                </h2>
+                <p className="text-xs font-medium text-on-surface-variant/70 mt-1">
+                  Monitoring alokasi dana kas vs realisasi pengeluaran per divisi panitia
+                </p>
+              </div>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50 shrink-0">
+                {budgets.length} Divisi
+              </span>
+            </div>
 
-        {/* Card 2: Terpakai */}
-        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
-          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center gap-1.5">
-            <TrendingDown className="size-3.5 text-error" /> TERPAKAI
-          </p>
-          <p className="text-2xl font-black text-error my-2 leading-none">{formatRp(overview.total_used)}</p>
-          <p className="text-xs text-on-surface-variant font-mono">Total pengeluaran</p>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {budgets.map((b) => {
+                const pct = b.total_budget > 0 ? Math.round((b.used_amount / b.total_budget) * 100) : 0;
+                return (
+                  <div
+                    key={b.division_id}
+                    className="group bg-white border border-[#04000D]/5 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.02)]"
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-extrabold text-base text-on-surface group-hover:text-accent-magenta transition-colors">
+                            {b.division_name}
+                          </h3>
+                          <p className="font-mono text-[10px] text-on-surface-variant/60">
+                            {b.transaction_count} transaksi
+                          </p>
+                        </div>
+                        {isTreasurerOrBPH && (
+                          <button
+                            onClick={() => setShowSetBudget(b.division_id)}
+                            className="font-mono text-[10px] font-bold text-accent-magenta hover:underline cursor-pointer"
+                          >
+                            Atur
+                          </button>
+                        )}
+                      </div>
 
-        {/* Card 3: Sisa */}
-        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
-          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center gap-1.5">
-            <TrendingUp className="size-3.5 text-accent-green" /> SISA ANGGARAN
-          </p>
-          <p className="text-2xl font-black text-accent-green my-2 leading-none">{formatRp(overview.total_remaining)}</p>
-          <p className="text-xs text-on-surface-variant font-mono">Sisa dana tersedia</p>
-        </div>
-
-        {/* Card 4: Pending Requests */}
-        <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 transition-all hover:border-outline-variant">
-          <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase flex items-center gap-1.5">
-            <FileText className="size-3.5" /> PENGAJUAN PENDING
-          </p>
-          <p className="text-2xl font-black text-on-surface my-2 leading-none">{overview.pending_requests}</p>
-          <p className="text-xs text-on-surface-variant font-mono">Menunggu persetujuan</p>
-        </div>
-      </div>
-
-      {/* Budget Allocation by Division */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold tracking-tight text-on-surface">Anggaran Per Divisi</h2>
-          <span className="text-xs font-mono text-on-surface-variant">{budgets.length} divisi</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {budgets.map((b) => {
-            const pct = b.total_budget > 0 ? Math.round((b.used_amount / b.total_budget) * 100) : 0;
-            return (
-              <Card key={b.division_id} className="bg-white border border-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between gap-4">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-base font-bold text-on-surface">{b.division_name}</h3>
-                      <p className="text-xs text-on-surface-variant font-mono">{b.transaction_count} transaksi</p>
+                      <div className="space-y-1">
+                        <div className="flex justify-between font-mono text-[11px]">
+                          <span className="text-on-surface-variant/70">Terpakai: {formatRp(b.used_amount)}</span>
+                          <span className="font-bold text-on-surface">{pct}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              pct > 90 ? "bg-accent-magenta" : pct > 75 ? "bg-amber-500" : "bg-[#04000D]"
+                            }`}
+                            style={{ width: `${Math.min(100, pct)}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between font-mono text-[11px] pt-0.5">
+                          <span className="text-on-surface-variant/60">Total: {formatRp(b.total_budget)}</span>
+                          <span className="text-green-700 font-bold">Sisa: {formatRp(b.remaining)}</span>
+                        </div>
+                      </div>
                     </div>
-                    {isTreasurerOrBPH && (
+
+                    <div className="flex items-center gap-2 pt-2.5 border-t border-[#04000D]/5">
+                      <Link href={`/dashboard/finance/${b.division_id}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full text-xs font-bold cursor-pointer rounded-xl border-[#04000D]/10">
+                          Detail Transaksi ↗
+                        </Button>
+                      </Link>
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => setShowSetBudget(b.division_id)}
-                        className="cursor-pointer text-xs font-mono font-bold text-primary hover:underline p-1 h-auto"
+                        onClick={() => setShowAddTx(b.id || b.division_id)}
+                        className="text-xs font-bold cursor-pointer text-accent-magenta hover:bg-accent-magenta/10 rounded-xl"
+                        title="Setor nota divisi ini"
                       >
-                        Atur
+                        + Nota
                       </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-mono">
-                      <span className="text-on-surface-variant">Terpakai: {formatRp(b.used_amount)}</span>
-                      <span className="font-bold">{pct}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          pct > 90 ? "bg-error" : pct > 75 ? "bg-amber-500" : "bg-primary"
-                        }`}
-                        style={{ width: `${Math.min(100, pct)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-xs font-mono pt-1">
-                      <span className="text-on-surface-variant">Total: {formatRp(b.total_budget)}</span>
-                      <span className="text-accent-green font-bold">Sisa: {formatRp(b.remaining)}</span>
                     </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-outline-variant/10">
-                  <Link href={`/dashboard/finance/${b.division_id}`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full text-xs font-bold cursor-pointer">
-                      Detail & Transaksi
-                    </Button>
-                  </Link>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setShowAddTx(b.id || b.division_id)}
-                    className="text-xs font-bold cursor-pointer text-primary hover:bg-primary/10"
-                    title="Tambah transaksi / nota divisi ini"
-                  >
-                    + Nota
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+          {/* Card 2: Pengajuan Dana Kas (DESIGN.md Table Recipe) */}
+          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6">
+            <div className="flex items-center justify-between border-b border-[#04000D]/5 pb-4 mb-5">
+              <div>
+                <h2 className="font-extrabold text-xl text-on-surface flex items-center gap-2">
+                  <FileText className="size-5 text-accent-magenta" /> Pengajuan Dana Kas
+                </h2>
+                <p className="text-xs font-medium text-on-surface-variant/70 mt-1">
+                  Daftar pengajuan permohonan pencairan dana kas divisi panitia
+                </p>
+              </div>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50 shrink-0">
+                {requests.length} Pengajuan
+              </span>
+            </div>
 
-      {/* Budget Requests Table */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold tracking-tight text-on-surface">Pengajuan Dana Kas</h2>
-          <span className="text-xs font-mono text-on-surface-variant">{requests.length} pengajuan</span>
-        </div>
-
-        <div className="bg-white border border-outline-variant/60 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-surface-container-low border-b border-outline-variant/20">
-                  <th className="text-left px-4 py-3 text-xs font-mono font-bold text-on-surface-variant tracking-wider">Tanggal</th>
-                  <th className="text-left px-4 py-3 text-xs font-mono font-bold text-on-surface-variant tracking-wider">Divisi</th>
-                  <th className="text-left px-4 py-3 text-xs font-mono font-bold text-on-surface-variant tracking-wider">Pengaju</th>
-                  <th className="text-left px-4 py-3 text-xs font-mono font-bold text-on-surface-variant tracking-wider">Tujuan</th>
-                  <th className="text-right px-4 py-3 text-xs font-mono font-bold text-on-surface-variant tracking-wider">Nominal</th>
-                  <th className="text-center px-4 py-3 text-xs font-mono font-bold text-on-surface-variant tracking-wider">Status</th>
-                  {isTreasurerOrBPH && (
-                    <th className="text-center px-4 py-3 text-xs font-mono font-bold text-on-surface-variant tracking-wider">Aksi</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {requests.length === 0 ? (
-                  <tr>
-                    <td colSpan={isTreasurerOrBPH ? 7 : 6} className="text-center py-10 text-sm text-on-surface-variant font-mono">
-                      Belum ada pengajuan dana.
-                    </td>
-                  </tr>
-                ) : (
-                  requests.map((r) => (
-                    <tr key={r.id} className="border-b border-outline-variant/10 hover:bg-surface-container/40 transition-colors">
-                      <td className="px-4 py-3 text-xs font-mono">
-                        {new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
-                      </td>
-                      <td className="px-4 py-3 text-xs font-bold font-mono">{r.division_name}</td>
-                      <td className="px-4 py-3 text-xs font-mono">{r.requester_name}</td>
-                      <td className="px-4 py-3 text-xs font-medium max-w-xs truncate" title={r.purpose}>
-                        {r.purpose}
-                      </td>
-                      <td className="px-4 py-3 text-right text-xs font-bold font-mono text-primary">
-                        {formatRp(r.amount)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <Badge
-                          variant={r.status === "approved" ? "success" : r.status === "rejected" ? "danger" : "warning"}
-                          className="text-[10px] font-mono px-2 py-0.5 uppercase"
-                        >
-                          {r.status === "approved" ? "Disetujui" : r.status === "rejected" ? "Ditolak" : "Pending"}
-                        </Badge>
-                      </td>
+            <div className="border border-[#04000D]/5 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50/80 border-b border-[#04000D]/5">
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Tanggal</th>
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Divisi</th>
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Pengaju</th>
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Keperluan</th>
+                      <th className="text-right px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Nominal</th>
+                      <th className="text-center px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Status</th>
                       {isTreasurerOrBPH && (
-                        <td className="px-4 py-3 text-center">
-                          {r.status === "pending" ? (
-                            <div className="flex items-center justify-center gap-1">
-                              <button
-                                onClick={async () => {
-                                  if (confirm(`Setujui pengajuan dana ${formatRp(r.amount)}?`)) {
-                                    await handleBudgetRequest(r.id, "approved");
-                                  }
-                                }}
-                                className="p-1 rounded text-accent-green hover:bg-accent-green/10 cursor-pointer"
-                                title="Setujui"
-                              >
-                                <CheckCircle className="size-4" />
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  const reason = prompt("Catatan penolakan (opsional):");
-                                  await handleBudgetRequest(r.id, "rejected", reason || undefined);
-                                }}
-                                className="p-1 rounded text-error hover:bg-error/10 cursor-pointer"
-                                title="Tolak"
-                              >
-                                <XCircle className="size-4" />
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-[10px] font-mono text-on-surface-variant/60">
-                              {r.handler_name ? `Oleh ${r.handler_name}` : "Selesai"}
-                            </span>
-                          )}
-                        </td>
+                        <th className="text-center px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Aksi</th>
                       )}
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {requests.length === 0 ? (
+                      <tr>
+                        <td colSpan={isTreasurerOrBPH ? 7 : 6} className="text-center py-10 font-mono text-xs text-on-surface-variant/60">
+                          Belum ada pengajuan dana.
+                        </td>
+                      </tr>
+                    ) : (
+                      requests.map((r) => (
+                        <tr key={r.id} className="border-b border-[#04000D]/5 hover:bg-slate-50/60 transition-colors">
+                          <td className="px-4 py-3 font-mono text-xs">
+                            {new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs font-bold text-on-surface">{r.division_name}</td>
+                          <td className="px-4 py-3 font-mono text-xs">{r.requester_name}</td>
+                          <td className="px-4 py-3 text-xs font-medium max-w-xs truncate" title={r.purpose}>
+                            {r.purpose}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-xs font-bold text-on-surface">
+                            {formatRp(r.amount)}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <Badge
+                              variant={r.status === "approved" ? "success" : r.status === "rejected" ? "danger" : "warning"}
+                              className="font-mono text-[9px] px-2 py-0.5 uppercase"
+                            >
+                              {r.status === "approved" ? "Disetujui" : r.status === "rejected" ? "Ditolak" : "Pending"}
+                            </Badge>
+                          </td>
+                          {isTreasurerOrBPH && (
+                            <td className="px-4 py-3 text-center">
+                              {r.status === "pending" ? (
+                                <div className="flex items-center justify-center gap-1">
+                                  <button
+                                    onClick={async () => {
+                                      if (confirm(`Setujui pengajuan dana ${formatRp(r.amount)}?`)) {
+                                        await handleBudgetRequest(r.id, "approved");
+                                      }
+                                    }}
+                                    className="p-1 rounded text-green-700 hover:bg-green-50 cursor-pointer"
+                                    title="Setujui"
+                                  >
+                                    <CheckCircle className="size-4" />
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      const reason = prompt("Catatan penolakan (opsional):");
+                                      await handleBudgetRequest(r.id, "rejected", reason || undefined);
+                                    }}
+                                    className="p-1 rounded text-accent-magenta hover:bg-accent-magenta/10 cursor-pointer"
+                                    title="Tolak"
+                                  >
+                                    <XCircle className="size-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="font-mono text-[9px] text-on-surface-variant/50">
+                                  {r.handler_name ? `Oleh ${r.handler_name}` : "Selesai"}
+                                </span>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column (1/3 Width): DESIGN.md Stat Cards & Quick Links */}
+        <div className="flex flex-col gap-5 md:gap-6">
+          {/* Card 1: Ringkasan Anggaran (DESIGN.md Stat Card Pattern) */}
+          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6 space-y-4">
+            <div className="border-b border-[#04000D]/5 pb-3">
+              <h3 className="font-extrabold text-base text-on-surface flex items-center gap-2">
+                <TrendingUp className="size-4 text-accent-magenta" /> Ringkasan Anggaran
+              </h3>
+              <p className="text-[11px] font-medium text-on-surface-variant/70 mt-0.5">
+                Total alokasi & realisasi kas panitia
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Total Anggaran */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-[#04000D]/5 text-center">
+                <p className="font-mono text-[9px] font-bold uppercase text-on-surface-variant/50 tracking-wider">TOTAL ALOKASI</p>
+                <p className="font-extrabold text-xl text-on-surface mt-1 leading-tight">{formatRp(overview.total_budget)}</p>
+              </div>
+
+              {/* Total Terpakai */}
+              <div className="p-3.5 rounded-xl bg-red-50/50 border border-red-200/40 text-center">
+                <p className="font-mono text-[9px] font-bold uppercase text-accent-magenta tracking-wider">TERPAKAI</p>
+                <p className="font-extrabold text-xl text-accent-magenta mt-1 leading-tight">{formatRp(overview.total_used)}</p>
+              </div>
+
+              {/* Sisa Anggaran */}
+              <div className="p-3.5 rounded-xl bg-[#DCEEB1]/20 border border-[#DCEEB1]/50 text-center">
+                <p className="font-mono text-[9px] font-bold uppercase text-green-800 tracking-wider">SISA KAS</p>
+                <p className="font-extrabold text-xl text-green-800 mt-1 leading-tight">{formatRp(overview.total_remaining)}</p>
+              </div>
+
+              {/* Pending Requests */}
+              <div className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/50 text-center">
+                <p className="font-mono text-[9px] font-bold uppercase text-amber-700 tracking-wider">PENDING</p>
+                <p className="font-extrabold text-xl text-amber-700 mt-1 leading-tight">{overview.pending_requests}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Akses LPJ & Ekspor Data */}
+          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6 space-y-4">
+            <div className="border-b border-[#04000D]/5 pb-3">
+              <h3 className="font-extrabold text-base text-on-surface flex items-center gap-2">
+                <FileText className="size-4 text-accent-magenta" /> Laporan LPJ & Ekspor
+              </h3>
+              <p className="text-[11px] font-medium text-on-surface-variant/70 mt-0.5">
+                Cetak LPJ & unduh rekapitulasi data keuangan
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <Link href="/dashboard/finance/report" className="w-full">
+                <Button variant="outline" className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 hover:bg-slate-50">
+                  <span className="flex items-center gap-2">
+                    <FileText className="size-4 text-accent-magenta" /> Halaman LPJ Keuangan
+                  </span>
+                  <ArrowUpRight className="size-4 text-on-surface-variant/60" />
+                </Button>
+              </Link>
+
+              {isTreasurerOrBPH && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={handleExport}
+                    disabled={exporting}
+                    className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 hover:bg-slate-50"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Download className="size-4 text-green-700" /> Unduh Ringkasan (CSV)
+                    </span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={handleExportDetail}
+                    disabled={exporting}
+                    className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 hover:bg-slate-50"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Download className="size-4 text-accent-magenta" /> Unduh Detail Transaksi (CSV)
+                    </span>
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -485,7 +567,7 @@ export function FinanceClient({
                   <button
                     type="button"
                     onClick={() => setShowPreview(uploadedUrl)}
-                    className="text-xs text-primary font-bold hover:underline cursor-pointer shrink-0"
+                    className="text-xs text-accent-magenta font-bold hover:underline cursor-pointer shrink-0"
                   >
                     Pratinjau
                   </button>
@@ -499,7 +581,7 @@ export function FinanceClient({
                 </div>
               ) : (
                 <>
-                  <Upload className="size-6 text-primary" />
+                  <Upload className="size-6 text-accent-magenta" />
                   <p className="text-xs text-on-surface-variant text-center font-medium">Klik atau seret file nota/kwitansi (PDF/Gambar)</p>
                   <input
                     type="file"
@@ -519,7 +601,7 @@ export function FinanceClient({
             <Button type="button" variant="ghost" onClick={resetTxModal} className="cursor-pointer">
               Batal
             </Button>
-            <Button type="submit" disabled={addTxPending} className="cursor-pointer font-bold">
+            <Button type="submit" disabled={addTxPending} className="cursor-pointer font-bold bg-[#FF3D8B] text-white hover:bg-[#e03479]">
               {addTxPending ? "Menyetor..." : showAddTx === "SETOR" ? "Setor Laporan Keuangan" : "Simpan Transaksi"}
             </Button>
           </div>
