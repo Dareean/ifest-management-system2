@@ -63,8 +63,9 @@ export async function addTransaction(prevState: ActionState, formData: FormData)
   const assignment = await getCurrentAssignment();
   if (!assignment) return { error: "Silakan login terlebih dahulu" };
 
-  const budgetId = formData.get("budget_id") as string;
-  const type = formData.get("type") as string;
+  let budgetId = formData.get("budget_id") as string;
+  const divisionId = formData.get("division_id") as string;
+  const type = (formData.get("type") as string) || "expense";
   const amount = parseFloat(formData.get("amount") as string);
   const description = formData.get("description") as string;
   const category = formData.get("category") as string;
@@ -72,11 +73,37 @@ export async function addTransaction(prevState: ActionState, formData: FormData)
   const transactionDate = formData.get("transaction_date") as string;
   const attachmentUrl = formData.get("attachment_url") as string;
 
+  if (!budgetId && divisionId) {
+    const { data: existingBudget } = await supabase
+      .from("budgets")
+      .select("id")
+      .eq("committee_year_id", YEAR_ID)
+      .eq("division_id", divisionId)
+      .maybeSingle();
+
+    if (existingBudget) {
+      budgetId = existingBudget.id;
+    } else {
+      const { data: newBudget, error: bErr } = await supabase
+        .from("budgets")
+        .insert({
+          committee_year_id: YEAR_ID,
+          division_id: divisionId,
+          total_budget: 0,
+        })
+        .select("id")
+        .single();
+
+      if (bErr || !newBudget) return { error: "Gagal membuat anggaran divisi" };
+      budgetId = newBudget.id;
+    }
+  }
+
   if (!budgetId || !type || isNaN(amount) || amount <= 0 || !description) {
-    return { error: "Semua field harus diisi" };
+    return { error: "Mohon isi semua data transaksi dan nominal dengan benar" };
   }
   if (type !== "income" && type !== "expense") {
-    return { error: "Tipe tidak valid" };
+    return { error: "Tipe transaksi tidak valid" };
   }
 
   const { error } = await supabase.from("budget_transactions").insert({
@@ -92,6 +119,29 @@ export async function addTransaction(prevState: ActionState, formData: FormData)
   });
 
   if (error) return { error: error.message };
+
+  // Notify Bendahara of new financial report/receipt submission
+  const { data: bendaharaAssignments } = await supabase
+    .from("committee_assignments")
+    .select("id, role:roles!inner(level)")
+    .eq("committee_year_id", YEAR_ID)
+    .eq("is_active", true)
+    .gte("role.level", 70);
+
+  if (Array.isArray(bendaharaAssignments)) {
+    for (const m of bendaharaAssignments) {
+      if (m.id !== assignment.id) {
+        await createNotification(
+          m.id,
+          "system",
+          `Laporan Keuangan Disetor: Rp${amount.toLocaleString("id-ID")}`,
+          `Keterangan: ${description} (Nomor Nota: ${receiptNumber || "-"})`,
+          true,
+        );
+      }
+    }
+  }
+
   revalidatePath("/dashboard/finance");
   revalidatePath("/dashboard/finance/report");
   return { success: true };
