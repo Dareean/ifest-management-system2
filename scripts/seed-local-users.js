@@ -2,6 +2,12 @@
 // Seed user untuk SUPABASE LOKAL (dev/login)
 // Cara pakai: node scripts/seed-local-users.js
 // Mengambil kredensial dari .env.local (harus DB LOKAL).
+//
+// Akun:
+//  - Core BPH : admin@ifest.com, sekretaris@ifest.com, bendahara@ifest.com
+//  - Per divisi: <slug>koor@ifest.com (role koordinator) &
+//                <slug>anggota@ifest.com (role anggota)
+//  Semua password default: ifest2026
 // ============================================================
 const fs = require('fs');
 const path = require('path');
@@ -36,46 +42,60 @@ if (!supabaseUrl.includes('127.0.0.1') && !supabaseUrl.includes('localhost')) {
 
 const supabase = createClient(supabaseUrl, svcKey, { auth: { persistSession: false } });
 
-const users = [
-  {
-    email: 'admin@local.ifest',
-    password: 'LocalAdmin123!',
-    nama: 'Admin Lokal',
-    nim: 'LOCAL-ADMIN',
-    divisi: 'bph',
-    role: 'pic',
-  },
-  {
-    email: 'sekretaris@local.ifest',
-    password: 'LocalSekretaris123!',
-    nama: 'Sekretaris Lokal',
-    nim: 'LOCAL-SEKRETARIS',
-    divisi: 'bph',
-    role: 'sekretaris-1',
-  },
-  {
-    email: 'anggota@local.ifest',
-    password: 'LocalAnggota123!',
-    nama: 'Anggota Lokal',
-    nim: 'LOCAL-ANGGOTA',
-    divisi: 'acara',
-    role: 'anggota',
-  },
+// ID harus sama dengan YEAR_ID yang di-hardcode aplikasi
+const YEAR_ID = 'c2f2a48e-3e58-4559-aaa0-623a3825348b';
+
+const CORE = [
+  { email: 'admin@ifest.com', nama: 'Admin I-FEST', nim: 'LOCAL-ADMIN', divisi: 'bph', role: 'pic' },
+  { email: 'sekretaris@ifest.com', nama: 'Sekretaris I-FEST', nim: 'LOCAL-SEKRETARIS', divisi: 'bph', role: 'sekretaris-1' },
+  { email: 'bendahara@ifest.com', nama: 'Bendahara I-FEST', nim: 'LOCAL-BENDAHARA', divisi: 'bph', role: 'bendahara' },
 ];
 
 async function seed() {
-  const { data: year } = await supabase
+  const { data: year, error: yearErr } = await supabase
     .from('committee_years')
     .select('id')
-    .eq('is_active', true)
+    .eq('id', YEAR_ID)
     .single();
-  if (!year) throw new Error('Tidak ada committee_years aktif di DB lokal. Jalankan `supabase db reset` dulu.');
-  const yearId = year.id;
+  if (yearErr || !year) {
+    console.error('committee_years dengan ID c2f2a48e-... tidak ada. Jalankan `supabase db reset` dulu.');
+    process.exit(1);
+  }
 
-  const { data: divisions } = await supabase.from('divisions').select('id,slug');
+  const { data: divisions } = await supabase.from('divisions').select('id,slug,name');
   const { data: roles } = await supabase.from('roles').select('id,slug');
   const divMap = Object.fromEntries(divisions.map((d) => [d.slug, d.id]));
   const roleMap = Object.fromEntries(roles.map((r) => [r.slug, r.id]));
+
+  // Bangun daftar akun: core + koor/anggota per divisi
+  const users = [...CORE];
+  for (const d of divisions) {
+    if (d.slug === 'bph') continue; // BPH sudah diwakili core (admin/sekretaris/bendahara)
+    // nim wajib <= 20 char (kolom profiles.nim VARCHAR(20))
+    const nimKoor = `L-${d.slug}-K`.slice(0, 20);
+    const nimAng = `L-${d.slug}-A`.slice(0, 20);
+    users.push(
+      {
+        email: `${d.slug}koor@ifest.com`,
+        nama: `Koordinator Divisi ${d.name}`,
+        nim: nimKoor,
+        divisi: d.slug,
+        role: 'koordinator',
+      },
+      {
+        email: `${d.slug}anggota@ifest.com`,
+        nama: `Anggota Divisi ${d.name}`,
+        nim: nimAng,
+        divisi: d.slug,
+        role: 'anggota',
+      },
+    );
+  }
+
+  const { data: allUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const existingByEmail = new Map((allUsers?.users ?? []).map((x) => [x.email, x]));
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   for (const u of users) {
     const divId = divMap[u.divisi];
@@ -84,22 +104,20 @@ async function seed() {
       console.error(`✗ Divisi/role "${u.divisi}/${u.role}" tidak ditemukan`);
       continue;
     }
-
-    const { data: listData } = await supabase.auth.admin.listUsers();
-    const existing = listData?.users?.find((x) => x.email === u.email);
+    const existing = existingByEmail.get(u.email);
     if (existing) {
-      console.log(`~ Hapus user lama ${u.email}...`);
       await supabase.auth.admin.deleteUser(existing.id);
+      await sleep(200);
     }
 
     const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
       email: u.email,
-      password: u.password,
+      password: 'ifest2026',
       email_confirm: true,
       user_metadata: { full_name: u.nama, nim: u.nim },
     });
     if (createErr || !newUser?.user) {
-      console.error(`✗ Gagal buat ${u.email}: ${createErr?.message}`);
+      console.error(`✗ Gagal buat ${u.email}: ${JSON.stringify(createErr)}`);
       continue;
     }
 
@@ -110,7 +128,7 @@ async function seed() {
     });
 
     const { error: assignErr } = await supabase.from('committee_assignments').insert({
-      committee_year_id: yearId,
+      committee_year_id: YEAR_ID,
       user_id: newUser.user.id,
       division_id: divId,
       role_id: roleId,
@@ -118,9 +136,10 @@ async function seed() {
     });
     if (assignErr) console.error(`✗ Gagal assignment ${u.email}: ${assignErr.message}`);
     else console.log(`✓ ${u.email} (${u.divisi}/${u.role})`);
+    await sleep(150);
   }
 
-  console.log('\nSelesai. Login di http://localhost:3000 dengan salah satu akun di atas.');
+  console.log(`\nSelesai: ${users.length} akun. Login di http://localhost:3000 (password: ifest2026).`);
 }
 
 seed().catch((e) => {

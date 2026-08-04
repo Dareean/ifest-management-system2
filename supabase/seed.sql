@@ -4,9 +4,11 @@
 -- ============================================================
 
 -- 1. Committee year
-INSERT INTO committee_years (label, is_active, started_at)
-VALUES ('I-FEST 2026', true, '2026-03-05')
-ON CONFLICT (label) DO NOTHING;
+-- ID sengaja dipakai SAMA dengan ID produksi (c2f2a48e-...) karena
+-- kode aplikasi meng-hardcode YEAR_ID ini (src/lib/auth/authorize.ts, dll).
+INSERT INTO committee_years (id, label, is_active, started_at)
+VALUES ('c2f2a48e-3e58-4559-aaa0-623a3825348b', 'I-FEST 2026', true, '2026-03-05')
+ON CONFLICT (id) DO NOTHING;
 
 -- 2. Divisions
 INSERT INTO divisions (committee_year_id, name, slug, description, sort_order) VALUES
