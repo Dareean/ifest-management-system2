@@ -11,7 +11,6 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  FileDown,
   Plus,
   CheckCircle,
   XCircle,
@@ -22,6 +21,8 @@ import {
   Loader2,
   Download,
   ArrowUpRight,
+  Receipt,
+  User,
 } from "lucide-react";
 import type { BudgetWithDivision, BudgetRequestData, FinanceOverview } from "@/lib/data/finance";
 
@@ -71,6 +72,18 @@ export function FinanceClient({
   const [, setBudgetAction, setBudgetPending] = useActionState(setBudget, null);
   const [, addTxAction, addTxPending] = useActionState(addTransaction, null);
   const [, createReqAction, createReqPending] = useActionState(createBudgetRequest, null);
+
+  // Non-treasurer users focus ONLY on their own division & submitted notes
+  const userDivisionBudget = budgets.find((b) => b.division_id === userDivisionId) || budgets[0];
+  const displayedBudgets = isTreasurerOrBPH
+    ? budgets
+    : userDivisionBudget
+    ? [userDivisionBudget]
+    : budgets;
+
+  const displayedRequests = isTreasurerOrBPH
+    ? requests
+    : requests.filter((r) => r.division_name === userDivisionBudget?.division_name);
 
   async function handleExport() {
     setExporting(true);
@@ -141,10 +154,10 @@ export function FinanceClient({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent-magenta">
-            Manajemen Keuangan
+            {isTreasurerOrBPH ? "MANAJEMEN KEUANGAN KEPANITIAAN" : `KEUANGAN DIVISI ${userDivisionBudget?.division_name || ""}`}
           </span>
           <h1 className="font-extrabold text-3xl md:text-4xl tracking-tight text-on-surface">
-            Overview Anggaran & Transaksi
+            {isTreasurerOrBPH ? "Overview Anggaran & Transaksi" : "Setor Laporan & Nota Keuangan"}
           </h1>
         </div>
         <div className="flex items-center gap-3 shrink-0 flex-wrap">
@@ -160,7 +173,7 @@ export function FinanceClient({
             onClick={() => setShowRequest(true)}
             className="cursor-pointer text-xs font-bold rounded-xl border-[#04000D]/10 text-on-surface bg-white hover:bg-[#04000D] hover:text-white transition-all group"
           >
-            <Plus className="size-4 text-on-surface group-hover:text-white transition-colors" /> Ajukan Dana
+            <Plus className="size-4 text-on-surface group-hover:text-white transition-colors" /> Ajukan Dana Kas
           </Button>
         </div>
       </div>
@@ -175,38 +188,41 @@ export function FinanceClient({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 items-start">
         {/* Left Column (2/3 Width): Division Budgets & Requests */}
         <div className="lg:col-span-2 flex flex-col gap-5 md:gap-6">
-          {/* Card 1: Anggaran Per Divisi (DESIGN.md Standard Card Recipe) */}
+          {/* Card 1: Anggaran Divisi (DESIGN.md Standard Card Recipe) */}
           <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6">
             <div className="flex items-center justify-between border-b border-[#04000D]/5 pb-4 mb-5">
               <div>
                 <h2 className="font-extrabold text-xl text-on-surface flex items-center gap-2">
-                  <DollarSign className="size-5 text-accent-magenta" /> Realisasi Anggaran Per Divisi
+                  <DollarSign className="size-5 text-accent-magenta" />{" "}
+                  {isTreasurerOrBPH ? "Realisasi Anggaran Per Divisi" : `Anggaran Divisi ${userDivisionBudget?.division_name || ""}`}
                 </h2>
                 <p className="text-xs font-medium text-on-surface-variant/70 mt-1">
-                  Monitoring alokasi dana kas vs realisasi pengeluaran per divisi panitia
+                  {isTreasurerOrBPH
+                    ? "Monitoring alokasi dana kas vs realisasi pengeluaran per divisi panitia"
+                    : "Pencatatan realisasi dan sisa dana kas untuk divisi Anda"}
                 </p>
               </div>
               <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50 shrink-0">
-                {budgets.length} Divisi
+                {displayedBudgets.length} {isTreasurerOrBPH ? "Divisi" : "Divisi Saya"}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {budgets.map((b) => {
+            <div className={`grid grid-cols-1 ${isTreasurerOrBPH ? "md:grid-cols-2" : "grid-cols-1"} gap-4`}>
+              {displayedBudgets.map((b) => {
                 const pct = b.total_budget > 0 ? Math.round((b.used_amount / b.total_budget) * 100) : 0;
                 return (
                   <div
                     key={b.division_id}
-                    className="group bg-white border border-[#04000D]/5 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all hover:border-[#04000D]/20 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)]"
+                    className="group bg-white border border-[#04000D]/5 rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all hover:border-[#04000D]/20 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)]"
                   >
-                    <div className="space-y-2.5">
+                    <div className="space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h3 className="font-extrabold text-base text-on-surface group-hover:text-accent-magenta transition-colors">
+                          <h3 className="font-extrabold text-lg text-on-surface group-hover:text-accent-magenta transition-colors">
                             {b.division_name}
                           </h3>
-                          <p className="font-mono text-[10px] text-on-surface-variant/60">
-                            {b.transaction_count} transaksi
+                          <p className="font-mono text-xs text-on-surface-variant/60 mt-0.5">
+                            {b.transaction_count} transaksi pengeluaran/nota terdaftar
                           </p>
                         </div>
                         {isTreasurerOrBPH && (
@@ -219,12 +235,12 @@ export function FinanceClient({
                         )}
                       </div>
 
-                      <div className="space-y-1">
-                        <div className="flex justify-between font-mono text-[11px]">
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between font-mono text-xs">
                           <span className="text-on-surface-variant/70">Terpakai: {formatRp(b.used_amount)}</span>
                           <span className="font-bold text-on-surface">{pct}%</span>
                         </div>
-                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all ${
                               pct > 90 ? "bg-accent-magenta" : pct > 75 ? "bg-amber-500" : "bg-[#04000D]"
@@ -232,14 +248,14 @@ export function FinanceClient({
                             style={{ width: `${Math.min(100, pct)}%` }}
                           />
                         </div>
-                        <div className="flex justify-between font-mono text-[11px] pt-0.5">
-                          <span className="text-on-surface-variant/60">Total: {formatRp(b.total_budget)}</span>
-                          <span className="text-green-700 font-bold">Sisa: {formatRp(b.remaining)}</span>
+                        <div className="flex justify-between font-mono text-xs pt-0.5">
+                          <span className="text-on-surface-variant/60">Total Pagu: {formatRp(b.total_budget)}</span>
+                          <span className="text-green-700 font-bold">Sisa Kas: {formatRp(b.remaining)}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-2.5 border-t border-[#04000D]/5">
+                    <div className="flex items-center gap-2 pt-3 border-t border-[#04000D]/5">
                       <Link href={`/dashboard/finance/${b.division_id}`} className="flex-1">
                         <Button
                           variant="outline"
@@ -247,18 +263,17 @@ export function FinanceClient({
                           className="w-full text-xs font-bold cursor-pointer rounded-xl border-[#04000D]/10 text-on-surface bg-white hover:bg-[#04000D] hover:text-white transition-all group/btn"
                         >
                           <span className="text-on-surface group-hover/btn:text-white transition-colors">
-                            Detail Transaksi ↗
+                            Lihat Riwayat & Nota ↗
                           </span>
                         </Button>
                       </Link>
                       <Button
                         size="sm"
-                        variant="ghost"
                         onClick={() => setShowAddTx(b.id || b.division_id)}
-                        className="text-xs font-bold cursor-pointer text-accent-magenta hover:bg-accent-magenta/10 rounded-xl"
-                        title="Setor nota divisi ini"
+                        className="text-xs font-bold cursor-pointer bg-[#FF3D8B] text-white hover:bg-[#e03479] rounded-xl px-4 py-2"
+                        title="Setor nota pengeluaran baru"
                       >
-                        + Nota
+                        <Upload className="size-3.5" /> Setor Nota
                       </Button>
                     </div>
                   </div>
@@ -267,19 +282,22 @@ export function FinanceClient({
             </div>
           </div>
 
-          {/* Card 2: Pengajuan Dana Kas (DESIGN.md Table Recipe) */}
+          {/* Card 2: Pengajuan Dana Kas / Riwayat Permohonan */}
           <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6">
             <div className="flex items-center justify-between border-b border-[#04000D]/5 pb-4 mb-5">
               <div>
                 <h2 className="font-extrabold text-xl text-on-surface flex items-center gap-2">
-                  <FileText className="size-5 text-accent-magenta" /> Pengajuan Dana Kas
+                  <FileText className="size-5 text-accent-magenta" />{" "}
+                  {isTreasurerOrBPH ? "Daftar Pengajuan Dana Kas" : "Pengajuan Dana Kas Divisi Saya"}
                 </h2>
                 <p className="text-xs font-medium text-on-surface-variant/70 mt-1">
-                  Daftar pengajuan permohonan pencairan dana kas divisi panitia
+                  {isTreasurerOrBPH
+                    ? "Daftar pengajuan permohonan pencairan dana kas divisi panitia"
+                    : "Status pengajuan pencairan dana kas yang diajukan ke Bendahara"}
                 </p>
               </div>
               <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50 shrink-0">
-                {requests.length} Pengajuan
+                {displayedRequests.length} Pengajuan
               </span>
             </div>
 
@@ -300,14 +318,14 @@ export function FinanceClient({
                     </tr>
                   </thead>
                   <tbody>
-                    {requests.length === 0 ? (
+                    {displayedRequests.length === 0 ? (
                       <tr>
                         <td colSpan={isTreasurerOrBPH ? 7 : 6} className="text-center py-10 font-mono text-xs text-on-surface-variant/60">
                           Belum ada pengajuan dana.
                         </td>
                       </tr>
                     ) : (
-                      requests.map((r) => (
+                      displayedRequests.map((r) => (
                         <tr key={r.id} className="border-b border-[#04000D]/5 hover:bg-slate-50/60 transition-colors">
                           <td className="px-4 py-3 font-mono text-xs">
                             {new Date(r.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
@@ -377,66 +395,94 @@ export function FinanceClient({
           <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6 space-y-4">
             <div className="border-b border-[#04000D]/5 pb-3">
               <h3 className="font-extrabold text-base text-on-surface flex items-center gap-2">
-                <TrendingUp className="size-4 text-accent-magenta" /> Ringkasan Anggaran
+                <TrendingUp className="size-4 text-accent-magenta" />{" "}
+                {isTreasurerOrBPH ? "Ringkasan Anggaran" : "Ringkasan Divisi Saya"}
               </h3>
               <p className="text-[11px] font-medium text-on-surface-variant/70 mt-0.5">
-                Total alokasi & realisasi kas panitia
+                {isTreasurerOrBPH ? "Total alokasi & realisasi kas panitia" : "Penggunaan anggaran divisi Anda"}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {/* Total Anggaran */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-[#04000D]/5 text-center">
-                <p className="font-mono text-[9px] font-bold uppercase text-on-surface-variant/50 tracking-wider">TOTAL ALOKASI</p>
-                <p className="font-extrabold text-xl text-on-surface mt-1 leading-tight">{formatRp(overview.total_budget)}</p>
+            {isTreasurerOrBPH ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-[#04000D]/5 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-on-surface-variant/50 tracking-wider">TOTAL ALOKASI</p>
+                  <p className="font-extrabold text-xl text-on-surface mt-1 leading-tight">{formatRp(overview.total_budget)}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-red-50/50 border border-red-200/40 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-accent-magenta tracking-wider">TERPAKAI</p>
+                  <p className="font-extrabold text-xl text-accent-magenta mt-1 leading-tight">{formatRp(overview.total_used)}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-[#DCEEB1]/20 border border-[#DCEEB1]/50 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-green-800 tracking-wider">SISA KAS</p>
+                  <p className="font-extrabold text-xl text-green-800 mt-1 leading-tight">{formatRp(overview.total_remaining)}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/50 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-amber-700 tracking-wider">PENDING</p>
+                  <p className="font-extrabold text-xl text-amber-700 mt-1 leading-tight">{overview.pending_requests}</p>
+                </div>
               </div>
-
-              {/* Total Terpakai */}
-              <div className="p-3.5 rounded-xl bg-red-50/50 border border-red-200/40 text-center">
-                <p className="font-mono text-[9px] font-bold uppercase text-accent-magenta tracking-wider">TERPAKAI</p>
-                <p className="font-extrabold text-xl text-accent-magenta mt-1 leading-tight">{formatRp(overview.total_used)}</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-[#04000D]/5 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-on-surface-variant/50 tracking-wider">TOTAL PAGU</p>
+                  <p className="font-extrabold text-xl text-on-surface mt-1 leading-tight">{formatRp(userDivisionBudget?.total_budget ?? 0)}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-red-50/50 border border-red-200/40 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-accent-magenta tracking-wider">TERPAKAI</p>
+                  <p className="font-extrabold text-xl text-accent-magenta mt-1 leading-tight">{formatRp(userDivisionBudget?.used_amount ?? 0)}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-[#DCEEB1]/20 border border-[#DCEEB1]/50 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-green-800 tracking-wider">SISA KAS</p>
+                  <p className="font-extrabold text-xl text-green-800 mt-1 leading-tight">{formatRp(userDivisionBudget?.remaining ?? 0)}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-[#04000D]/5 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-on-surface-variant/50 tracking-wider">TRANSAKSI</p>
+                  <p className="font-extrabold text-xl text-on-surface mt-1 leading-tight">{userDivisionBudget?.transaction_count ?? 0}</p>
+                </div>
               </div>
-
-              {/* Sisa Anggaran */}
-              <div className="p-3.5 rounded-xl bg-[#DCEEB1]/20 border border-[#DCEEB1]/50 text-center">
-                <p className="font-mono text-[9px] font-bold uppercase text-green-800 tracking-wider">SISA KAS</p>
-                <p className="font-extrabold text-xl text-green-800 mt-1 leading-tight">{formatRp(overview.total_remaining)}</p>
-              </div>
-
-              {/* Pending Requests */}
-              <div className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/50 text-center">
-                <p className="font-mono text-[9px] font-bold uppercase text-amber-700 tracking-wider">PENDING</p>
-                <p className="font-extrabold text-xl text-amber-700 mt-1 leading-tight">{overview.pending_requests}</p>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Card 2: Akses LPJ & Ekspor Data */}
+          {/* Card 2: Panduan & Akses LPJ */}
           <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6 space-y-4">
             <div className="border-b border-[#04000D]/5 pb-3">
               <h3 className="font-extrabold text-base text-on-surface flex items-center gap-2">
-                <FileText className="size-4 text-accent-magenta" /> Laporan LPJ & Ekspor
+                <FileText className="size-4 text-accent-magenta" />{" "}
+                {isTreasurerOrBPH ? "Laporan LPJ & Ekspor" : "Setor Nota Ke Bendahara"}
               </h3>
               <p className="text-[11px] font-medium text-on-surface-variant/70 mt-0.5">
-                Cetak LPJ & unduh rekapitulasi data keuangan
+                {isTreasurerOrBPH
+                  ? "Cetak LPJ & unduh rekapitulasi data keuangan"
+                  : "Lampirkan bukti struk/kwitansi fisik atau digital"}
               </p>
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <Link href="/dashboard/finance/report" className="w-full">
-                <Button
-                  variant="outline"
-                  className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 bg-white text-on-surface hover:bg-[#04000D] hover:text-white transition-all group"
-                >
-                  <span className="flex items-center gap-2 text-on-surface group-hover:text-white transition-colors">
-                    <FileText className="size-4 text-accent-magenta group-hover:text-[#FF3D8B] transition-colors" /> Halaman LPJ Keuangan
-                  </span>
-                  <ArrowUpRight className="size-4 text-on-surface-variant/60 group-hover:text-white transition-colors" />
-                </Button>
-              </Link>
+              <Button
+                onClick={() => setShowAddTx("SETOR")}
+                className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl bg-[#FF3D8B] text-white hover:bg-[#e03479]"
+              >
+                <span className="flex items-center gap-2">
+                  <Upload className="size-4" /> Upload Nota Pengeluaran
+                </span>
+                <ArrowUpRight className="size-4" />
+              </Button>
 
               {isTreasurerOrBPH && (
                 <>
+                  <Link href="/dashboard/finance/report" className="w-full">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 bg-white text-on-surface hover:bg-[#04000D] hover:text-white transition-all group"
+                    >
+                      <span className="flex items-center gap-2 text-on-surface group-hover:text-white transition-colors">
+                        <FileText className="size-4 text-accent-magenta group-hover:text-[#FF3D8B] transition-colors" /> Halaman LPJ Keuangan
+                      </span>
+                      <ArrowUpRight className="size-4 text-on-surface-variant/60 group-hover:text-white transition-colors" />
+                    </Button>
+                  </Link>
+
                   <Button
                     variant="outline"
                     onClick={handleExport}
@@ -493,19 +539,26 @@ export function FinanceClient({
         <form action={addTxAction} className="flex flex-col gap-4">
           {showAddTx === "SETOR" ? (
             <div>
-              <label className="caption block mb-1 text-on-surface-variant font-bold">Pilih Divisi <span className="text-error">*</span></label>
-              <select
-                name="division_id"
-                defaultValue={userDivisionId || (budgets[0]?.division_id ?? "")}
-                className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231d1b1d%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10"
-                required
-              >
-                {budgets.map((b) => (
-                  <option key={b.division_id} value={b.division_id}>
-                    {b.division_name}
-                  </option>
-                ))}
-              </select>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Divisi Disetor <span className="text-error">*</span></label>
+              {isTreasurerOrBPH ? (
+                <select
+                  name="division_id"
+                  defaultValue={userDivisionId || (budgets[0]?.division_id ?? "")}
+                  className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231d1b1d%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10"
+                  required
+                >
+                  {budgets.map((b) => (
+                    <option key={b.division_id} value={b.division_id}>
+                      {b.division_name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <>
+                  <input type="hidden" name="division_id" value={userDivisionBudget?.division_id || userDivisionId} />
+                  <Input value={userDivisionBudget?.division_name || "Divisi Saya"} disabled className="bg-slate-50 font-bold" />
+                </>
+              )}
             </div>
           ) : (
             <input type="hidden" name="budget_id" value={showAddTx ?? ""} />
@@ -622,16 +675,23 @@ export function FinanceClient({
         <form action={createReqAction} className="flex flex-col gap-4">
           <div>
             <label className="caption block mb-1 text-on-surface-variant font-bold">Divisi <span className="text-error">*</span></label>
-            <select
-              name="division_id"
-              defaultValue={userDivisionId || (budgets[0]?.division_id ?? "")}
-              className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231d1b1d%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10"
-              required
-            >
-              {budgets.map((b) => (
-                <option key={b.division_id} value={b.division_id}>{b.division_name}</option>
-              ))}
-            </select>
+            {isTreasurerOrBPH ? (
+              <select
+                name="division_id"
+                defaultValue={userDivisionId || (budgets[0]?.division_id ?? "")}
+                className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:border-accent-magenta focus:outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%231d1b1d%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat pr-10"
+                required
+              >
+                {budgets.map((b) => (
+                  <option key={b.division_id} value={b.division_id}>{b.division_name}</option>
+                ))}
+              </select>
+            ) : (
+              <>
+                <input type="hidden" name="division_id" value={userDivisionBudget?.division_id || userDivisionId} />
+                <Input value={userDivisionBudget?.division_name || "Divisi Saya"} disabled className="bg-slate-50 font-bold" />
+              </>
+            )}
           </div>
           <div>
             <label className="caption block mb-1 text-on-surface-variant font-bold">Nominal Pengajuan (Rp) <span className="text-error">*</span></label>
