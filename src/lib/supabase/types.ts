@@ -127,6 +127,8 @@ export interface Database {
           division_id: string;
           role_id: string;
           is_active: boolean;
+          can_submit_report: boolean;
+          can_create_meeting: boolean;
           assigned_at: string;
         };
         Insert: {
@@ -136,6 +138,8 @@ export interface Database {
           division_id: string;
           role_id: string;
           is_active?: boolean;
+          can_submit_report?: boolean;
+          can_create_meeting?: boolean;
           assigned_at?: string;
         };
         Update: {
@@ -145,6 +149,8 @@ export interface Database {
           division_id?: string;
           role_id?: string;
           is_active?: boolean;
+          can_submit_report?: boolean;
+          can_create_meeting?: boolean;
           assigned_at?: string;
         };
       };

@@ -17,7 +17,7 @@ async function requireActiveMember() {
   const admin = createAdminClient();
   const { data: assignment } = await admin
     .from("committee_assignments")
-    .select("id, division_id, role:roles(level, slug, is_report_creator)")
+    .select("id, division_id, can_submit_report, role:roles(level, slug, is_report_creator)")
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", userId)
     .eq("is_active", true)
@@ -43,9 +43,9 @@ export async function submitWeeklyReport(prevState: any, formData: FormData) {
     return { error: "Semua field wajib diisi." };
   }
 
-  // Auth check: caller must have is_report_creator or be BPH Admin (level >= 90)
+  // Auth check: caller must have is_report_creator (from role or personnel assignment) or be BPH Admin (level >= 90)
   const level = caller.role?.level ?? 0;
-  const canReport = !!caller.role?.is_report_creator || level >= 90;
+  const canReport = !!caller.role?.is_report_creator || !!caller.can_submit_report || level >= 90;
   if (!canReport) {
     return { error: "Anda tidak memiliki akses untuk menyetor laporan." };
   }

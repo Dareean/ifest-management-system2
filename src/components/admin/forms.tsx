@@ -216,6 +216,16 @@ export function AssignmentFormModal({ open, onClose, divisions, roles }: {
             ))}
           </select>
         </div>
+        <div className="flex flex-col gap-xs">
+          <label className="flex items-center gap-xs cursor-pointer">
+            <input type="checkbox" name="can_submit_report" className="size-4" />
+            <span className="caption font-medium">Berikan Akses Setor Laporan (Laporan Creator)</span>
+          </label>
+          <label className="flex items-center gap-xs cursor-pointer">
+            <input type="checkbox" name="can_create_meeting" className="size-4" />
+            <span className="caption font-medium">Berikan Akses Membuat Rapat (Meeting Creator)</span>
+          </label>
+        </div>
         <div className="flex gap-sm justify-end">
           <Button type="button" variant="ghost" onClick={onClose}>Batal</Button>
           <Button type="submit" disabled={pending}>

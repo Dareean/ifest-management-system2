@@ -41,6 +41,8 @@ async function getAuthSession(): Promise<AuthResult> {
     .select(`
       id,
       division_id,
+      can_submit_report,
+      can_create_meeting,
       division:divisions!committee_assignments_division_id_fkey(name),
       role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
     `)
@@ -70,8 +72,8 @@ async function getAuthSession(): Promise<AuthResult> {
       roleSlug,
       roleLevel: role?.level ?? 0,
       isApprover: role?.is_approver ?? false,
-      isMeetingCreator: role?.is_meeting_creator ?? false,
-      isReportCreator: role?.is_report_creator ?? false,
+      isMeetingCreator: (role?.is_meeting_creator ?? false) || (a.can_create_meeting ?? false),
+      isReportCreator: (role?.is_report_creator ?? false) || (a.can_submit_report ?? false),
       isSecretary: SECRETARY_SLUGS.includes(roleSlug),
     },
   };

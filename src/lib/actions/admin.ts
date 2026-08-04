@@ -290,11 +290,16 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
     return { error: "User sudah memiliki assignment di tahun ini" };
   }
 
+  const canSubmitReport = formData.get("can_submit_report") === "on";
+  const canCreateMeeting = formData.get("can_create_meeting") === "on";
+
   const { error: assignErr } = await supabase.from("committee_assignments").insert({
     committee_year_id: YEAR_ID,
     user_id: profileId,
     division_id: divisionId,
     role_id: roleId,
+    can_submit_report: canSubmitReport,
+    can_create_meeting: canCreateMeeting,
   });
 
   if (assignErr) return { error: assignErr.message };
@@ -311,5 +316,37 @@ export async function deleteAssignment(id: string) {
   const { error } = await supabase.from("committee_assignments").delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/admin/assignments");
+  return { success: true };
+}
+
+export async function togglePersonnelReportCreator(id: string, canSubmit: boolean) {
+  const caller = await requireAdmin(60);
+  if (!caller) return { error: "Akses ditolak" };
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("committee_assignments")
+    .update({ can_submit_report: canSubmit })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/admin/assignments");
+  revalidatePath("/dashboard/weekly-report");
+  return { success: true };
+}
+
+export async function togglePersonnelMeetingCreator(id: string, canCreate: boolean) {
+  const caller = await requireAdmin(60);
+  if (!caller) return { error: "Akses ditolak" };
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("committee_assignments")
+    .update({ can_create_meeting: canCreate })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/admin/assignments");
+  revalidatePath("/dashboard/meetings");
   return { success: true };
 }

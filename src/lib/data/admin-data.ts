@@ -30,6 +30,8 @@ export interface AssignmentData {
   divisionSlug: string;
   role: string;
   roleSlug: string;
+  can_submit_report: boolean;
+  can_create_meeting: boolean;
 }
 
 export interface YearData {
@@ -88,6 +90,8 @@ export async function getAssignments(): Promise<AssignmentData[]> {
     .from("committee_assignments")
     .select(`
       id,
+      can_submit_report,
+      can_create_meeting,
       user:profiles(full_name, nim),
       division:divisions!committee_assignments_division_id_fkey(name, slug),
       role:roles(name, slug)
@@ -106,6 +110,8 @@ export async function getAssignments(): Promise<AssignmentData[]> {
     divisionSlug: a.division?.slug ?? "",
     role: a.role?.name ?? "",
     roleSlug: a.role?.slug ?? "",
+    can_submit_report: a.can_submit_report ?? false,
+    can_create_meeting: a.can_create_meeting ?? false,
   }));
 }
 
