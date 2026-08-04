@@ -11,6 +11,10 @@ export interface MemberRow {
   nim: string;
   roleName: string;
   roleLevel: number;
+  roleIsReportCreator: boolean;
+  roleIsMeetingCreator: boolean;
+  canSubmitReport: boolean;
+  canCreateMeeting: boolean;
   divisionName?: string;
 }
 
@@ -60,8 +64,10 @@ export default async function MembersPage() {
       .select(`
         id,
         division_id,
+        can_submit_report,
+        can_create_meeting,
         division:divisions!committee_assignments_division_id_fkey(name),
-        role:roles(name, slug, level),
+        role:roles(name, slug, level, is_report_creator, is_meeting_creator),
         user:profiles(full_name, nim)
       `)
       .eq("committee_year_id", YEAR_ID)
@@ -84,6 +90,10 @@ export default async function MembersPage() {
         nim: m.user?.nim ?? "",
         roleName: m.role?.name ?? "",
         roleLevel: m.role?.level ?? 0,
+        roleIsReportCreator: m.role?.is_report_creator ?? false,
+        roleIsMeetingCreator: m.role?.is_meeting_creator ?? false,
+        canSubmitReport: m.can_submit_report ?? false,
+        canCreateMeeting: m.can_create_meeting ?? false,
         divisionName: m.division?.name ?? "",
       });
     }
@@ -104,7 +114,9 @@ export default async function MembersPage() {
     .from("committee_assignments")
     .select(`
       id,
-      role:roles(name, slug, level),
+      can_submit_report,
+      can_create_meeting,
+      role:roles(name, slug, level, is_report_creator, is_meeting_creator),
       user:profiles(full_name, nim)
     `)
     .eq("committee_year_id", YEAR_ID)
@@ -118,6 +130,10 @@ export default async function MembersPage() {
     nim: m.user?.nim ?? "",
     roleName: m.role?.name ?? "",
     roleLevel: m.role?.level ?? 0,
+    roleIsReportCreator: m.role?.is_report_creator ?? false,
+    roleIsMeetingCreator: m.role?.is_meeting_creator ?? false,
+    canSubmitReport: m.can_submit_report ?? false,
+    canCreateMeeting: m.can_create_meeting ?? false,
   }));
 
   return (

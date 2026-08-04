@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, UserPlus, Trash2, Search, Filter } from "lucide-react";
+import { Users, UserPlus, Trash2, Search, Filter, FileText, Video } from "lucide-react";
 import { removeMember } from "@/lib/actions/remove-member";
+import { togglePersonnelReportCreator, togglePersonnelMeetingCreator } from "@/lib/actions/admin";
 import type { MemberRow, DivisionGroup } from "./page";
 
 interface Props {
@@ -41,6 +42,39 @@ function MemberCard({
     callerLevel >= 75 ||
     (callerLevel >= 55 && member.roleLevel < callerLevel);
 
+  const canManagePermissions = callerLevel >= 55;
+
+  const isInherentlyReportCreator = member.roleIsReportCreator || member.roleLevel >= 90;
+  const isInherentlyMeetingCreator = member.roleIsMeetingCreator || member.roleLevel >= 75;
+
+  async function handleToggleReportCreator() {
+    if (isInherentlyReportCreator) {
+      alert(`Personel ini sudah memiliki hak Setor Laporan otomatis dari jabatannya (${member.roleName}).`);
+      return;
+    }
+    const actionText = member.canSubmitReport ? "mencabut" : "memberikan";
+    if (confirm(`Apakah Anda yakin ingin ${actionText} hak Laporan Creator untuk ${member.name}?`)) {
+      startTransition(async () => {
+        await togglePersonnelReportCreator(member.assignmentId, !member.canSubmitReport);
+        router.refresh();
+      });
+    }
+  }
+
+  async function handleToggleMeetingCreator() {
+    if (isInherentlyMeetingCreator) {
+      alert(`Personel ini sudah memiliki hak Membuat Rapat otomatis dari jabatannya (${member.roleName}).`);
+      return;
+    }
+    const actionText = member.canCreateMeeting ? "mencabut" : "memberikan";
+    if (confirm(`Apakah Anda yakin ingin ${actionText} hak Meeting Creator untuk ${member.name}?`)) {
+      startTransition(async () => {
+        await togglePersonnelMeetingCreator(member.assignmentId, !member.canCreateMeeting);
+        router.refresh();
+      });
+    }
+  }
+
   const initials = member.name
     .split(" ")
     .map((n) => n[0])
@@ -64,46 +98,97 @@ function MemberCard({
   };
 
   return (
-    <div className={`group bg-white border border-outline-variant/60 rounded-2xl p-4 flex items-center justify-between gap-3 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-primary/20 hover:-translate-y-0.5 ${isPending ? "opacity-60 cursor-not-allowed" : ""}`}>
-      <div className="flex items-center gap-3.5 min-w-0 flex-1">
-        <div className={`size-11 rounded-2xl border flex items-center justify-center font-bold shrink-0 text-sm tracking-wider ${getAvatarBg(member.roleLevel)}`}>
-          {initials || "?"}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors duration-200" title={member.name}>
-            {member.name}
-          </p>
-          <div className="flex items-center gap-2 mt-1 flex-wrap min-w-0">
-            <span className="text-xs text-on-surface-variant font-mono shrink-0">{member.nim}</span>
-            <span className="size-1 rounded-full bg-outline-variant/60 shrink-0" />
-            <span className={`text-[9px] font-bold px-2 py-0.5 rounded border font-mono uppercase tracking-wider shrink-0 ${getRoleBadgeColor(member.roleLevel)}`}>
-              {member.roleName}
-            </span>
+    <div className={`group bg-white border border-outline-variant/60 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-primary/20 hover:-translate-y-0.5 ${isPending ? "opacity-60 cursor-not-allowed" : ""}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+          <div className={`size-11 rounded-2xl border flex items-center justify-center font-bold shrink-0 text-sm tracking-wider ${getAvatarBg(member.roleLevel)}`}>
+            {initials || "?"}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors duration-200" title={member.name}>
+              {member.name}
+            </p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap min-w-0">
+              <span className="text-xs text-on-surface-variant font-mono shrink-0">{member.nim}</span>
+              <span className="size-1 rounded-full bg-outline-variant/60 shrink-0" />
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded border font-mono uppercase tracking-wider shrink-0 ${getRoleBadgeColor(member.roleLevel)}`}>
+                {member.roleName}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="flex items-center gap-1 shrink-0">
-        {canDelete && (
-          <form
-            action={formAction}
-            onSubmit={(e) => {
-              if (!confirm(`Yakin ingin menghapus ${member.name} dari kepanitiaan?`)) {
-                e.preventDefault();
-              }
-            }}
-          >
-            <input type="hidden" name="target_id" value={member.assignmentId} />
-            <button
-              type="submit"
-              disabled={isPending}
-              className="p-2 rounded-xl hover:bg-error-container/20 text-on-surface-variant hover:text-error transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Hapus anggota"
+        <div className="flex items-center gap-1 shrink-0">
+          {canDelete && (
+            <form
+              action={formAction}
+              onSubmit={(e) => {
+                if (!confirm(`Yakin ingin menghapus ${member.name} dari kepanitiaan?`)) {
+                  e.preventDefault();
+                }
+              }}
             >
-              <Trash2 className="size-4" />
-            </button>
-          </form>
-        )}
+              <input type="hidden" name="target_id" value={member.assignmentId} />
+              <button
+                type="submit"
+                disabled={isPending}
+                className="p-2 rounded-xl hover:bg-error-container/20 text-on-surface-variant hover:text-error transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Hapus anggota"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </form>
+          )}
+        </div>
       </div>
+
+      {/* Permission Delegation Badges for Coordinators / BPH */}
+      {canManagePermissions && (
+        <div className="flex items-center gap-1.5 pt-2 border-t border-outline-variant/20 flex-wrap">
+          <button
+            onClick={handleToggleReportCreator}
+            disabled={isPending}
+            title={
+              isInherentlyReportCreator
+                ? `Akses otomatis dari jabatan ${member.roleName}`
+                : member.canSubmitReport
+                ? "Klik untuk mencabut hak setor laporan"
+                : "Klik untuk mendelegasikan hak setor laporan"
+            }
+            className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+              isInherentlyReportCreator
+                ? "bg-amber-100/80 text-amber-800 border-amber-300 shadow-sm"
+                : member.canSubmitReport
+                ? "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
+                : "bg-surface-container/40 text-on-surface-variant/50 border-outline-variant/30 hover:border-amber-300 hover:text-amber-700"
+            }`}
+          >
+            <FileText className="size-3" />
+            {isInherentlyReportCreator ? "Laporan Creator (Role)" : member.canSubmitReport ? "Laporan Creator" : "+ Laporan Creator"}
+          </button>
+
+          <button
+            onClick={handleToggleMeetingCreator}
+            disabled={isPending}
+            title={
+              isInherentlyMeetingCreator
+                ? `Akses otomatis dari jabatan ${member.roleName}`
+                : member.canCreateMeeting
+                ? "Klik untuk mencabut hak membuat rapat"
+                : "Klik untuk mendelegasikan hak membuat rapat"
+            }
+            className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+              isInherentlyMeetingCreator
+                ? "bg-blue-100/80 text-blue-800 border-blue-300 shadow-sm"
+                : member.canCreateMeeting
+                ? "bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100"
+                : "bg-surface-container/40 text-on-surface-variant/50 border-outline-variant/30 hover:border-blue-300 hover:text-blue-700"
+            }`}
+          >
+            <Video className="size-3" />
+            {isInherentlyMeetingCreator ? "Meeting Creator (Role)" : member.canCreateMeeting ? "Meeting Creator" : "+ Meeting Creator"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

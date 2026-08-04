@@ -190,43 +190,13 @@ export function AssignmentsClient({
                 </button>
               </div>
 
-              <div className="flex flex-col gap-2 pt-3 border-t border-outline-variant/20">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-surface-container text-on-surface border border-outline-variant/40">
-                    {a.division}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20">
-                    {a.role}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    onClick={() => handleToggleReportCreator(a.id, a.can_submit_report, a.name)}
-                    title={a.can_submit_report ? "Klik untuk mencabut hak setor laporan" : "Klik untuk mengizinkan setor laporan"}
-                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                      a.can_submit_report
-                        ? "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
-                        : "bg-surface-container/40 text-on-surface-variant/50 border-outline-variant/30 hover:border-amber-300 hover:text-amber-700"
-                    }`}
-                  >
-                    <FileText className="size-3" />
-                    {a.can_submit_report ? "Laporan Creator" : "+ Laporan Creator"}
-                  </button>
-
-                  <button
-                    onClick={() => handleToggleMeetingCreator(a.id, a.can_create_meeting, a.name)}
-                    title={a.can_create_meeting ? "Klik untuk mencabut hak membuat rapat" : "Klik untuk mengizinkan membuat rapat"}
-                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer ${
-                      a.can_create_meeting
-                        ? "bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100"
-                        : "bg-surface-container/40 text-on-surface-variant/50 border-outline-variant/30 hover:border-blue-300 hover:text-blue-700"
-                    }`}
-                  >
-                    <Video className="size-3" />
-                    {a.can_create_meeting ? "Meeting Creator" : "+ Meeting Creator"}
-                  </button>
-                </div>
+              <div className="flex items-center gap-2 pt-3 border-t border-outline-variant/20 flex-wrap">
+                <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-surface-container text-on-surface border border-outline-variant/40">
+                  {a.division}
+                </span>
+                <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20">
+                  {a.role}
+                </span>
               </div>
             </div>
           ))
