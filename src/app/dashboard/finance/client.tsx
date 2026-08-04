@@ -158,9 +158,9 @@ export function FinanceClient({
           <Button
             variant="outline"
             onClick={() => setShowRequest(true)}
-            className="cursor-pointer text-xs font-bold rounded-xl border-[#04000D]/10 hover:bg-slate-50"
+            className="cursor-pointer text-xs font-bold rounded-xl border-[#04000D]/10 text-on-surface bg-white hover:bg-[#04000D] hover:text-white transition-all group"
           >
-            <Plus className="size-4" /> Ajukan Dana
+            <Plus className="size-4 text-on-surface group-hover:text-white transition-colors" /> Ajukan Dana
           </Button>
         </div>
       </div>
@@ -197,7 +197,7 @@ export function FinanceClient({
                 return (
                   <div
                     key={b.division_id}
-                    className="group bg-white border border-[#04000D]/5 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.02)]"
+                    className="group bg-white border border-[#04000D]/5 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all hover:border-[#04000D]/20 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)]"
                   >
                     <div className="space-y-2.5">
                       <div className="flex items-start justify-between gap-2">
@@ -241,8 +241,14 @@ export function FinanceClient({
 
                     <div className="flex items-center gap-2 pt-2.5 border-t border-[#04000D]/5">
                       <Link href={`/dashboard/finance/${b.division_id}`} className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full text-xs font-bold cursor-pointer rounded-xl border-[#04000D]/10">
-                          Detail Transaksi ↗
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-xs font-bold cursor-pointer rounded-xl border-[#04000D]/10 text-on-surface bg-white hover:bg-[#04000D] hover:text-white transition-all group/btn"
+                        >
+                          <span className="text-on-surface group-hover/btn:text-white transition-colors">
+                            Detail Transaksi ↗
+                          </span>
                         </Button>
                       </Link>
                       <Button
@@ -418,11 +424,14 @@ export function FinanceClient({
 
             <div className="flex flex-col gap-2.5">
               <Link href="/dashboard/finance/report" className="w-full">
-                <Button variant="outline" className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 hover:bg-slate-50">
-                  <span className="flex items-center gap-2">
-                    <FileText className="size-4 text-accent-magenta" /> Halaman LPJ Keuangan
+                <Button
+                  variant="outline"
+                  className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 bg-white text-on-surface hover:bg-[#04000D] hover:text-white transition-all group"
+                >
+                  <span className="flex items-center gap-2 text-on-surface group-hover:text-white transition-colors">
+                    <FileText className="size-4 text-accent-magenta group-hover:text-[#FF3D8B] transition-colors" /> Halaman LPJ Keuangan
                   </span>
-                  <ArrowUpRight className="size-4 text-on-surface-variant/60" />
+                  <ArrowUpRight className="size-4 text-on-surface-variant/60 group-hover:text-white transition-colors" />
                 </Button>
               </Link>
 
@@ -432,10 +441,10 @@ export function FinanceClient({
                     variant="outline"
                     onClick={handleExport}
                     disabled={exporting}
-                    className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 hover:bg-slate-50"
+                    className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 bg-white text-on-surface hover:bg-[#04000D] hover:text-white transition-all group"
                   >
-                    <span className="flex items-center gap-2">
-                      <Download className="size-4 text-green-700" /> Unduh Ringkasan (CSV)
+                    <span className="flex items-center gap-2 text-on-surface group-hover:text-white transition-colors">
+                      <Download className="size-4 text-green-700 group-hover:text-emerald-400 transition-colors" /> Unduh Ringkasan (CSV)
                     </span>
                   </Button>
 
@@ -443,10 +452,10 @@ export function FinanceClient({
                     variant="outline"
                     onClick={handleExportDetail}
                     disabled={exporting}
-                    className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 hover:bg-slate-50"
+                    className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 bg-white text-on-surface hover:bg-[#04000D] hover:text-white transition-all group"
                   >
-                    <span className="flex items-center gap-2">
-                      <Download className="size-4 text-accent-magenta" /> Unduh Detail Transaksi (CSV)
+                    <span className="flex items-center gap-2 text-on-surface group-hover:text-white transition-colors">
+                      <Download className="size-4 text-accent-magenta group-hover:text-[#FF3D8B] transition-colors" /> Unduh Detail Transaksi (CSV)
                     </span>
                   </Button>
                 </>
@@ -468,7 +477,7 @@ export function FinanceClient({
             <Button type="button" variant="ghost" onClick={() => setShowSetBudget(null)} className="cursor-pointer">
               Batal
             </Button>
-            <Button type="submit" disabled={setBudgetPending} className="cursor-pointer font-bold">
+            <Button type="submit" disabled={setBudgetPending} className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black">
               {setBudgetPending ? "Menyimpan..." : "Simpan Anggaran"}
             </Button>
           </div>
@@ -636,7 +645,7 @@ export function FinanceClient({
             <Button type="button" variant="ghost" onClick={() => setShowRequest(false)} className="cursor-pointer">
               Batal
             </Button>
-            <Button type="submit" disabled={createReqPending} className="cursor-pointer font-bold">
+            <Button type="submit" disabled={createReqPending} className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black">
               {createReqPending ? "Mengajukan..." : "Kirim Pengajuan"}
             </Button>
           </div>

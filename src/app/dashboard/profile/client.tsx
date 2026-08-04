@@ -85,110 +85,112 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
   const waUrl = formattedPhone ? `https://wa.me/${formattedPhone.startsWith("0") ? "62" + formattedPhone.slice(1) : formattedPhone}` : null;
 
   return (
-    <div className="w-full flex flex-col gap-8">
-      {/* Header (Matching main dashboard style) */}
-      <div className="flex items-center justify-between gap-4">
+    <div className="w-full flex flex-col gap-6 md:gap-8">
+      {/* Header — DESIGN.md Section 3 Eyebrow + H1 Pattern */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
-            AKUN PANITIA
-          </p>
-          <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-accent-magenta">
+            Akun Panitia
+          </span>
+          <h1 className="font-extrabold text-3xl md:text-4xl tracking-tight text-on-surface">
             Profil Pengguna
           </h1>
         </div>
         <Button
-          variant={editing ? "outline" : "primary"}
-          size="sm"
           onClick={() => setEditing(!editing)}
-          className="cursor-pointer shrink-0 font-bold"
+          className={`cursor-pointer shrink-0 font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm ${
+            editing
+              ? "border border-[#04000D]/10 bg-white text-on-surface hover:bg-slate-50"
+              : "bg-[#FF3D8B] text-white hover:bg-[#e03479]"
+          }`}
         >
           <Pencil className="size-4" />
           {editing ? "Batal Edit" : "Edit Profil"}
         </Button>
       </div>
 
-      {/* Main Grid Layout (2/3 Left Column, 1/3 Right Column) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      {/* Main Grid Layout (DESIGN.md Grid Pattern: lg:col-span-2 left, 1 column right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 items-start">
         {/* Left Column (2/3 Width): Data Diri & Password Form */}
-        <div className="lg:col-span-2 flex flex-col gap-8">
-          {/* Card 1: Informasi Data Diri */}
-          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
-            <div className="flex items-center justify-between border-b border-outline-variant/20 pb-4 mb-6">
+        <div className="lg:col-span-2 flex flex-col gap-5 md:gap-6">
+          {/* Card 1: Informasi Data Diri (DESIGN.md Standard Card Recipe) */}
+          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6">
+            <div className="flex items-center justify-between border-b border-[#04000D]/5 pb-4 mb-5">
               <div>
-                <h2 className="text-xl font-extrabold text-on-surface flex items-center gap-2.5">
-                  <User className="size-5 text-primary" /> Informasi Data Diri
+                <h2 className="font-extrabold text-xl text-on-surface flex items-center gap-2">
+                  <User className="size-5 text-accent-magenta" /> Informasi Data Diri
                 </h2>
-                <p className="text-xs text-on-surface-variant font-medium mt-1">
+                <p className="text-xs font-medium text-on-surface-variant/70 mt-1">
                   Kelola data identitas dan kontak WhatsApp yang dapat dilihat oleh panitia lain
                 </p>
               </div>
               {editing && (
-                <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-300 shrink-0">
+                <span className="font-mono text-[9px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/50 uppercase shrink-0">
                   MODE EDIT AKTIF
                 </span>
               )}
             </div>
 
             {state?.error && (
-              <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono mb-6">
+              <div className="font-mono text-xs text-error bg-error-container/20 border border-error/20 rounded-xl p-4 mb-5">
                 {state.error}
               </div>
             )}
             {state?.success && (
-              <div className="text-sm text-accent-green bg-accent-green/10 border border-accent-green/30 rounded-lg p-4 font-mono mb-6">
+              <div className="font-mono text-xs text-green-800 bg-[#DCEEB1]/20 border border-[#DCEEB1]/50 rounded-xl p-4 mb-5">
                 Profil berhasil diperbarui dan disinkronkan ke seluruh sistem!
               </div>
             )}
 
-            <form action={formAction} className="flex flex-col gap-6">
+            <form action={formAction} className="flex flex-col gap-5">
               <input type="hidden" name="userId" value={profile.userId ?? ""} />
               <input type="hidden" name="avatarUrl" value={avatarUrl} />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* Full Name */}
                 <div>
-                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+                  <label className="caption block mb-1.5 text-on-surface-variant font-bold">
                     Nama Lengkap
                   </label>
                   <Input
                     name="fullName"
                     defaultValue={profile.fullName}
                     disabled={!editing}
-                    className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
+                    className={!editing ? "opacity-60 bg-slate-50 cursor-not-allowed" : ""}
                     required
                   />
                 </div>
 
                 {/* NIM */}
                 <div>
-                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
+                  <label className="caption block mb-1.5 text-on-surface-variant font-bold flex items-center gap-1.5">
                     <Hash className="size-3.5" /> NIM
                   </label>
                   <Input
                     name="nim"
                     defaultValue={profile.nim}
                     disabled={!editing}
-                    className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
+                    className={!editing ? "opacity-60 bg-slate-50 cursor-not-allowed" : ""}
                     required
                   />
                 </div>
 
                 {/* Email (Readonly) */}
                 <div>
-                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
+                  <label className="caption block mb-1.5 text-on-surface-variant font-bold flex items-center gap-1.5">
                     <Mail className="size-3.5" /> Email
                   </label>
                   <Input
                     value={profile.email ?? ""}
                     disabled
-                    className="opacity-60 bg-surface-container/20 cursor-not-allowed"
+                    className="opacity-60 bg-slate-50 cursor-not-allowed"
                   />
                 </div>
 
                 {/* Phone */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="caption block text-on-surface-variant font-semibold flex items-center gap-1.5">
+                    <label className="caption block text-on-surface-variant font-bold flex items-center gap-1.5">
                       <Phone className="size-3.5" /> No. HP / WhatsApp
                     </label>
                     {waUrl && (
@@ -196,7 +198,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
                         href={waUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs font-mono font-bold text-emerald-600 hover:underline flex items-center gap-1"
+                        className="font-mono text-xs font-bold text-green-700 hover:underline flex items-center gap-1"
                       >
                         Uji WA ↗
                       </a>
@@ -206,7 +208,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
                     name="phone"
                     defaultValue={profile.phone ?? ""}
                     disabled={!editing}
-                    className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
+                    className={!editing ? "opacity-60 bg-slate-50 cursor-not-allowed" : ""}
                     placeholder="Contoh: 081234567890"
                   />
                 </div>
@@ -214,7 +216,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
 
               {editing && (
                 <div className="flex justify-end mt-2">
-                  <Button type="submit" disabled={pending} className="cursor-pointer font-bold">
+                  <Button type="submit" disabled={pending} className="cursor-pointer font-bold bg-[#FF3D8B] text-white hover:bg-[#e03479]">
                     <Save className="size-4" />
                     {pending ? "Menyimpan..." : "Simpan Perubahan"}
                   </Button>
@@ -224,31 +226,31 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
           </div>
 
           {/* Card 2: Keamanan & Password */}
-          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
-            <div className="border-b border-outline-variant/20 pb-4 mb-6">
-              <h2 className="text-xl font-extrabold text-on-surface flex items-center gap-2.5">
+          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6">
+            <div className="border-b border-[#04000D]/5 pb-4 mb-5">
+              <h2 className="font-extrabold text-xl text-on-surface flex items-center gap-2">
                 <Lock className="size-5 text-accent-magenta" /> Keamanan & Password
               </h2>
-              <p className="text-xs text-on-surface-variant font-medium mt-1">
+              <p className="text-xs font-medium text-on-surface-variant/70 mt-1">
                 Ganti kata sandi akun Anda secara berkala untuk menjaga keamanan data
               </p>
             </div>
 
             {pwState?.error && (
-              <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono mb-6">
+              <div className="font-mono text-xs text-error bg-error-container/20 border border-error/20 rounded-xl p-4 mb-5">
                 {pwState.error}
               </div>
             )}
             {pwState?.success && (
-              <div className="text-sm text-accent-green bg-accent-green/10 border border-accent-green/30 rounded-lg p-4 font-mono mb-6">
+              <div className="font-mono text-xs text-green-800 bg-[#DCEEB1]/20 border border-[#DCEEB1]/50 rounded-xl p-4 mb-5">
                 Password berhasil diperbarui!
               </div>
             )}
 
-            <form action={pwAction} className="flex flex-col gap-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <form action={pwAction} className="flex flex-col gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+                  <label className="caption block mb-1.5 text-on-surface-variant font-bold">
                     Password Baru
                   </label>
                   <Input
@@ -260,7 +262,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
                 </div>
 
                 <div>
-                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+                  <label className="caption block mb-1.5 text-on-surface-variant font-bold">
                     Konfirmasi Password
                   </label>
                   <Input
@@ -273,7 +275,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
               </div>
 
               <div className="flex justify-end mt-2">
-                <Button type="submit" disabled={pwPending} className="cursor-pointer font-bold">
+                <Button type="submit" disabled={pwPending} className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black">
                   {pwPending ? "Memproses..." : "Perbarui Password"}
                 </Button>
               </div>
@@ -281,42 +283,42 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
           </div>
         </div>
 
-        {/* Right Column (1/3 Width): Identitas Card & Statistik Personal */}
-        <div className="flex flex-col gap-8">
-          {/* Card 1: Identitas & Foto Panitia */}
-          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8 flex flex-col items-center text-center space-y-4">
-            <div className="flex items-center justify-between w-full border-b border-outline-variant/20 pb-3 mb-1">
-              <h3 className="text-sm font-extrabold text-on-surface flex items-center gap-2">
-                <Shield className="size-4 text-primary" /> Identitas Panitia
+        {/* Right Column (1/3 Width): DESIGN.md Identitas Card & Stat Counters */}
+        <div className="flex flex-col gap-5 md:gap-6">
+          {/* Card 1: Identitas & Foto Panitia (DESIGN.md Profile Card Recipe) */}
+          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center space-y-4">
+            <div className="flex items-center justify-between w-full border-b border-[#04000D]/5 pb-3 mb-1">
+              <h3 className="font-extrabold text-base text-on-surface flex items-center gap-2">
+                <Shield className="size-4 text-accent-magenta" /> Identitas Panitia
               </h3>
               {profile.assignment?.isActive && (
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-300">
+                <span className="font-mono text-[9px] font-bold px-2 py-0.5 rounded bg-[#DCEEB1]/30 text-green-800 border border-[#DCEEB1]/50 uppercase">
                   AKTIF
                 </span>
               )}
             </div>
 
-            {/* Avatar Container with Upload */}
+            {/* Avatar Box (DESIGN.md Line 208 Avatar Kotak Inisial) */}
             <div className="relative group shrink-0 select-none my-2">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt={profile.fullName}
-                  className="size-24 rounded-2xl object-cover border border-outline-variant/60 shadow-sm"
+                  className="size-24 rounded-2xl object-cover border border-[#04000D]/10 shadow-sm"
                 />
               ) : (
-                <div className="size-24 rounded-2xl bg-surface-container text-primary font-mono font-bold text-3xl flex items-center justify-center border border-outline-variant/60">
+                <div className="size-24 rounded-2xl bg-[#04000D] text-[#DCEEB1] font-mono font-bold text-3xl flex items-center justify-center border border-[#04000D]/10">
                   {getInitials(profile.fullName)}
                 </div>
               )}
 
-              <label className="absolute inset-0 rounded-2xl bg-black/50 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-white gap-1">
+              <label className="absolute inset-0 rounded-2xl bg-black/60 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-white gap-1">
                 {uploading ? (
                   <Loader2 className="size-5 animate-spin" />
                 ) : (
                   <>
-                    <Camera className="size-5" />
-                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider">Ubah Foto</span>
+                    <Camera className="size-5 text-[#DCEEB1]" />
+                    <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#DCEEB1]">Ubah Foto</span>
                   </>
                 )}
                 <input
@@ -331,53 +333,53 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
 
             {/* User Detail Summary */}
             <div className="space-y-1 w-full">
-              <h3 className="text-lg font-bold text-on-surface truncate">{profile.fullName || "Nama Panitia"}</h3>
-              <p className="text-xs font-mono text-on-surface-variant">NIM: {profile.nim || "-"}</p>
-              <p className="text-xs font-mono text-on-surface-variant/70 truncate">{profile.email ?? "-"}</p>
+              <h3 className="font-extrabold text-lg text-on-surface truncate">{profile.fullName || "Nama Panitia"}</h3>
+              <p className="font-mono text-xs text-on-surface-variant/80">NIM: {profile.nim || "-"}</p>
+              <p className="font-mono text-xs text-on-surface-variant/60 truncate">{profile.email ?? "-"}</p>
             </div>
 
             {profile.assignment && (
-              <div className="w-full pt-3 border-t border-outline-variant/20 flex flex-col gap-2.5 text-left">
+              <div className="w-full pt-3 border-t border-[#04000D]/5 flex flex-col gap-2 text-left">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-on-surface-variant font-medium">Divisi</span>
+                  <span className="text-on-surface-variant/70 font-medium">Divisi</span>
                   <span className="font-bold text-on-surface font-mono">{profile.assignment.division}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-on-surface-variant font-medium">Jabatan</span>
-                  <span className="font-bold text-primary font-mono">{profile.assignment.role}</span>
+                  <span className="text-on-surface-variant/70 font-medium">Jabatan</span>
+                  <span className="font-bold text-accent-magenta font-mono">{profile.assignment.role}</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Card 2: Statistik Personal */}
+          {/* Card 2: Ringkasan Aktivitas (DESIGN.md Stat Cards) */}
           {profile.assignment && (
-            <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8 space-y-4">
-              <div className="border-b border-outline-variant/20 pb-3">
-                <h3 className="text-sm font-extrabold text-on-surface flex items-center gap-2">
-                  <TrendingUp className="size-4 text-primary" /> Statistik Personal
+            <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6 space-y-4">
+              <div className="border-b border-[#04000D]/5 pb-3">
+                <h3 className="font-extrabold text-base text-on-surface flex items-center gap-2">
+                  <TrendingUp className="size-4 text-accent-magenta" /> Ringkasan Aktivitas
                 </h3>
-                <p className="text-[11px] text-on-surface-variant font-medium mt-0.5">
-                  Ringkasan aktivitas dan partisipasi panitia
+                <p className="text-[11px] font-medium text-on-surface-variant/70 mt-0.5">
+                  Partisipasi & pencapaian tugas panitia
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/40 text-center">
-                  <p className="text-[9px] font-mono font-bold text-on-surface-variant uppercase">SURAT</p>
-                  <p className="text-2xl font-black text-on-surface mt-1">{profile.stats.totalLetters}</p>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-[#04000D]/5 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-on-surface-variant/50 tracking-wider">SURAT</p>
+                  <p className="font-extrabold text-2xl text-on-surface mt-1">{profile.stats.totalLetters}</p>
                 </div>
-                <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/40 text-center">
-                  <p className="text-[9px] font-mono font-bold text-on-surface-variant uppercase">RAPAT</p>
-                  <p className="text-2xl font-black text-on-surface mt-1">{profile.stats.totalMeetings}</p>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-[#04000D]/5 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-on-surface-variant/50 tracking-wider">RAPAT</p>
+                  <p className="font-extrabold text-2xl text-on-surface mt-1">{profile.stats.totalMeetings}</p>
                 </div>
-                <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/40 text-center">
-                  <p className="text-[9px] font-mono font-bold text-on-surface-variant uppercase">TOTAL TASK</p>
-                  <p className="text-2xl font-black text-on-surface mt-1">{profile.stats.totalTasks}</p>
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-[#04000D]/5 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-on-surface-variant/50 tracking-wider">TOTAL TASK</p>
+                  <p className="font-extrabold text-2xl text-on-surface mt-1">{profile.stats.totalTasks}</p>
                 </div>
-                <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/40 text-center">
-                  <p className="text-[9px] font-mono font-bold text-emerald-700 uppercase">SELESAI</p>
-                  <p className="text-2xl font-black text-emerald-700 mt-1">{profile.stats.doneTasks}</p>
+                <div className="p-3.5 rounded-xl bg-[#DCEEB1]/20 border border-[#DCEEB1]/50 text-center">
+                  <p className="font-mono text-[9px] font-bold uppercase text-green-800 tracking-wider">SELESAI</p>
+                  <p className="font-extrabold text-2xl text-green-800 mt-1">{profile.stats.doneTasks}</p>
                 </div>
               </div>
             </div>
