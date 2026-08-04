@@ -25,17 +25,17 @@ INSERT INTO divisions (committee_year_id, name, slug, description, sort_order) V
 ON CONFLICT (committee_year_id, slug) DO NOTHING;
 
 -- 3
-INSERT INTO roles (committee_year_id, name, slug, level, is_approver, is_meeting_creator) VALUES
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'PIC / Penanggung Jawab', 'pic', 100, true, true),
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Ketua Panitia', 'ketua-panitia', 90, true, true),
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Wakil Ketua', 'wakil-ketua', 80, true, true),
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Sekretaris I', 'sekretaris-1', 75, true, false),
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Sekretaris II', 'sekretaris-2', 75, true, false),
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Bendahara', 'bendahara', 70, false, false),
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Koordinator Divisi', 'koordinator', 60, false, true),
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Wakil Koordinator', 'wakil-koordinator', 55, false, false),
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Anggota', 'anggota', 50, false, false),
-  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'PIC / Penanggung Jawab Subdivisi', 'pic-sub', 53, false, false)
+INSERT INTO roles (committee_year_id, name, slug, level, is_approver, is_meeting_creator, is_report_creator) VALUES
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'PIC / Penanggung Jawab', 'pic', 100, true, true, true),
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Ketua Panitia', 'ketua-panitia', 90, true, true, true),
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Wakil Ketua', 'wakil-ketua', 80, true, true, true),
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Sekretaris I', 'sekretaris-1', 75, true, false, true),
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Sekretaris II', 'sekretaris-2', 75, true, false, true),
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Bendahara', 'bendahara', 70, false, false, true),
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Koordinator Divisi', 'koordinator', 60, false, true, true),
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Wakil Koordinator', 'wakil-koordinator', 55, false, false, true),
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'Anggota', 'anggota', 50, false, false, false),
+  ((SELECT id FROM committee_years WHERE label = 'I-FEST 2026'), 'PIC / Penanggung Jawab Subdivisi', 'pic-sub', 53, false, false, false)
 ON CONFLICT (committee_year_id, slug) DO NOTHING;
 
 -- 4. KPI Items

@@ -95,7 +95,7 @@ export function WeeklyReportDashboardClient({
   const [isPending, startTransition] = useTransition();
 
   const userRoleLevel = session.roleLevel ?? 0;
-  const isCoordinator = userRoleLevel >= 55; // level 55 is coordinator/wakil koordinator
+  const isCoordinator = session.isReportCreator || userRoleLevel >= 90;
 
   // --- STATS COMPUTATIONS (For selected week) ---
   const weekReports = initialReports.filter(r => r.weekLabel === selectedWeek);

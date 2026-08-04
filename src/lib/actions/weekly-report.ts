@@ -17,7 +17,7 @@ async function requireActiveMember() {
   const admin = createAdminClient();
   const { data: assignment } = await admin
     .from("committee_assignments")
-    .select("id, division_id, role:roles(level, slug)")
+    .select("id, division_id, role:roles(level, slug, is_report_creator)")
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", userId)
     .eq("is_active", true)
@@ -43,9 +43,10 @@ export async function submitWeeklyReport(prevState: any, formData: FormData) {
     return { error: "Semua field wajib diisi." };
   }
 
-  // Auth check: caller must be assigned to this division or be BPH (level >= 70)
+  // Auth check: caller must have is_report_creator or be BPH Admin (level >= 90)
   const level = caller.role?.level ?? 0;
-  if (level < 55) {
+  const canReport = !!caller.role?.is_report_creator || level >= 90;
+  if (!canReport) {
     return { error: "Anda tidak memiliki akses untuk menyetor laporan." };
   }
   if (level < 70 && caller.division_id !== divisionId) {

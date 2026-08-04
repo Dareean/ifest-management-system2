@@ -18,6 +18,7 @@ export interface RoleData {
   level: number;
   is_approver: boolean;
   is_meeting_creator: boolean;
+  is_report_creator: boolean;
 }
 
 export interface AssignmentData {
@@ -73,7 +74,7 @@ export async function getRoles(): Promise<RoleData[]> {
 
   const { data } = await supabase
     .from("roles")
-    .select("id, name, slug, level, is_approver, is_meeting_creator")
+    .select("id, name, slug, level, is_approver, is_meeting_creator, is_report_creator")
     .eq("committee_year_id", YEAR_ID)
     .order("level", { ascending: false });
 

@@ -63,7 +63,7 @@ export function DivisionFormModal({ open, onClose, initial }: {
 export function RoleFormModal({ open, onClose, initial }: {
   open: boolean;
   onClose: () => void;
-  initial?: { id: string; name: string; slug: string; level: number; is_approver: boolean; is_meeting_creator: boolean } | null;
+  initial?: { id: string; name: string; slug: string; level: number; is_approver: boolean; is_meeting_creator: boolean; is_report_creator: boolean } | null;
 }) {
   const action = initial ? updateRole : createRole;
   const [state, formAction, pending] = useActionState(action, null);
@@ -85,7 +85,7 @@ export function RoleFormModal({ open, onClose, initial }: {
           <label className="caption block mb-xs text-on-surface-variant">Level (semakin tinggi semakin berwenang)</label>
           <Input name="level" type="number" defaultValue={initial?.level ?? 50} />
         </div>
-        <div className="flex gap-xl">
+        <div className="flex flex-wrap gap-md">
           <label className="flex items-center gap-xs cursor-pointer">
             <input type="checkbox" name="is_approver" defaultChecked={initial?.is_approver} className="size-4" />
             <span className="caption">Approver</span>
@@ -93,6 +93,10 @@ export function RoleFormModal({ open, onClose, initial }: {
           <label className="flex items-center gap-xs cursor-pointer">
             <input type="checkbox" name="is_meeting_creator" defaultChecked={initial?.is_meeting_creator} className="size-4" />
             <span className="caption">Meeting Creator</span>
+          </label>
+          <label className="flex items-center gap-xs cursor-pointer">
+            <input type="checkbox" name="is_report_creator" defaultChecked={initial?.is_report_creator} className="size-4" />
+            <span className="caption">Laporan Creator</span>
           </label>
         </div>
         <div className="flex gap-sm justify-end">

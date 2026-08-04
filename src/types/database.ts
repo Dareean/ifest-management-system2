@@ -27,6 +27,7 @@ export type Role = {
   level: number;
   is_approver: boolean;
   is_meeting_creator: boolean;
+  is_report_creator: boolean;
   created_at: string;
 };
 

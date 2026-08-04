@@ -105,6 +105,7 @@ export async function createRole(prevState: unknown, formData: FormData) {
   const level = parseInt(formData.get("level") as string) || 50;
   const isApprover = formData.get("is_approver") === "on";
   const isMeetingCreator = formData.get("is_meeting_creator") === "on";
+  const isReportCreator = formData.get("is_report_creator") === "on";
 
   const { error } = await supabase.from("roles").insert({
     committee_year_id: YEAR_ID,
@@ -113,6 +114,7 @@ export async function createRole(prevState: unknown, formData: FormData) {
     level,
     is_approver: isApprover,
     is_meeting_creator: isMeetingCreator,
+    is_report_creator: isReportCreator,
   });
 
   if (error) return { error: error.message };
@@ -131,10 +133,18 @@ export async function updateRole(prevState: unknown, formData: FormData) {
   const level = parseInt(formData.get("level") as string) || 50;
   const isApprover = formData.get("is_approver") === "on";
   const isMeetingCreator = formData.get("is_meeting_creator") === "on";
+  const isReportCreator = formData.get("is_report_creator") === "on";
 
   const { error } = await supabase
     .from("roles")
-    .update({ name, slug, level, is_approver: isApprover, is_meeting_creator: isMeetingCreator })
+    .update({ 
+      name, 
+      slug, 
+      level, 
+      is_approver: isApprover, 
+      is_meeting_creator: isMeetingCreator,
+      is_report_creator: isReportCreator,
+    })
     .eq("id", id);
 
   if (error) return { error: error.message };

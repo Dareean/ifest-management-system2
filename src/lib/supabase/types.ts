@@ -67,6 +67,7 @@ export interface Database {
           level: number;
           is_approver: boolean;
           is_meeting_creator: boolean;
+          is_report_creator: boolean;
           created_at: string;
         };
         Insert: {
@@ -77,6 +78,7 @@ export interface Database {
           level?: number;
           is_approver?: boolean;
           is_meeting_creator?: boolean;
+          is_report_creator?: boolean;
           created_at?: string;
         };
         Update: {
@@ -87,6 +89,7 @@ export interface Database {
           level?: number;
           is_approver?: boolean;
           is_meeting_creator?: boolean;
+          is_report_creator?: boolean;
           created_at?: string;
         };
       };

@@ -17,6 +17,7 @@ export interface AuthSession {
   roleLevel: number;
   isApprover: boolean;
   isMeetingCreator: boolean;
+  isReportCreator: boolean;
   isSecretary: boolean;
 }
 
@@ -41,7 +42,7 @@ async function getAuthSession(): Promise<AuthResult> {
       id,
       division_id,
       division:divisions!committee_assignments_division_id_fkey(name),
-      role:roles(name, slug, level, is_approver, is_meeting_creator)
+      role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
     `)
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", userId)
@@ -70,6 +71,7 @@ async function getAuthSession(): Promise<AuthResult> {
       roleLevel: role?.level ?? 0,
       isApprover: role?.is_approver ?? false,
       isMeetingCreator: role?.is_meeting_creator ?? false,
+      isReportCreator: role?.is_report_creator ?? false,
       isSecretary: SECRETARY_SLUGS.includes(roleSlug),
     },
   };
@@ -94,7 +96,7 @@ export async function requireRole(minLevel: number): Promise<
 }
 
 export async function requirePermission(
-  permission: "is_approver" | "is_meeting_creator",
+  permission: "is_approver" | "is_meeting_creator" | "is_report_creator",
 ): Promise<
   | { authorized: true; session: AuthSession }
   | { authorized: false; error: string }
@@ -106,12 +108,19 @@ export async function requirePermission(
   const hasPermission =
     permission === "is_approver"
       ? result.session.isApprover
-      : result.session.isMeetingCreator;
+      : permission === "is_meeting_creator"
+      ? result.session.isMeetingCreator
+      : result.session.isReportCreator;
 
   if (!hasPermission) {
+    const labels: Record<string, string> = {
+      is_approver: "approval",
+      is_meeting_creator: "membuat rapat",
+      is_report_creator: "membuat/menyetor laporan",
+    };
     return {
       authorized: false,
-      error: `Akses ditolak. Anda tidak memiliki izin ${permission === "is_approver" ? "approval" : "membuat rapat"}.`,
+      error: `Akses ditolak. Anda tidak memiliki izin ${labels[permission]}.`,
     };
   }
 
