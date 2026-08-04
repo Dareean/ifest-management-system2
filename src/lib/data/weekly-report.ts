@@ -18,7 +18,6 @@ export const REVERSE_DIVISION_MAP: Record<DivisionName, string> = {
 // Map database row to WeeklyReport interface
 export function mapDbRowToReport(row: any): WeeklyReport {
   const dbSlug = row.division?.slug || "";
-  // Map DB slug to DivisionName (or fallback to uppercase of slug)
   const division = (DIVISION_MAP[dbSlug] || dbSlug.toUpperCase().replace("-", " ")) as DivisionName;
   
   return {
@@ -26,8 +25,8 @@ export function mapDbRowToReport(row: any): WeeklyReport {
     division,
     divisionId: row.division?.id,
     divisionSlug: dbSlug,
-    supervisorId: row.division?.supervisor_id || undefined,
-    supervisorName: row.division?.supervisor?.profiles?.full_name || undefined,
+    supervisorId: row.supervisor_id || undefined,
+    supervisorName: row.supervisor_name || undefined,
     weekLabel: row.week_label,
     submittedAt: row.submitted_at,
     achievements: row.achievements,
@@ -42,27 +41,29 @@ export function mapDbRowToReport(row: any): WeeklyReport {
 export async function getWeeklyReportsForSupervisor(supervisorAssignmentId: string) {
   const supabase = createAdminClient();
   
-  // 1. Fetch divisions supervised by this user
+  // 1. Fetch division for this supervisor assignment
+  const { data: assignment } = await supabase
+    .from("committee_assignments")
+    .select("division_id")
+    .eq("id", supervisorAssignmentId)
+    .maybeSingle();
+
+  const divisionId = assignment?.division_id;
+
   const { data: divisions, error: divError } = await supabase
     .from("divisions")
-    .select(`
-      id,
-      name,
-      slug,
-      supervisor_id,
-      supervisor:committee_assignments!divisions_supervisor_id_fkey(
-        profiles(full_name)
-      )
-    `)
+    .select("id, name, slug")
     .eq("committee_year_id", YEAR_ID)
-    .eq("supervisor_id", supervisorAssignmentId);
+    .order("sort_order");
     
   if (divError || !divisions) {
-    console.error("Error fetching supervised divisions:", divError);
+    console.error("Error fetching divisions:", divError);
     return { divisions: [], reports: [] };
   }
+
+  const targetDivisions = divisionId ? divisions.filter((d) => d.id === divisionId) : divisions;
+  const divisionIds = targetDivisions.map((d) => d.id);
   
-  const divisionIds = divisions.map(d => d.id);
   if (divisionIds.length === 0) {
     return { divisions: [], reports: [] };
   }
@@ -83,11 +84,7 @@ export async function getWeeklyReportsForSupervisor(supervisorAssignmentId: stri
       division:divisions(
         id,
         name,
-        slug,
-        supervisor_id,
-        supervisor:committee_assignments!divisions_supervisor_id_fkey(
-          profiles(full_name)
-        )
+        slug
       )
     `)
     .in("division_id", divisionIds)
@@ -98,12 +95,12 @@ export async function getWeeklyReportsForSupervisor(supervisorAssignmentId: stri
   }
   
   return {
-    divisions: divisions.map((d: any) => ({
+    divisions: targetDivisions.map((d: any) => ({
       id: d.id,
       name: d.name,
       slug: d.slug,
       displayName: DIVISION_MAP[d.slug] || d.name,
-      supervisorName: d.supervisor?.profiles?.full_name || null
+      supervisorName: null
     })),
     reports: (reports || []).map(mapDbRowToReport)
   };
@@ -127,11 +124,7 @@ export async function getWeeklyReportsForCoordinator(divisionId: string) {
       division:divisions(
         id,
         name,
-        slug,
-        supervisor_id,
-        supervisor:committee_assignments!divisions_supervisor_id_fkey(
-          profiles(full_name)
-        )
+        slug
       )
     `)
     .eq("division_id", divisionId)
@@ -150,15 +143,7 @@ export async function getWeeklyReportsForAll() {
   // Fetch all divisions except BPH
   const { data: divisions, error: divError } = await supabase
     .from("divisions")
-    .select(`
-      id,
-      name,
-      slug,
-      supervisor_id,
-      supervisor:committee_assignments!divisions_supervisor_id_fkey(
-        profiles(full_name)
-      )
-    `)
+    .select("id, name, slug")
     .eq("committee_year_id", YEAR_ID)
     .neq("slug", "bph")
     .order("sort_order");
@@ -182,22 +167,22 @@ export async function getWeeklyReportsForAll() {
       division:divisions(
         id,
         name,
-        slug,
-        supervisor_id,
-        supervisor:committee_assignments!divisions_supervisor_id_fkey(
-          profiles(full_name)
-        )
+        slug
       )
     `)
     .order("submitted_at", { ascending: false });
     
+  if (reportsError) {
+    console.error("Error fetching weekly reports:", reportsError);
+  }
+
   return {
     divisions: divisions.map((d: any) => ({
       id: d.id,
       name: d.name,
       slug: d.slug,
       displayName: DIVISION_MAP[d.slug] || d.name,
-      supervisorName: d.supervisor?.profiles?.full_name || null
+      supervisorName: null
     })),
     reports: (reports || []).map(mapDbRowToReport)
   };

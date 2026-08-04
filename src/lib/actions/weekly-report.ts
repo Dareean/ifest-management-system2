@@ -65,18 +65,10 @@ export async function submitWeeklyReport(prevState: any, formData: FormData) {
     return { error: "Laporan untuk minggu ini sudah disetujui dan tidak dapat diubah." };
   }
 
-  // 1. Fetch division detail to get name, slug, and supervisor info
+  // 1. Fetch division detail to get name and slug
   const { data: division } = await supabase
     .from("divisions")
-    .select(`
-      name, 
-      slug, 
-      supervisor:committee_assignments!divisions_supervisor_id_fkey(
-        id,
-        user_id,
-        profiles(full_name)
-      )
-    `)
+    .select("name, slug")
     .eq("id", divisionId)
     .single();
 
@@ -123,10 +115,21 @@ export async function submitWeeklyReport(prevState: any, formData: FormData) {
   }
 
   // 2. Send email notification to supervisor if supervisor exists
-  const supervisor = division?.supervisor as any;
-  if (supervisor && supervisor.user_id) {
-    const supervisorUserId = supervisor.user_id;
-    const supervisorName = supervisor.profiles?.full_name || "Pengawas";
+  const { data: supervisorAssignment } = await supabase
+    .from("committee_assignments")
+    .select(`
+      user_id,
+      role:roles!inner(level),
+      user:profiles(full_name)
+    `)
+    .eq("division_id", divisionId)
+    .eq("is_active", true)
+    .gte("role.level", 55)
+    .maybeSingle();
+
+  if (supervisorAssignment && supervisorAssignment.user_id) {
+    const supervisorUserId = supervisorAssignment.user_id;
+    const supervisorName = (supervisorAssignment.user as any)?.full_name || "Pengawas";
     
     // Get supervisor email from Auth admin
     const { data: authUser } = await supabase.auth.admin.getUserById(supervisorUserId);

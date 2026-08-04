@@ -38,19 +38,10 @@ export interface DivisionTaskSummary {
 export async function getDivisionsWithTasks(): Promise<DivisionWithTasks[]> {
   const supabase = createAdminClient();
 
-  // Fetch divisions with their supervisors (joining profiles via committee_assignments)
+  // 1. Fetch divisions
   const { data: divisions, error: divError } = await supabase
     .from("divisions")
-    .select(`
-      id,
-      name,
-      slug,
-      description,
-      supervisor_id,
-      supervisor:committee_assignments!divisions_supervisor_id_fkey(
-        profiles(full_name)
-      )
-    `)
+    .select("id, name, slug, description, sort_order")
     .eq("committee_year_id", YEAR_ID)
     .order("sort_order");
 
@@ -59,7 +50,33 @@ export async function getDivisionsWithTasks(): Promise<DivisionWithTasks[]> {
     return [];
   }
 
-  // Fetch all tasks for the active year
+  // 2. Fetch supervisors (Koordinator for each division)
+  const { data: supervisors } = await supabase
+    .from("committee_assignments")
+    .select(`
+      id,
+      division_id,
+      role:roles!inner(name, level),
+      user:profiles(full_name)
+    `)
+    .eq("committee_year_id", YEAR_ID)
+    .eq("is_active", true)
+    .gte("role.level", 55);
+
+  const supervisorMap: Record<string, { id: string; name: string; level: number }> = {};
+  for (const s of (supervisors as any[]) ?? []) {
+    const dId = s.division_id;
+    const currentLevel = s.role?.level ?? 0;
+    if (!supervisorMap[dId] || currentLevel > supervisorMap[dId].level) {
+      supervisorMap[dId] = {
+        id: s.id,
+        name: s.user?.full_name ?? "",
+        level: currentLevel,
+      };
+    }
+  }
+
+  // 3. Fetch all tasks for the active year
   const { data: tasks, error: tasksError } = await supabase
     .from("tasks")
     .select(`
@@ -73,7 +90,7 @@ export async function getDivisionsWithTasks(): Promise<DivisionWithTasks[]> {
       division_id,
       assignee_id,
       assignee:committee_assignments(
-        profiles(full_name)
+        user:profiles(full_name)
       )
     `)
     .eq("committee_year_id", YEAR_ID)
@@ -84,13 +101,12 @@ export async function getDivisionsWithTasks(): Promise<DivisionWithTasks[]> {
   }
 
   const tasksByDivision: Record<string, Task[]> = {};
-  for (const t of tasks ?? []) {
+  for (const t of (tasks as any[]) ?? []) {
     const did = t.division_id;
     if (!tasksByDivision[did]) tasksByDivision[did] = [];
-    
-    // Extract assignee name
-    const assigneeName = (t.assignee as any)?.profiles?.full_name ?? null;
-    
+
+    const assigneeName = t.assignee?.user?.full_name ?? null;
+
     tasksByDivision[did].push({
       id: t.id,
       title: t.title,
@@ -106,16 +122,15 @@ export async function getDivisionsWithTasks(): Promise<DivisionWithTasks[]> {
 
   return divisions.map((div: any) => {
     const divTasks = tasksByDivision[div.id] ?? [];
-    // Extract supervisor name
-    const supervisorName = div.supervisor?.profiles?.full_name ?? null;
+    const supInfo = supervisorMap[div.id];
 
     return {
       id: div.id,
       name: div.name,
       slug: div.slug,
       description: div.description,
-      supervisorId: div.supervisor_id,
-      supervisorName,
+      supervisorId: supInfo?.id ?? null,
+      supervisorName: supInfo?.name ?? null,
       tasks: divTasks,
       totalTasks: divTasks.length,
       doneTasks: divTasks.filter((t) => t.status === "done").length,

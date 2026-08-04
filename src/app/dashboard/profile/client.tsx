@@ -20,12 +20,13 @@ import {
   CheckSquare,
   ExternalLink,
   Pencil,
+  Lock,
+  Save,
 } from "lucide-react";
 import { updateProfile, changePassword } from "@/lib/actions/profile";
 import type { ProfileData } from "@/lib/data/profile";
 
 export function ProfileClient({ profile }: { profile: ProfileData }) {
-  const [activeTab, setActiveTab] = useState<"INFO" | "STATISTIK" | "KEAMANAN">("INFO");
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(updateProfile, null);
   const [pwState, pwAction, pwPending] = useActionState(changePassword, null);
@@ -84,410 +85,305 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
   const waUrl = formattedPhone ? `https://wa.me/${formattedPhone.startsWith("0") ? "62" + formattedPhone.slice(1) : formattedPhone}` : null;
 
   return (
-    <div className="w-full flex flex-col gap-6">
-      {/* Glassmorphism Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/40 backdrop-blur-md border border-outline-variant/20 rounded-3xl p-6">
+    <div className="w-full flex flex-col gap-8">
+      {/* Header (Matching main dashboard style) */}
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-primary font-mono text-xs font-bold tracking-widest uppercase mb-1">
-            PENGATURAN AKUN
+          <p className="text-accent-magenta font-mono text-xs font-bold tracking-widest uppercase mb-1">
+            AKUN PANITIA
           </p>
-          <h1 className="text-3xl font-black tracking-tight text-on-surface font-sans">
+          <h1 className="text-4xl font-extrabold tracking-tight text-on-surface">
             Profil Pengguna
           </h1>
-          <p className="mt-1 text-sm text-on-surface-variant font-medium">
-            Kelola data pribadi, informasi kepanitiaan, dan keamanan akun Anda
-          </p>
         </div>
-
         <Button
-          variant="outline"
+          variant={editing ? "outline" : "primary"}
+          size="sm"
           onClick={() => setEditing(!editing)}
-          className="cursor-pointer font-sans text-sm font-bold gap-2 px-5 py-6 rounded-2xl border-outline-variant/60 hover:bg-white hover:shadow-md transition-all shrink-0"
+          className="cursor-pointer shrink-0 font-bold"
         >
           <Pencil className="size-4" />
-          {editing ? "Selesai Edit" : "Edit Profil"}
+          {editing ? "Batal Edit" : "Edit Profil"}
         </Button>
       </div>
 
-      {/* Profile Hero Banner */}
-      <div className="bg-white border border-outline-variant/40 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 via-accent-magenta/5 to-transparent rounded-full blur-2xl -z-10 pointer-events-none" />
-
-        {/* Avatar Container with Upload Hover Overlay */}
-        <div className="relative group shrink-0 select-none">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={profile.fullName}
-              className="size-24 rounded-3xl object-cover border-2 border-primary/20 shadow-md"
-            />
-          ) : (
-            <div className="size-24 rounded-3xl bg-primary/10 text-primary font-mono font-black text-3xl flex items-center justify-center border-2 border-primary/20 shadow-md">
-              {getInitials(profile.fullName)}
-            </div>
-          )}
-
-          <label className="absolute inset-0 rounded-3xl bg-black/50 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-white gap-1">
-            {uploading ? (
-              <Loader2 className="size-6 animate-spin" />
-            ) : (
-              <>
-                <Camera className="size-6" />
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider">Ubah</span>
-              </>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-              disabled={uploading}
-            />
-          </label>
-        </div>
-
-        {/* User Info Header Summary */}
-        <div className="flex-1 min-w-0 text-center md:text-left space-y-2">
-          <div className="flex flex-col md:flex-row md:items-center gap-3 justify-between">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">
-                {profile.fullName || "Nama Panitia"}
-              </h2>
-              <p className="text-sm font-mono text-on-surface-variant/80 mt-1 flex items-center justify-center md:justify-start gap-2">
-                <Hash className="size-4 text-primary" /> {profile.nim || "NIM belum diisi"}
-              </p>
-            </div>
-          </div>
-
-          {/* Badges */}
-          <div className="flex items-center justify-center md:justify-start gap-2 pt-2 flex-wrap">
-            {profile.assignment ? (
-              <>
-                <span className="text-xs font-mono font-bold px-3 py-1 rounded-xl bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
-                  {profile.assignment.role}
-                </span>
-                <span className="text-xs font-mono font-bold px-3 py-1 rounded-xl bg-surface-container text-on-surface border border-outline-variant/40 uppercase tracking-wider">
-                  {profile.assignment.division}
-                </span>
-                <span className={`text-xs font-mono font-bold px-3 py-1 rounded-xl border uppercase tracking-wider ${
-                  profile.assignment.isActive ? "bg-emerald-50 text-emerald-700 border-emerald-300" : "bg-red-50 text-red-700 border-red-300"
-                }`}>
-                  {profile.assignment.isActive ? "Panitia Aktif" : "Non-Aktif"}
-                </span>
-              </>
-            ) : (
-              <span className="text-xs font-mono font-bold px-3 py-1 rounded-xl bg-surface-container text-on-surface-variant border border-outline-variant/40">
-                Belum Terdaftar di Kepanitiaan
-              </span>
-            )}
-          </div>
-
-          {uploadError && (
-            <p className="text-xs font-mono font-bold text-red-600 pt-1">{uploadError}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Navigation Tabs Bar */}
-      <div className="flex items-center gap-2 bg-white border border-outline-variant/40 rounded-2xl p-2 shadow-sm">
-        <button
-          onClick={() => setActiveTab("INFO")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold font-mono tracking-wider uppercase transition-all duration-200 cursor-pointer ${
-            activeTab === "INFO"
-              ? "bg-primary text-white shadow-sm font-black"
-              : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
-          }`}
-        >
-          <User className="size-4" />
-          Data Diri
-        </button>
-
-        <button
-          onClick={() => setActiveTab("STATISTIK")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold font-mono tracking-wider uppercase transition-all duration-200 cursor-pointer ${
-            activeTab === "STATISTIK"
-              ? "bg-primary text-white shadow-sm font-black"
-              : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
-          }`}
-        >
-          <TrendingUp className="size-4" />
-          Kepanitiaan & Statistik
-        </button>
-
-        <button
-          onClick={() => setActiveTab("KEAMANAN")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold font-mono tracking-wider uppercase transition-all duration-200 cursor-pointer ${
-            activeTab === "KEAMANAN"
-              ? "bg-primary text-white shadow-sm font-black"
-              : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
-          }`}
-        >
-          <KeyRound className="size-4" />
-          Keamanan Akun
-        </button>
-      </div>
-
-      {/* Tab 1: INFO PROFIL */}
-      {activeTab === "INFO" && (
-        <div className="bg-white border border-outline-variant/40 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col gap-6">
-          <div className="flex items-center justify-between border-b border-outline-variant/30 pb-4">
-            <div>
-              <h3 className="text-xl font-black text-on-surface">Informasi Data Diri</h3>
-              <p className="text-xs text-on-surface-variant mt-0.5">
-                Perubahan data diri dapat dilihat oleh seluruh panitia IFEST
-              </p>
-            </div>
-            {editing && (
-              <span className="text-xs font-mono font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-xl border border-amber-300">
-                Mode Edit Aktif
-              </span>
-            )}
-          </div>
-
-          {state?.error && (
-            <div className="text-xs font-mono text-red-700 bg-red-50 border border-red-300 rounded-2xl p-4">
-              {state.error}
-            </div>
-          )}
-          {state?.success && (
-            <div className="text-xs font-mono text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-2xl p-4">
-              Profil berhasil diperbarui dan disinkronkan ke seluruh sistem!
-            </div>
-          )}
-
-          <form action={formAction} className="flex flex-col gap-6">
-            <input type="hidden" name="userId" value={profile.userId ?? ""} />
-            <input type="hidden" name="avatarUrl" value={avatarUrl} />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Full Name */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
-                  <User className="size-3.5" /> Nama Lengkap
-                </label>
-                <Input
-                  name="fullName"
-                  defaultValue={profile.fullName}
-                  disabled={!editing}
-                  className={`h-11 rounded-2xl text-sm font-medium ${!editing ? "opacity-70 bg-surface-container/30 border-outline-variant/40 cursor-not-allowed" : "border-primary/80"}`}
-                  required
-                />
+      {/* Main Grid Layout (2/3 Left Column, 1/3 Right Column) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Left Column (2/3 Width): Data Diri & Password Form */}
+        <div className="lg:col-span-2 flex flex-col gap-8">
+          {/* Card 1: Informasi Data Diri */}
+          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
+            <div className="flex items-center justify-between border-b border-outline-variant/20 pb-4 mb-6">
+              <div>
+                <h2 className="text-xl font-extrabold text-on-surface flex items-center gap-2.5">
+                  <User className="size-5 text-primary" /> Informasi Data Diri
+                </h2>
+                <p className="text-xs text-on-surface-variant font-medium mt-1">
+                  Kelola data identitas dan kontak WhatsApp yang dapat dilihat oleh panitia lain
+                </p>
               </div>
+              {editing && (
+                <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-300 shrink-0">
+                  MODE EDIT AKTIF
+                </span>
+              )}
+            </div>
 
-              {/* NIM */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
-                  <Hash className="size-3.5" /> NIM (Nomor Induk Mahasiswa)
-                </label>
-                <Input
-                  name="nim"
-                  defaultValue={profile.nim}
-                  disabled={!editing}
-                  className={`h-11 rounded-2xl text-sm font-mono font-medium ${!editing ? "opacity-70 bg-surface-container/30 border-outline-variant/40 cursor-not-allowed" : "border-primary/80"}`}
-                  required
-                />
+            {state?.error && (
+              <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono mb-6">
+                {state.error}
               </div>
-
-              {/* Email (Readonly) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
-                  <Mail className="size-3.5" /> Email Terdaftar
-                </label>
-                <Input
-                  value={profile.email ?? ""}
-                  disabled
-                  className="h-11 rounded-2xl text-sm font-mono opacity-60 bg-surface-container/20 border-outline-variant/30 cursor-not-allowed"
-                />
+            )}
+            {state?.success && (
+              <div className="text-sm text-accent-green bg-accent-green/10 border border-accent-green/30 rounded-lg p-4 font-mono mb-6">
+                Profil berhasil diperbarui dan disinkronkan ke seluruh sistem!
               </div>
+            )}
 
-              {/* Phone / WhatsApp */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
-                    <Phone className="size-3.5" /> No. WhatsApp / HP
+            <form action={formAction} className="flex flex-col gap-6">
+              <input type="hidden" name="userId" value={profile.userId ?? ""} />
+              <input type="hidden" name="avatarUrl" value={avatarUrl} />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Full Name */}
+                <div>
+                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+                    Nama Lengkap
                   </label>
-                  {waUrl && (
-                    <a
-                      href={waUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] font-mono font-bold text-emerald-600 hover:underline inline-flex items-center gap-1"
-                    >
-                      Uji WhatsApp ↗
-                    </a>
-                  )}
+                  <Input
+                    name="fullName"
+                    defaultValue={profile.fullName}
+                    disabled={!editing}
+                    className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
+                    required
+                  />
                 </div>
-                <Input
-                  name="phone"
-                  defaultValue={profile.phone ?? ""}
-                  disabled={!editing}
-                  className={`h-11 rounded-2xl text-sm font-mono font-medium ${!editing ? "opacity-70 bg-surface-container/30 border-outline-variant/40 cursor-not-allowed" : "border-primary/80"}`}
-                  placeholder="Contoh: 081234567890"
-                />
+
+                {/* NIM */}
+                <div>
+                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
+                    <Hash className="size-3.5" /> NIM
+                  </label>
+                  <Input
+                    name="nim"
+                    defaultValue={profile.nim}
+                    disabled={!editing}
+                    className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
+                    required
+                  />
+                </div>
+
+                {/* Email (Readonly) */}
+                <div>
+                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold flex items-center gap-1.5">
+                    <Mail className="size-3.5" /> Email
+                  </label>
+                  <Input
+                    value={profile.email ?? ""}
+                    disabled
+                    className="opacity-60 bg-surface-container/20 cursor-not-allowed"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="caption block text-on-surface-variant font-semibold flex items-center gap-1.5">
+                      <Phone className="size-3.5" /> No. HP / WhatsApp
+                    </label>
+                    {waUrl && (
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-mono font-bold text-emerald-600 hover:underline flex items-center gap-1"
+                      >
+                        Uji WA ↗
+                      </a>
+                    )}
+                  </div>
+                  <Input
+                    name="phone"
+                    defaultValue={profile.phone ?? ""}
+                    disabled={!editing}
+                    className={!editing ? "opacity-60 bg-surface-container/20 cursor-not-allowed" : ""}
+                    placeholder="Contoh: 081234567890"
+                  />
+                </div>
               </div>
+
+              {editing && (
+                <div className="flex justify-end mt-2">
+                  <Button type="submit" disabled={pending} className="cursor-pointer font-bold">
+                    <Save className="size-4" />
+                    {pending ? "Menyimpan..." : "Simpan Perubahan"}
+                  </Button>
+                </div>
+              )}
+            </form>
+          </div>
+
+          {/* Card 2: Keamanan & Password */}
+          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8">
+            <div className="border-b border-outline-variant/20 pb-4 mb-6">
+              <h2 className="text-xl font-extrabold text-on-surface flex items-center gap-2.5">
+                <Lock className="size-5 text-accent-magenta" /> Keamanan & Password
+              </h2>
+              <p className="text-xs text-on-surface-variant font-medium mt-1">
+                Ganti kata sandi akun Anda secara berkala untuk menjaga keamanan data
+              </p>
             </div>
 
-            {editing && (
-              <div className="flex justify-end pt-2">
-                <Button
-                  type="submit"
-                  disabled={pending}
-                  className="cursor-pointer font-bold px-6 py-5 rounded-2xl shadow-md shadow-primary/10"
-                >
-                  {pending ? "Menyimpan..." : "Simpan Perubahan Data Diri"}
+            {pwState?.error && (
+              <div className="text-sm text-error bg-error-container rounded-lg p-4 font-mono mb-6">
+                {pwState.error}
+              </div>
+            )}
+            {pwState?.success && (
+              <div className="text-sm text-accent-green bg-accent-green/10 border border-accent-green/30 rounded-lg p-4 font-mono mb-6">
+                Password berhasil diperbarui!
+              </div>
+            )}
+
+            <form action={pwAction} className="flex flex-col gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+                    Password Baru
+                  </label>
+                  <Input
+                    type="password"
+                    name="password"
+                    required
+                    placeholder="Minimal 6 karakter"
+                  />
+                </div>
+
+                <div>
+                  <label className="caption block mb-1.5 text-on-surface-variant font-semibold">
+                    Konfirmasi Password
+                  </label>
+                  <Input
+                    type="password"
+                    name="confirmPassword"
+                    required
+                    placeholder="Ulangi password baru"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-2">
+                <Button type="submit" disabled={pwPending} className="cursor-pointer font-bold">
+                  {pwPending ? "Memproses..." : "Perbarui Password"}
                 </Button>
               </div>
-            )}
-          </form>
+            </form>
+          </div>
         </div>
-      )}
 
-      {/* Tab 2: STATISTIK & KEPANITIAAN */}
-      {activeTab === "STATISTIK" && (
-        <div className="flex flex-col gap-6">
-          {/* Kepanitiaan Status */}
-          {profile.assignment ? (
-            <div className="bg-white border border-outline-variant/40 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-outline-variant/30 pb-4">
-                <div>
-                  <h3 className="text-xl font-black text-on-surface">Status Penugasan Kepanitiaan</h3>
-                  <p className="text-xs text-on-surface-variant mt-0.5">
-                    Struktur divisi & hak jabatan dalam kepanitiaan I-FEST 2026
-                  </p>
-                </div>
-                <span className="text-xs font-mono font-bold px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-300">
-                  Terverifikasi
+        {/* Right Column (1/3 Width): Identitas Card & Statistik Personal */}
+        <div className="flex flex-col gap-8">
+          {/* Card 1: Identitas & Foto Panitia */}
+          <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8 flex flex-col items-center text-center space-y-4">
+            <div className="flex items-center justify-between w-full border-b border-outline-variant/20 pb-3 mb-1">
+              <h3 className="text-sm font-extrabold text-on-surface flex items-center gap-2">
+                <Shield className="size-4 text-primary" /> Identitas Panitia
+              </h3>
+              {profile.assignment?.isActive && (
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-300">
+                  AKTIF
                 </span>
+              )}
+            </div>
+
+            {/* Avatar Container with Upload */}
+            <div className="relative group shrink-0 select-none my-2">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={profile.fullName}
+                  className="size-24 rounded-2xl object-cover border border-outline-variant/60 shadow-sm"
+                />
+              ) : (
+                <div className="size-24 rounded-2xl bg-surface-container text-primary font-mono font-bold text-3xl flex items-center justify-center border border-outline-variant/60">
+                  {getInitials(profile.fullName)}
+                </div>
+              )}
+
+              <label className="absolute inset-0 rounded-2xl bg-black/50 flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-white gap-1">
+                {uploading ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  <>
+                    <Camera className="size-5" />
+                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider">Ubah Foto</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                  disabled={uploading}
+                />
+              </label>
+            </div>
+
+            {/* User Detail Summary */}
+            <div className="space-y-1 w-full">
+              <h3 className="text-lg font-bold text-on-surface truncate">{profile.fullName || "Nama Panitia"}</h3>
+              <p className="text-xs font-mono text-on-surface-variant">NIM: {profile.nim || "-"}</p>
+              <p className="text-xs font-mono text-on-surface-variant/70 truncate">{profile.email ?? "-"}</p>
+            </div>
+
+            {profile.assignment && (
+              <div className="w-full pt-3 border-t border-outline-variant/20 flex flex-col gap-2.5 text-left">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-on-surface-variant font-medium">Divisi</span>
+                  <span className="font-bold text-on-surface font-mono">{profile.assignment.division}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-on-surface-variant font-medium">Jabatan</span>
+                  <span className="font-bold text-primary font-mono">{profile.assignment.role}</span>
+                </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <div className="p-4 rounded-2xl bg-surface-container/30 border border-outline-variant/40 space-y-1">
-                  <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-variant">Divisi</p>
-                  <p className="text-base font-extrabold text-on-surface">{profile.assignment.division}</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-surface-container/30 border border-outline-variant/40 space-y-1">
-                  <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-variant">Jabatan / Role</p>
-                  <p className="text-base font-extrabold text-primary">{profile.assignment.role}</p>
-                </div>
-                <div className="p-4 rounded-2xl bg-surface-container/30 border border-outline-variant/40 space-y-1">
-                  <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-on-surface-variant">Tanggal Ditugaskan</p>
-                  <p className="text-sm font-mono font-bold text-on-surface">
-                    {new Date(profile.assignment.assignedAt).toLocaleDateString("id-ID", {
-                      day: "numeric", month: "long", year: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white border border-outline-variant/40 rounded-3xl p-8 shadow-sm text-center">
-              <Shield className="size-12 text-on-surface-variant/40 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-on-surface">Belum Memiliki Penugasan</h3>
-              <p className="text-xs text-on-surface-variant mt-1">
-                Silakan hubungi BPH Admin untuk melakukan penugasan divisi dan role.
-              </p>
-            </div>
-          )}
-
-          {/* Stats Grid Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white border border-outline-variant/60 rounded-3xl p-6 flex flex-col gap-2 shadow-sm text-center">
-              <p className="text-[10px] font-mono font-bold tracking-widest text-on-surface-variant uppercase flex items-center justify-center gap-1.5">
-                <FileText className="size-3.5 text-primary" /> SURAT
-              </p>
-              <p className="text-4xl font-black text-on-surface my-1 leading-none">{profile.stats.totalLetters}</p>
-              <p className="text-[10px] text-on-surface-variant font-mono">Permohonan diajukan</p>
-            </div>
-
-            <div className="bg-white border border-outline-variant/60 rounded-3xl p-6 flex flex-col gap-2 shadow-sm text-center">
-              <p className="text-[10px] font-mono font-bold tracking-widest text-on-surface-variant uppercase flex items-center justify-center gap-1.5">
-                <CalendarDays className="size-3.5 text-block-blue" /> RAPAT
-              </p>
-              <p className="text-4xl font-black text-on-surface my-1 leading-none">{profile.stats.totalMeetings}</p>
-              <p className="text-[10px] text-on-surface-variant font-mono">Undangan diterima</p>
-            </div>
-
-            <div className="bg-white border border-outline-variant/60 rounded-3xl p-6 flex flex-col gap-2 shadow-sm text-center">
-              <p className="text-[10px] font-mono font-bold tracking-widest text-on-surface-variant uppercase flex items-center justify-center gap-1.5">
-                <CheckSquare className="size-3.5 text-amber-600" /> TOTAL TASK
-              </p>
-              <p className="text-4xl font-black text-on-surface my-1 leading-none">{profile.stats.totalTasks}</p>
-              <p className="text-[10px] text-on-surface-variant font-mono">Tugas diberikan</p>
-            </div>
-
-            <div className="bg-white border border-outline-variant/60 rounded-3xl p-6 flex flex-col gap-2 shadow-sm text-center">
-              <p className="text-[10px] font-mono font-bold tracking-widest text-on-surface-variant uppercase flex items-center justify-center gap-1.5">
-                <CheckCircle2 className="size-3.5 text-emerald-600" /> SELESAI
-              </p>
-              <p className="text-4xl font-black text-on-surface my-1 leading-none">{profile.stats.doneTasks}</p>
-              <p className="text-[10px] text-on-surface-variant font-mono">Tugas rampung</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab 3: KEAMANAN & PASSWORD */}
-      {activeTab === "KEAMANAN" && (
-        <div className="bg-white border border-outline-variant/40 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col gap-6">
-          <div className="border-b border-outline-variant/30 pb-4">
-            <h3 className="text-xl font-black text-on-surface">Keamanan & Password Akun</h3>
-            <p className="text-xs text-on-surface-variant mt-0.5">
-              Ganti kata sandi akun Anda secara berkala untuk menjaga keamanan data
-            </p>
+            )}
           </div>
 
-          {pwState?.error && (
-            <div className="text-xs font-mono text-red-700 bg-red-50 border border-red-300 rounded-2xl p-4">
-              {pwState.error}
-            </div>
-          )}
-          {pwState?.success && (
-            <div className="text-xs font-mono text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-2xl p-4">
-              Password berhasil diperbarui! Silakan gunakan password baru Anda untuk login berikutnya.
-            </div>
-          )}
-
-          <form action={pwAction} className="flex flex-col gap-6 max-w-xl">
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
-                  <KeyRound className="size-3.5" /> Password Baru
-                </label>
-                <Input
-                  type="password"
-                  name="password"
-                  required
-                  placeholder="Minimal 6 karakter"
-                  className="h-11 rounded-2xl text-sm"
-                />
+          {/* Card 2: Statistik Personal */}
+          {profile.assignment && (
+            <div className="bg-white border border-outline-variant/60 rounded-2xl p-6 sm:p-8 space-y-4">
+              <div className="border-b border-outline-variant/20 pb-3">
+                <h3 className="text-sm font-extrabold text-on-surface flex items-center gap-2">
+                  <TrendingUp className="size-4 text-primary" /> Statistik Personal
+                </h3>
+                <p className="text-[11px] text-on-surface-variant font-medium mt-0.5">
+                  Ringkasan aktivitas dan partisipasi panitia
+                </p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
-                  <KeyRound className="size-3.5" /> Konfirmasi Password Baru
-                </label>
-                <Input
-                  type="password"
-                  name="confirmPassword"
-                  required
-                  placeholder="Ketik ulang password baru"
-                  className="h-11 rounded-2xl text-sm"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/40 text-center">
+                  <p className="text-[9px] font-mono font-bold text-on-surface-variant uppercase">SURAT</p>
+                  <p className="text-2xl font-black text-on-surface mt-1">{profile.stats.totalLetters}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/40 text-center">
+                  <p className="text-[9px] font-mono font-bold text-on-surface-variant uppercase">RAPAT</p>
+                  <p className="text-2xl font-black text-on-surface mt-1">{profile.stats.totalMeetings}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/40 text-center">
+                  <p className="text-[9px] font-mono font-bold text-on-surface-variant uppercase">TOTAL TASK</p>
+                  <p className="text-2xl font-black text-on-surface mt-1">{profile.stats.totalTasks}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/40 text-center">
+                  <p className="text-[9px] font-mono font-bold text-emerald-700 uppercase">SELESAI</p>
+                  <p className="text-2xl font-black text-emerald-700 mt-1">{profile.stats.doneTasks}</p>
+                </div>
               </div>
             </div>
-
-            <div className="flex justify-end pt-2">
-              <Button
-                type="submit"
-                disabled={pwPending}
-                className="cursor-pointer font-bold px-6 py-5 rounded-2xl shadow-md shadow-primary/10"
-              >
-                {pwPending ? "Memproses..." : "Perbarui Password Akun"}
-              </Button>
-            </div>
-          </form>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
