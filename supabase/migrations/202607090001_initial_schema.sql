@@ -386,3 +386,14 @@ CREATE POLICY "Allow authenticated all" ON email_queue FOR ALL USING (auth.role(
 -- Profile-specific: users can only see/edit their own profile
 CREATE POLICY "Allow profiles select own" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Allow profiles update own" ON profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+
+-- ============================================================
+-- GRANTS
+-- Tabel yang dibuat oleh migration tidak otomatis mendapat
+-- privilege dari roles.sql bawaan Supabase. GRANT eksplisit di sini
+-- agar anon / authenticated / service_role bisa mengakses.
+-- ============================================================
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
