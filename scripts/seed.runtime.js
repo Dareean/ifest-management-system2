@@ -1,7 +1,14 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = 'https://xxmxbyiggrottreetrig.supabase.co';
-const svcKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXhieWlnZ3JvdHRyZWV0cmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzM5NjczNSwiZXhwIjoyMDk4OTcyNzM1fQ.XOqLhMsqoHAb3J6FZH6jo4jZiOAxGl6BMhdZshY_3xw';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !svcKey) {
+  console.error('Missing Supabase credentials. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
+  console.error('For local: load .env.local via `node -r dotenv/config` or set env vars.');
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, svcKey, { auth: { persistSession: false } });
 
 const yearId = 'c2f2a48e-3e58-4559-aaa0-623a3825348b';

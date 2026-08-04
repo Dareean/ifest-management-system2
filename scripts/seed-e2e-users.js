@@ -1,7 +1,13 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = process.env.TEST_SUPABASE_URL || 'https://xxmxbyiggrottreetrig.supabase.co';
-const svcKey = process.env.TEST_SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXhieWlnZ3JvdHRyZWV0cmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzM5NjczNSwiZXhwIjoyMDk4OTcyNzM1fQ.XOqLhMsqoHAb3J6FZH6jo4jZiOAxGl6BMhdZshY_3xw';
+const supabaseUrl = process.env.TEST_SUPABASE_URL;
+const svcKey = process.env.TEST_SUPABASE_SERVICE_KEY;
+
+if (!supabaseUrl || !svcKey) {
+  console.error('Missing test Supabase credentials. Set TEST_SUPABASE_URL and TEST_SUPABASE_SERVICE_KEY.');
+  console.error('Load from .env.test: `node -r dotenv/config` or set env vars. JANGAN fallback ke produksi.');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, svcKey, { auth: { persistSession: false } });
 
