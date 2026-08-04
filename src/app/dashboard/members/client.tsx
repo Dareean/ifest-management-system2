@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, UserPlus, Trash2, Search, Filter, FileText, Video } from "lucide-react";
+import { Users, UserPlus, Trash2, Search, Filter, FileText, Video, X, ExternalLink, PhoneCall, Info } from "lucide-react";
 import { removeMember } from "@/lib/actions/remove-member";
 import { togglePersonnelReportCreator, togglePersonnelMeetingCreator } from "@/lib/actions/admin";
 import type { MemberRow, DivisionGroup } from "./page";
@@ -19,6 +19,108 @@ interface Props {
   allDivisions?: DivisionGroup[];
 }
 
+function MemberDetailModal({
+  open,
+  onClose,
+  member,
+}: {
+  open: boolean;
+  onClose: () => void;
+  member: MemberRow;
+}) {
+  if (!open) return null;
+
+  const initials = member.name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const formattedPhone = member.phone ? member.phone.replace(/[^0-9]/g, "") : null;
+  const waUrl = formattedPhone ? `https://wa.me/${formattedPhone.startsWith("0") ? "62" + formattedPhone.slice(1) : formattedPhone}` : null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white border border-outline-variant/60 rounded-3xl p-6 w-full max-w-md shadow-2xl relative space-y-6">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-full transition-colors cursor-pointer"
+        >
+          <X className="size-5" />
+        </button>
+
+        <div className="flex flex-col items-center text-center space-y-3 pt-2">
+          {member.avatarUrl ? (
+            <img
+              src={member.avatarUrl}
+              alt={member.name}
+              className="size-20 rounded-3xl object-cover border-2 border-primary/20 shadow-md"
+            />
+          ) : (
+            <div className="size-20 rounded-3xl bg-primary/10 text-primary font-mono font-black text-2xl flex items-center justify-center border-2 border-primary/20 shadow-md">
+              {initials || "?"}
+            </div>
+          )}
+
+          <div>
+            <h3 className="text-xl font-black text-on-surface">{member.name}</h3>
+            <p className="text-sm font-mono text-on-surface-variant mt-0.5">{member.nim}</p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            {member.divisionName && (
+              <span className="text-xs font-mono font-bold px-3 py-1 rounded-xl bg-surface-container text-on-surface border border-outline-variant/40">
+                {member.divisionName}
+              </span>
+            )}
+            <span className="text-xs font-mono font-bold px-3 py-1 rounded-xl bg-primary/10 text-primary border border-primary/20">
+              {member.roleName}
+            </span>
+          </div>
+        </div>
+
+        {/* Contact info & Statuses */}
+        <div className="bg-surface-container/30 border border-outline-variant/40 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-on-surface-variant font-medium">Nomor WhatsApp / HP</span>
+            {member.phone ? (
+              <a
+                href={waUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono font-bold text-emerald-600 hover:underline flex items-center gap-1"
+              >
+                {member.phone} <ExternalLink className="size-3" />
+              </a>
+            ) : (
+              <span className="font-mono text-on-surface-variant/50">Belum diisi</span>
+            )}
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-on-surface-variant font-medium">Hak Setor Laporan</span>
+            <span className={`font-mono font-bold ${member.roleIsReportCreator || member.canSubmitReport || member.roleLevel >= 90 ? "text-amber-600" : "text-on-surface-variant/50"}`}>
+              {member.roleIsReportCreator || member.canSubmitReport || member.roleLevel >= 90 ? "Aktif (Laporan Creator)" : "Tidak Aktif"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-on-surface-variant font-medium">Hak Membuat Rapat</span>
+            <span className={`font-mono font-bold ${member.roleIsMeetingCreator || member.canCreateMeeting || member.roleLevel >= 75 ? "text-blue-600" : "text-on-surface-variant/50"}`}>
+              {member.roleIsMeetingCreator || member.canCreateMeeting || member.roleLevel >= 75 ? "Aktif (Meeting Creator)" : "Tidak Aktif"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={onClose} className="w-full rounded-2xl font-bold cursor-pointer">
+            Tutup
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MemberCard({
   member,
   callerLevel,
@@ -27,6 +129,7 @@ function MemberCard({
   callerLevel: number;
 }) {
   const router = useRouter();
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [state, formAction] = useActionState(removeMember, null);
 
@@ -98,48 +201,68 @@ function MemberCard({
   };
 
   return (
-    <div className={`group bg-white border border-outline-variant/60 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-primary/20 hover:-translate-y-0.5 ${isPending ? "opacity-60 cursor-not-allowed" : ""}`}>
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3.5 min-w-0 flex-1">
-          <div className={`size-11 rounded-2xl border flex items-center justify-center font-bold shrink-0 text-sm tracking-wider ${getAvatarBg(member.roleLevel)}`}>
-            {initials || "?"}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors duration-200" title={member.name}>
-              {member.name}
-            </p>
-            <div className="flex items-center gap-2 mt-1 flex-wrap min-w-0">
-              <span className="text-xs text-on-surface-variant font-mono shrink-0">{member.nim}</span>
-              <span className="size-1 rounded-full bg-outline-variant/60 shrink-0" />
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded border font-mono uppercase tracking-wider shrink-0 ${getRoleBadgeColor(member.roleLevel)}`}>
-                {member.roleName}
-              </span>
+    <>
+      <div className={`group bg-white border border-outline-variant/60 rounded-2xl p-4 flex flex-col justify-between gap-3 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-primary/20 hover:-translate-y-0.5 ${isPending ? "opacity-60 cursor-not-allowed" : ""}`}>
+        <div className="flex items-center justify-between gap-3">
+          <div
+            onClick={() => setShowDetailModal(true)}
+            className="flex items-center gap-3.5 min-w-0 flex-1 cursor-pointer group/profile"
+            title="Klik untuk melihat detail profil"
+          >
+            {member.avatarUrl ? (
+              <img
+                src={member.avatarUrl}
+                alt={member.name}
+                className="size-11 rounded-2xl object-cover shrink-0 border border-outline-variant/40 group-hover/profile:border-primary/40 transition-colors"
+              />
+            ) : (
+              <div className={`size-11 rounded-2xl border flex items-center justify-center font-bold shrink-0 text-sm tracking-wider ${getAvatarBg(member.roleLevel)}`}>
+                {initials || "?"}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-on-surface truncate group-hover/profile:text-primary transition-colors duration-200" title={member.name}>
+                {member.name}
+              </p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap min-w-0">
+                <span className="text-xs text-on-surface-variant font-mono shrink-0">{member.nim}</span>
+                <span className="size-1 rounded-full bg-outline-variant/60 shrink-0" />
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded border font-mono uppercase tracking-wider shrink-0 ${getRoleBadgeColor(member.roleLevel)}`}>
+                  {member.roleName}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {canDelete && (
-            <form
-              action={formAction}
-              onSubmit={(e) => {
-                if (!confirm(`Yakin ingin menghapus ${member.name} dari kepanitiaan?`)) {
-                  e.preventDefault();
-                }
-              }}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => setShowDetailModal(true)}
+              className="p-2 rounded-xl hover:bg-surface-container text-on-surface-variant/70 hover:text-on-surface transition-all duration-200 cursor-pointer"
+              title="Lihat Profil"
             >
-              <input type="hidden" name="target_id" value={member.assignmentId} />
-              <button
-                type="submit"
-                disabled={isPending}
-                className="p-2 rounded-xl hover:bg-error-container/20 text-on-surface-variant hover:text-error transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Hapus anggota"
+              <Info className="size-4" />
+            </button>
+            {canDelete && (
+              <form
+                action={formAction}
+                onSubmit={(e) => {
+                  if (!confirm(`Yakin ingin menghapus ${member.name} dari kepanitiaan?`)) {
+                    e.preventDefault();
+                  }
+                }}
               >
-                <Trash2 className="size-4" />
-              </button>
-            </form>
-          )}
+                <input type="hidden" name="target_id" value={member.assignmentId} />
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="p-2 rounded-xl hover:bg-error-container/20 text-on-surface-variant hover:text-error transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Hapus anggota"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </form>
+            )}
+          </div>
         </div>
-      </div>
 
       {/* Permission Delegation Badges for Coordinators / BPH */}
       {canManagePermissions && (
@@ -189,7 +312,14 @@ function MemberCard({
           </button>
         </div>
       )}
-    </div>
+      </div>
+
+      <MemberDetailModal
+        open={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        member={member}
+      />
+    </>
   );
 }
 

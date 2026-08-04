@@ -170,9 +170,17 @@ export function AssignmentsClient({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="size-11 rounded-2xl bg-surface-container text-primary font-mono font-bold text-sm flex items-center justify-center shrink-0 border border-outline-variant/40 group-hover:bg-primary group-hover:text-white transition-colors duration-200">
-                    {getInitials(a.name)}
-                  </div>
+                  {a.avatarUrl ? (
+                    <img
+                      src={a.avatarUrl}
+                      alt={a.name}
+                      className="size-11 rounded-2xl object-cover shrink-0 border border-outline-variant/40"
+                    />
+                  ) : (
+                    <div className="size-11 rounded-2xl bg-surface-container text-primary font-mono font-bold text-sm flex items-center justify-center shrink-0 border border-outline-variant/40 group-hover:bg-primary group-hover:text-white transition-colors duration-200">
+                      {getInitials(a.name)}
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <h3 className="text-sm font-extrabold text-on-surface group-hover:text-primary transition-colors duration-200 truncate" title={a.name}>
                       {a.name}

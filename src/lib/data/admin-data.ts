@@ -25,6 +25,8 @@ export interface AssignmentData {
   id: string;
   name: string;
   nim: string;
+  phone: string | null;
+  avatarUrl: string | null;
   email: string;
   division: string;
   divisionSlug: string;
@@ -92,7 +94,7 @@ export async function getAssignments(): Promise<AssignmentData[]> {
       id,
       can_submit_report,
       can_create_meeting,
-      user:profiles(full_name, nim),
+      user:profiles(full_name, nim, phone, avatar_url),
       division:divisions!committee_assignments_division_id_fkey(name, slug),
       role:roles(name, slug)
     `)
@@ -105,6 +107,8 @@ export async function getAssignments(): Promise<AssignmentData[]> {
     id: a.id,
     name: a.user?.full_name ?? "",
     nim: a.user?.nim ?? "",
+    phone: a.user?.phone ?? null,
+    avatarUrl: a.user?.avatar_url ?? null,
     email: "",
     division: a.division?.name ?? "",
     divisionSlug: a.division?.slug ?? "",

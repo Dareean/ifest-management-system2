@@ -233,19 +233,27 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
     const subtitleText = profile.fullName ? profile.fullName : `${formattedRole} Panitia IFEST`;
 
     return (
-      <div className="flex items-center gap-3 p-3.5 bg-[#0B0C10] rounded-2xl border border-slate-800 shadow-md mb-2">
-        <div className="w-10 h-10 rounded-2xl bg-[#D7F77B] flex items-center justify-center font-bold shrink-0">
-          <Shield className="size-5 text-[#0B0C10]" />
-        </div>
+      <Link href="/dashboard/profile" className="flex items-center gap-3 p-3.5 bg-[#0B0C10] rounded-2xl border border-slate-800 shadow-md mb-2 hover:border-[#D7F77B]/40 transition-colors group cursor-pointer">
+        {profile.avatarUrl ? (
+          <img
+            src={profile.avatarUrl}
+            alt={profile.fullName}
+            className="w-10 h-10 rounded-2xl object-cover shrink-0 border border-slate-700 group-hover:border-[#D7F77B] transition-colors"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-2xl bg-[#D7F77B] flex items-center justify-center font-bold shrink-0">
+            <Shield className="size-5 text-[#0B0C10]" />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-[#D7F77B] font-sans leading-tight truncate">
             {titleText}
           </p>
-          <p className="text-xs font-mono text-slate-400 truncate mt-1">
+          <p className="text-xs font-mono text-slate-400 truncate mt-1 group-hover:text-slate-200 transition-colors">
             {subtitleText}
           </p>
         </div>
-      </div>
+      </Link>
     );
   };
 

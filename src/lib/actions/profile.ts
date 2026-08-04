@@ -30,6 +30,8 @@ export async function updateProfile(prevState: unknown, formData: FormData) {
   if (error) return { error: error.message };
 
   revalidatePath("/dashboard/profile");
+  revalidatePath("/dashboard", "layout");
+  revalidatePath("/admin", "layout");
   return { success: true };
 }
 

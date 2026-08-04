@@ -9,6 +9,8 @@ export interface MemberRow {
   assignmentId: string;
   name: string;
   nim: string;
+  phone: string | null;
+  avatarUrl: string | null;
   roleName: string;
   roleLevel: number;
   roleIsReportCreator: boolean;
@@ -68,7 +70,7 @@ export default async function MembersPage() {
         can_create_meeting,
         division:divisions!committee_assignments_division_id_fkey(name),
         role:roles(name, slug, level, is_report_creator, is_meeting_creator),
-        user:profiles(full_name, nim)
+        user:profiles(full_name, nim, phone, avatar_url)
       `)
       .eq("committee_year_id", YEAR_ID)
       .eq("is_active", true)
@@ -88,6 +90,8 @@ export default async function MembersPage() {
         assignmentId: m.id,
         name: m.user?.full_name ?? "",
         nim: m.user?.nim ?? "",
+        phone: m.user?.phone ?? null,
+        avatarUrl: m.user?.avatar_url ?? null,
         roleName: m.role?.name ?? "",
         roleLevel: m.role?.level ?? 0,
         roleIsReportCreator: m.role?.is_report_creator ?? false,
@@ -117,7 +121,7 @@ export default async function MembersPage() {
       can_submit_report,
       can_create_meeting,
       role:roles(name, slug, level, is_report_creator, is_meeting_creator),
-      user:profiles(full_name, nim)
+      user:profiles(full_name, nim, phone, avatar_url)
     `)
     .eq("committee_year_id", YEAR_ID)
     .eq("division_id", divisionId)
@@ -128,6 +132,8 @@ export default async function MembersPage() {
     assignmentId: m.id,
     name: m.user?.full_name ?? "",
     nim: m.user?.nim ?? "",
+    phone: m.user?.phone ?? null,
+    avatarUrl: m.user?.avatar_url ?? null,
     roleName: m.role?.name ?? "",
     roleLevel: m.role?.level ?? 0,
     roleIsReportCreator: m.role?.is_report_creator ?? false,
