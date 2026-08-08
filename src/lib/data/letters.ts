@@ -48,7 +48,32 @@ export async function getLetters(requesterId?: string): Promise<LetterData[]> {
     query = query.eq("requester_id", requesterId);
   }
 
-  const { data } = await query;
+  let { data, error } = await query;
+
+  if (error || !data) {
+    let fallbackQuery = supabase
+      .from("letter_requests")
+      .select(`
+        id,
+        letter_type,
+        subject,
+        status,
+        created_at,
+        requester_id,
+        division:divisions(name, slug),
+        requester:committee_assignments!requester_id(
+          user:profiles(full_name, nim)
+        )
+      `)
+      .eq("committee_year_id", YEAR_ID)
+      .order("created_at", { ascending: false });
+
+    if (requesterId) {
+      fallbackQuery = fallbackQuery.eq("requester_id", requesterId);
+    }
+    const fallback = await fallbackQuery;
+    data = fallback.data as any;
+  }
 
   if (!data) return [];
 
@@ -58,10 +83,10 @@ export async function getLetters(requesterId?: string): Promise<LetterData[]> {
     letterType: l.letter_type,
     subject: l.subject,
     status: l.status,
-    category: l.category,
+    category: l.category ?? null,
     priority: l.priority ?? "sedang",
-    deadlineAt: l.deadline_at,
-    targetInstitution: l.target_institution,
+    deadlineAt: l.deadline_at ?? null,
+    targetInstitution: l.target_institution ?? null,
     division: l.division?.name ?? "",
     divisionSlug: l.division?.slug ?? "",
     requester: l.requester?.user?.full_name ?? "",

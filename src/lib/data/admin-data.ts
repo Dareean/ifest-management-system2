@@ -76,19 +76,39 @@ export async function getDivisionsWithMembers(): Promise<DivisionWithMembers[]> 
 export async function getRoles(): Promise<RoleData[]> {
   const supabase = createAdminClient();
 
-  const { data } = await supabase
+  let { data, error } = await supabase
     .from("roles")
     .select("id, name, slug, level, is_approver, is_meeting_creator, is_report_creator")
     .eq("committee_year_id", YEAR_ID)
     .order("level", { ascending: false });
 
-  return data ?? [];
+  if (error || !data) {
+    const fallback = await supabase
+      .from("roles")
+      .select("id, name, slug, level, is_approver, is_meeting_creator")
+      .eq("committee_year_id", YEAR_ID)
+      .order("level", { ascending: false });
+    data = (fallback.data ?? []).map((r: any) => ({
+      ...r,
+      is_report_creator: r.level >= 55,
+    }));
+  }
+
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    level: r.level,
+    is_approver: r.is_approver ?? false,
+    is_meeting_creator: r.is_meeting_creator ?? false,
+    is_report_creator: r.is_report_creator ?? false,
+  }));
 }
 
 export async function getAssignments(): Promise<AssignmentData[]> {
   const supabase = createAdminClient();
 
-  const { data } = await supabase
+  let { data, error } = await supabase
     .from("committee_assignments")
     .select(`
       id,
@@ -100,6 +120,20 @@ export async function getAssignments(): Promise<AssignmentData[]> {
     `)
     .eq("committee_year_id", YEAR_ID)
     .eq("is_active", true);
+
+  if (error || !data) {
+    const fallback = await supabase
+      .from("committee_assignments")
+      .select(`
+        id,
+        user:profiles(full_name, nim, phone, avatar_url),
+        division:divisions!committee_assignments_division_id_fkey(name, slug),
+        role:roles(name, slug)
+      `)
+      .eq("committee_year_id", YEAR_ID)
+      .eq("is_active", true);
+    data = fallback.data as any;
+  }
 
   if (!data) return [];
 
