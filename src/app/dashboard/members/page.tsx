@@ -61,7 +61,7 @@ export default async function MembersPage() {
 
   if (isBPH) {
     // BPH: show all members grouped by division
-    const { data: allAssignments } = await admin
+    let { data: allAssignments, error: queryErr } = await admin
       .from("committee_assignments")
       .select(`
         id,
@@ -75,6 +75,23 @@ export default async function MembersPage() {
       .eq("committee_year_id", YEAR_ID)
       .eq("is_active", true)
       .order("division_id");
+
+    // Fallback if optional schema columns are missing in remote DB
+    if (queryErr || !allAssignments) {
+      const fallback = await admin
+        .from("committee_assignments")
+        .select(`
+          id,
+          division_id,
+          division:divisions!committee_assignments_division_id_fkey(name),
+          role:roles(name, slug, level),
+          user:profiles(full_name, nim, phone, avatar_url)
+        `)
+        .eq("committee_year_id", YEAR_ID)
+        .eq("is_active", true)
+        .order("division_id");
+      allAssignments = fallback.data as any;
+    }
 
     const grouped: Record<string, DivisionGroup> = {};
     for (const m of (allAssignments as any[]) ?? []) {
@@ -94,8 +111,8 @@ export default async function MembersPage() {
         avatarUrl: m.user?.avatar_url ?? null,
         roleName: m.role?.name ?? "",
         roleLevel: m.role?.level ?? 0,
-        roleIsReportCreator: m.role?.is_report_creator ?? false,
-        roleIsMeetingCreator: m.role?.is_meeting_creator ?? false,
+        roleIsReportCreator: m.role?.is_report_creator ?? ((m.role?.level ?? 0) >= 55),
+        roleIsMeetingCreator: m.role?.is_meeting_creator ?? ((m.role?.level ?? 0) >= 75 || m.role?.slug === "koordinator"),
         canSubmitReport: m.can_submit_report ?? false,
         canCreateMeeting: m.can_create_meeting ?? false,
         divisionName: m.division?.name ?? "",
@@ -114,7 +131,7 @@ export default async function MembersPage() {
   }
 
   // Koordinator/Wakord: show own division members
-  const { data: members } = await admin
+  let { data: members, error: divErr } = await admin
     .from("committee_assignments")
     .select(`
       id,
@@ -128,6 +145,21 @@ export default async function MembersPage() {
     .eq("is_active", true)
     .order("role_id");
 
+  if (divErr || !members) {
+    const fallback = await admin
+      .from("committee_assignments")
+      .select(`
+        id,
+        role:roles(name, slug, level),
+        user:profiles(full_name, nim, phone, avatar_url)
+      `)
+      .eq("committee_year_id", YEAR_ID)
+      .eq("division_id", divisionId)
+      .eq("is_active", true)
+      .order("role_id");
+    members = fallback.data as any;
+  }
+
   const memberList: MemberRow[] = ((members as any[]) ?? []).map((m) => ({
     assignmentId: m.id,
     name: m.user?.full_name ?? "",
@@ -136,8 +168,8 @@ export default async function MembersPage() {
     avatarUrl: m.user?.avatar_url ?? null,
     roleName: m.role?.name ?? "",
     roleLevel: m.role?.level ?? 0,
-    roleIsReportCreator: m.role?.is_report_creator ?? false,
-    roleIsMeetingCreator: m.role?.is_meeting_creator ?? false,
+    roleIsReportCreator: m.role?.is_report_creator ?? ((m.role?.level ?? 0) >= 55),
+    roleIsMeetingCreator: m.role?.is_meeting_creator ?? ((m.role?.level ?? 0) >= 75 || m.role?.slug === "koordinator"),
     canSubmitReport: m.can_submit_report ?? false,
     canCreateMeeting: m.can_create_meeting ?? false,
   }));
