@@ -1,4 +1,4 @@
-import { getFinanceOverview, getBudgets, getBudgetRequests } from "@/lib/data/finance";
+import { getFinanceOverview, getBudgets, getBudgetRequests, getAllTransactions } from "@/lib/data/finance";
 import { FinanceClient } from "./client";
 import { requireRole } from "@/lib/auth/authorize";
 
@@ -8,10 +8,11 @@ export default async function FinancePage() {
   const level = session?.roleLevel ?? 0;
   const isTreasurerOrBPH = level >= 90 || level === 70;
 
-  const [overview, budgets, requests] = await Promise.all([
+  const [overview, budgets, requests, transactions] = await Promise.all([
     getFinanceOverview(),
     getBudgets(),
     getBudgetRequests(),
+    getAllTransactions(),
   ]);
 
   return (
@@ -19,6 +20,7 @@ export default async function FinancePage() {
       overview={overview}
       budgets={budgets}
       requests={requests}
+      allTransactions={transactions}
       userAssignmentId={session?.assignmentId ?? ""}
       userDivisionId={session?.divisionId ?? ""}
       isTreasurerOrBPH={isTreasurerOrBPH}

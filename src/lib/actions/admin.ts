@@ -242,22 +242,28 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
   const fullName = formData.get("full_name") as string;
   const nim = formData.get("nim") as string;
   const email = formData.get("email") as string;
+  const canSubmitReport = formData.get("can_submit_report") === "on";
+  const canCreateMeeting = formData.get("can_create_meeting") === "on";
 
   if (!divisionId || !roleId || !fullName || !nim || !email) {
     return { error: "Semua field harus diisi" };
   }
 
-  const { data: existing } = await supabase
+  // 1. Check profile by NIM
+  const { data: existingProfile } = await supabase
     .from("profiles")
     .select("id, full_name")
     .eq("nim", nim)
     .maybeSingle();
 
-  let profileId: string;
+  let profileId: string | null = null;
 
-  if (existing) {
-    profileId = existing.id;
+  if (existingProfile) {
+    profileId = existingProfile.id;
+    // Update profile full_name if changed
+    await supabase.from("profiles").update({ full_name: fullName }).eq("id", profileId);
   } else {
+    // 2. Try to create Auth user
     const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
       email,
       password: "ifest2026",
@@ -265,20 +271,32 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
       user_metadata: { full_name: fullName, nim },
     });
 
-    if (authErr || !authUser?.user) {
-      return { error: authErr?.message ?? "Gagal membuat akun" };
+    if (authUser?.user) {
+      profileId = authUser.user.id;
+    } else {
+      // If user with this email already exists in Auth, look them up
+      const { data: listData } = await supabase.auth.admin.listUsers();
+      const existingAuthUser = listData?.users?.find(
+        (u) => u.email?.toLowerCase() === email.toLowerCase()
+      );
+      if (existingAuthUser) {
+        profileId = existingAuthUser.id;
+      } else {
+        return { error: authErr?.message ?? "Gagal membuat akun panitia" };
+      }
     }
 
-    profileId = authUser.user.id;
+    // Upsert profile
     const { error: profileErr } = await supabase.from("profiles").upsert({
       id: profileId,
       full_name: fullName,
       nim,
-    }).select("id").single();
+    });
 
     if (profileErr) return { error: profileErr.message };
   }
 
+  // 3. Upsert Committee Assignment
   const { data: existingAssignment } = await supabase
     .from("committee_assignments")
     .select("id")
@@ -287,22 +305,33 @@ export async function createAssignment(prevState: unknown, formData: FormData) {
     .maybeSingle();
 
   if (existingAssignment) {
-    return { error: "User sudah memiliki assignment di tahun ini" };
+    // Force update existing assignment to new division and role
+    const { error: updateErr } = await supabase
+      .from("committee_assignments")
+      .update({
+        division_id: divisionId,
+        role_id: roleId,
+        can_submit_report: canSubmitReport,
+        can_create_meeting: canCreateMeeting,
+        is_active: true,
+      })
+      .eq("id", existingAssignment.id);
+
+    if (updateErr) return { error: updateErr.message };
+  } else {
+    // Insert new assignment
+    const { error: assignErr } = await supabase.from("committee_assignments").insert({
+      committee_year_id: YEAR_ID,
+      user_id: profileId,
+      division_id: divisionId,
+      role_id: roleId,
+      can_submit_report: canSubmitReport,
+      can_create_meeting: canCreateMeeting,
+      is_active: true,
+    });
+
+    if (assignErr) return { error: assignErr.message };
   }
-
-  const canSubmitReport = formData.get("can_submit_report") === "on";
-  const canCreateMeeting = formData.get("can_create_meeting") === "on";
-
-  const { error: assignErr } = await supabase.from("committee_assignments").insert({
-    committee_year_id: YEAR_ID,
-    user_id: profileId,
-    division_id: divisionId,
-    role_id: roleId,
-    can_submit_report: canSubmitReport,
-    can_create_meeting: canCreateMeeting,
-  });
-
-  if (assignErr) return { error: assignErr.message };
 
   revalidatePath("/admin/assignments");
   return { success: true };
@@ -313,8 +342,50 @@ export async function deleteAssignment(id: string) {
   if (!caller) return { error: "Akses ditolak" };
 
   const supabase = createAdminClient();
-  const { error } = await supabase.from("committee_assignments").delete().eq("id", id);
-  if (error) return { error: error.message };
+
+  // 1. Fetch assignment to get user_id
+  const { data: assignment } = await supabase
+    .from("committee_assignments")
+    .select("id, user_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!assignment) return { error: "Penugasan tidak ditemukan" };
+
+  const userId = assignment.user_id;
+
+  // 2. Delete committee assignment row
+  const { error: deleteAssignErr } = await supabase
+    .from("committee_assignments")
+    .delete()
+    .eq("id", id);
+
+  if (deleteAssignErr) {
+    // Fallback: If foreign key restricts hard delete, mark inactive
+    const { error: softErr } = await supabase
+      .from("committee_assignments")
+      .update({ is_active: false })
+      .eq("id", id);
+
+    if (softErr) return { error: softErr.message };
+  }
+
+  // 3. Delete Profile and Auth User if user has no remaining assignments
+  if (userId) {
+    const { data: remainingAssigns } = await supabase
+      .from("committee_assignments")
+      .select("id")
+      .eq("user_id", userId);
+
+    if (!remainingAssigns || remainingAssigns.length === 0) {
+      // Delete Profile
+      await supabase.from("profiles").delete().eq("id", userId);
+
+      // Delete Auth User from Supabase Auth
+      await supabase.auth.admin.deleteUser(userId).catch(() => {});
+    }
+  }
+
   revalidatePath("/admin/assignments");
   return { success: true };
 }
@@ -332,6 +403,7 @@ export async function togglePersonnelReportCreator(id: string, canSubmit: boolea
   if (error) return { error: error.message };
   revalidatePath("/admin/assignments");
   revalidatePath("/dashboard/weekly-report");
+  revalidatePath("/dashboard/members");
   return { success: true };
 }
 
@@ -348,5 +420,6 @@ export async function togglePersonnelMeetingCreator(id: string, canCreate: boole
   if (error) return { error: error.message };
   revalidatePath("/admin/assignments");
   revalidatePath("/dashboard/meetings");
+  revalidatePath("/dashboard/members");
   return { success: true };
 }

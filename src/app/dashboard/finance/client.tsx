@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
-import { setBudget, addTransaction, createBudgetRequest, handleBudgetRequest, exportFinanceCSV, exportFinanceCSVDetail } from "@/lib/actions/finance";
+import { setBudget, addTransaction, updateTransaction, deleteTransaction, createBudgetRequest, handleBudgetRequest, exportFinanceCSV, exportFinanceCSVDetail, syncAllToAppsScript } from "@/lib/actions/finance";
+import { useRouter } from "next/navigation";
 import {
   DollarSign,
   TrendingUp,
@@ -23,8 +24,13 @@ import {
   ArrowUpRight,
   Receipt,
   User,
+  Share2,
+  RefreshCw,
+  Pencil,
+  Trash2,
+  Search,
 } from "lucide-react";
-import type { BudgetWithDivision, BudgetRequestData, FinanceOverview } from "@/lib/data/finance";
+import type { BudgetWithDivision, BudgetRequestData, FinanceOverview, AllTransactionData } from "@/lib/data/finance";
 
 const CATEGORY_OPTIONS = [
   { value: "", label: "Pilih kategori..." },
@@ -49,6 +55,7 @@ export function FinanceClient({
   overview,
   budgets,
   requests,
+  allTransactions = [],
   userAssignmentId = "",
   userDivisionId = "",
   isTreasurerOrBPH = true,
@@ -56,12 +63,15 @@ export function FinanceClient({
   overview: FinanceOverview;
   budgets: BudgetWithDivision[];
   requests: BudgetRequestData[];
+  allTransactions?: AllTransactionData[];
   userAssignmentId?: string;
   userDivisionId?: string;
   isTreasurerOrBPH?: boolean;
 }) {
+  const router = useRouter();
   const [showSetBudget, setShowSetBudget] = useState<string | null>(null);
   const [showAddTx, setShowAddTx] = useState<string | null>(null);
+  const [showEditTx, setShowEditTx] = useState<AllTransactionData | null>(null);
   const [showRequest, setShowRequest] = useState(false);
   const [showPreview, setShowPreview] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -69,9 +79,24 @@ export function FinanceClient({
   const [uploadedUrl, setUploadedUrl] = useState<string>("");
   const [actionMsg, setActionMsg] = useState<string | null>(null);
 
+  const [txSearch, setTxSearch] = useState("");
+  const [txTypeFilter, setTxTypeFilter] = useState("all");
+  const [txDivFilter, setTxDivFilter] = useState("all");
+
   const [, setBudgetAction, setBudgetPending] = useActionState(setBudget, null);
   const [, addTxAction, addTxPending] = useActionState(addTransaction, null);
+  const [, updateTxAction, updateTxPending] = useActionState(updateTransaction, null);
   const [, createReqAction, createReqPending] = useActionState(createBudgetRequest, null);
+
+  async function handleDeleteTx(id: string) {
+    if (!confirm("Hapus transaksi ini?")) return;
+    const result = await deleteTransaction(id);
+    if (result?.error) {
+      setActionMsg(result.error);
+    } else {
+      router.refresh();
+    }
+  }
 
   // Non-treasurer users focus ONLY on their own division & submitted notes
   const userDivisionBudget = budgets.find((b) => b.division_id === userDivisionId) || budgets[0];
@@ -109,6 +134,23 @@ export function FinanceClient({
     a.click();
     URL.revokeObjectURL(url);
     setExporting(false);
+  }
+
+  const [showAppsScriptModal, setShowAppsScriptModal] = useState(false);
+  const [appsScriptUrlInput, setAppsScriptUrlInput] = useState("");
+  const [syncingAppsScript, setSyncingAppsScript] = useState(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  async function handleSyncToSpreadsheet() {
+    setSyncingAppsScript(true);
+    setSyncStatusMsg(null);
+    const res = await syncAllToAppsScript(appsScriptUrlInput || undefined);
+    if (res.error) {
+      setSyncStatusMsg({ type: "error", text: res.error });
+    } else {
+      setSyncStatusMsg({ type: "success", text: res.message || "Seluruh data keuangan berhasil disinkronkan ke Google Sheets!" });
+    }
+    setSyncingAppsScript(false);
   }
 
   async function handleFileUpload(file: File) {
@@ -163,7 +205,7 @@ export function FinanceClient({
         <div className="flex items-center gap-3 shrink-0 flex-wrap">
           <Button
             onClick={() => setShowAddTx("SETOR")}
-            className="cursor-pointer font-bold bg-[#FF3D8B] text-white hover:bg-[#e03479] text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all"
+            className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all"
           >
             <Upload className="size-4" /> Setor Laporan & Nota
           </Button>
@@ -270,7 +312,7 @@ export function FinanceClient({
                       <Button
                         size="sm"
                         onClick={() => setShowAddTx(b.id || b.division_id)}
-                        className="text-xs font-bold cursor-pointer bg-[#FF3D8B] text-white hover:bg-[#e03479] rounded-xl px-4 py-2"
+                        className="text-xs font-bold cursor-pointer bg-[#04000D] text-white hover:bg-black rounded-xl px-4 py-2"
                         title="Setor nota pengeluaran baru"
                       >
                         <Upload className="size-3.5" /> Setor Nota
@@ -279,6 +321,174 @@ export function FinanceClient({
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Card: Jurnal Transaksi Keuangan (Direct Data Input & Manipulation Table) */}
+          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#04000D]/5 pb-4 mb-5">
+              <div>
+                <h2 className="font-extrabold text-xl text-on-surface flex items-center gap-2">
+                  <Receipt className="size-5 text-accent-magenta" /> Jurnal Transaksi Keuangan Panitia
+                </h2>
+                <p className="text-xs font-medium text-on-surface-variant/70 mt-1">
+                  Kelola, edit, dan manipulasi pencatatan pengeluaran & pemasukan secara langsung
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowAddTx("SETOR")}
+                className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black text-xs px-3.5 py-2 rounded-xl shadow-sm transition-all shrink-0 self-start sm:self-auto"
+              >
+                <Plus className="size-3.5" /> Catat Transaksi Baru
+              </Button>
+            </div>
+
+            {/* Filters & Search */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
+                <input
+                  type="text"
+                  value={txSearch}
+                  onChange={(e) => setTxSearch(e.target.value)}
+                  placeholder="Cari deskripsi, no. nota, divisi..."
+                  className="w-full h-9 pl-9 pr-3 text-xs rounded-lg border border-[#04000D]/10 bg-slate-50/60 focus:bg-white focus:outline-none focus:border-[#04000D]/30 transition-all"
+                />
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <select
+                  value={txTypeFilter}
+                  onChange={(e) => setTxTypeFilter(e.target.value)}
+                  className="h-9 text-xs rounded-lg border border-[#04000D]/10 bg-white px-3 font-mono cursor-pointer"
+                >
+                  <option value="all">Semua Tipe</option>
+                  <option value="expense">Pengeluaran</option>
+                  <option value="income">Pemasukan</option>
+                </select>
+                {isTreasurerOrBPH && (
+                  <select
+                    value={txDivFilter}
+                    onChange={(e) => setTxDivFilter(e.target.value)}
+                    className="h-9 text-xs rounded-lg border border-[#04000D]/10 bg-white px-3 font-mono cursor-pointer"
+                  >
+                    <option value="all">Semua Divisi</option>
+                    {budgets.map((b) => (
+                      <option key={b.division_id} value={b.division_id}>
+                        {b.division_name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+
+            {/* Transactions Table */}
+            <div className="border border-[#04000D]/5 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50/80 border-b border-[#04000D]/5">
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Tanggal</th>
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Divisi</th>
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Tipe</th>
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Kategori</th>
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Deskripsi</th>
+                      <th className="text-right px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Jumlah</th>
+                      <th className="text-left px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">No. Nota</th>
+                      <th className="text-center px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Bukti</th>
+                      {isTreasurerOrBPH && (
+                        <th className="text-center px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/50">Aksi</th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const list = allTransactions.filter((tx) => {
+                        if (txTypeFilter !== "all" && tx.type !== txTypeFilter) return false;
+                        if (txDivFilter !== "all" && tx.division_id !== txDivFilter) return false;
+                        if (txSearch) {
+                          const q = txSearch.toLowerCase();
+                          const matchDesc = tx.description.toLowerCase().includes(q);
+                          const matchDiv = tx.division_name.toLowerCase().includes(q);
+                          const matchNo = (tx.receipt_number || "").toLowerCase().includes(q);
+                          const matchCat = (tx.category || "").toLowerCase().includes(q);
+                          if (!matchDesc && !matchDiv && !matchNo && !matchCat) return false;
+                        }
+                        return true;
+                      });
+
+                      if (list.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={isTreasurerOrBPH ? 9 : 8} className="text-center py-10 font-mono text-xs text-on-surface-variant/60">
+                              Belum ada catatan transaksi keuangan.
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return list.map((tx) => (
+                        <tr key={tx.id} className="border-b border-[#04000D]/5 hover:bg-slate-50/60 transition-colors">
+                          <td className="px-4 py-3 font-mono text-xs">
+                            {new Date(tx.transaction_date).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs font-bold text-on-surface">{tx.division_name}</td>
+                          <td className="px-4 py-3">
+                            <Badge
+                              variant={tx.type === "income" ? "success" : "danger"}
+                              className="font-mono text-[9px] px-2 py-0.5 uppercase"
+                            >
+                              {tx.type === "income" ? "Masuk" : "Keluar"}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs text-on-surface-variant">
+                            {tx.category || "-"}
+                          </td>
+                          <td className="px-4 py-3 text-xs font-medium max-w-xs truncate" title={tx.description}>
+                            {tx.description}
+                          </td>
+                          <td className={`px-4 py-3 text-right font-mono text-xs font-bold ${tx.type === "expense" ? "text-error" : "text-green-700"}`}>
+                            {tx.type === "expense" ? "-" : "+"}{formatRp(tx.amount)}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs text-on-surface-variant">{tx.receipt_number || "-"}</td>
+                          <td className="px-4 py-3 text-center">
+                            {tx.attachment_url ? (
+                              <button
+                                onClick={() => setShowPreview(tx.attachment_url!)}
+                                className="inline-flex items-center gap-1 text-xs text-accent-magenta font-bold hover:underline cursor-pointer"
+                              >
+                                <Eye className="size-3.5" /> Lihat
+                              </button>
+                            ) : (
+                              <span className="text-xs text-on-surface-variant/50">-</span>
+                            )}
+                          </td>
+                          {isTreasurerOrBPH && (
+                            <td className="px-4 py-3 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => setShowEditTx(tx)}
+                                  className="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-slate-100 cursor-pointer transition-colors"
+                                  title="Edit Transaksi"
+                                >
+                                  <Pencil className="size-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTx(tx.id)}
+                                  className="p-1 rounded text-error hover:bg-error/10 cursor-pointer transition-colors"
+                                  title="Hapus Transaksi"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -461,7 +671,7 @@ export function FinanceClient({
             <div className="flex flex-col gap-2.5">
               <Button
                 onClick={() => setShowAddTx("SETOR")}
-                className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl bg-[#FF3D8B] text-white hover:bg-[#e03479]"
+                className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl bg-[#04000D] text-white hover:bg-black"
               >
                 <span className="flex items-center gap-2">
                   <Upload className="size-4" /> Upload Nota Pengeluaran
@@ -503,6 +713,17 @@ export function FinanceClient({
                     <span className="flex items-center gap-2 text-on-surface group-hover:text-white transition-colors">
                       <Download className="size-4 text-accent-magenta group-hover:text-[#FF3D8B] transition-colors" /> Unduh Detail Transaksi (CSV)
                     </span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAppsScriptModal(true)}
+                    className="w-full justify-between cursor-pointer font-bold text-xs rounded-xl border-[#04000D]/10 bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-700 hover:text-white transition-all group"
+                  >
+                    <span className="flex items-center gap-2 font-extrabold text-emerald-800 group-hover:text-white transition-colors">
+                      <Share2 className="size-4 text-emerald-600 group-hover:text-emerald-200 transition-colors" /> Sinkron ke Google Sheets
+                    </span>
+                    <ArrowUpRight className="size-4 text-emerald-600 group-hover:text-white transition-colors" />
                   </Button>
                 </>
               )}
@@ -663,7 +884,7 @@ export function FinanceClient({
             <Button type="button" variant="ghost" onClick={resetTxModal} className="cursor-pointer">
               Batal
             </Button>
-            <Button type="submit" disabled={addTxPending} className="cursor-pointer font-bold bg-[#FF3D8B] text-white hover:bg-[#e03479]">
+            <Button type="submit" disabled={addTxPending} className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black">
               {addTxPending ? "Menyetor..." : showAddTx === "SETOR" ? "Setor Laporan Keuangan" : "Simpan Transaksi"}
             </Button>
           </div>
@@ -747,6 +968,139 @@ export function FinanceClient({
               <ExternalLink className="size-4" /> Buka Bukti Nota di Tab Baru
             </a>
           </div>
+        )}
+      </Modal>
+
+      {/* Google Apps Script / Spreadsheet Sync Modal */}
+      <Modal open={showAppsScriptModal} onClose={() => setShowAppsScriptModal(false)} title="Sinkronkan Ke Google Sheets (Apps Script)">
+        <div className="flex flex-col gap-4">
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-950 font-sans space-y-2">
+            <p className="font-extrabold flex items-center gap-1.5 text-sm text-emerald-900">
+              <Share2 className="size-4" /> Sinkronisasi Spreadsheet Otomatis & Direct Manipulation
+            </p>
+            <p>
+              Seluruh data jurnal transaksi pengeluaran/pemasukan dan pagu anggaran divisi panitia akan dikirimkan secara otomatis atau manual langsung ke Google Spreadsheet milik Bendahara.
+            </p>
+            <p className="font-mono text-[11px] bg-white p-2 rounded border border-emerald-200/80">
+              Skrip Apps Script: <span className="font-bold">scripts/google-apps-script-finance.gs</span>
+            </p>
+          </div>
+
+          <div>
+            <label className="caption block mb-1 text-on-surface-variant font-bold">
+              URL Webhook Apps Script (Opsional / Override)
+            </label>
+            <Input
+              value={appsScriptUrlInput}
+              onChange={(e) => setAppsScriptUrlInput(e.target.value)}
+              placeholder="https://script.google.com/macros/s/.../exec"
+              className="font-mono text-xs"
+            />
+            <p className="text-[11px] text-on-surface-variant/70 mt-1">
+              Kosongkan jika sudah mengatur <code className="bg-slate-100 px-1 py-0.5 rounded text-accent-magenta">APPSCRIPT_WEBHOOK_URL</code> di environment server.
+            </p>
+          </div>
+
+          {syncStatusMsg && (
+            <div
+              className={`p-3 rounded-xl text-xs font-mono border ${
+                syncStatusMsg.type === "success"
+                  ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                  : "bg-rose-100 text-rose-900 border-rose-300"
+              }`}
+            >
+              {syncStatusMsg.text}
+            </div>
+          )}
+
+          <div className="flex gap-2 justify-end mt-2">
+            <Button variant="ghost" onClick={() => setShowAppsScriptModal(false)} className="cursor-pointer text-xs">
+              Tutup
+            </Button>
+            <Button
+              onClick={handleSyncToSpreadsheet}
+              disabled={syncingAppsScript}
+              className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black text-xs gap-2"
+            >
+              {syncingAppsScript ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin" /> Menyinkronkan...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="size-3.5" /> Kirim & Sinkronkan Sekarang
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Transaksi Modal */}
+      <Modal open={!!showEditTx} onClose={() => setShowEditTx(null)} title="Edit Data Transaksi Keuangan">
+        {showEditTx && (
+          <form action={updateTxAction} className="flex flex-col gap-4">
+            <input type="hidden" name="id" value={showEditTx.id} />
+            <input type="hidden" name="attachment_url" value={showEditTx.attachment_url || ""} />
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Tipe Transaksi</label>
+              <select
+                name="type"
+                defaultValue={showEditTx.type}
+                className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:outline-none cursor-pointer"
+                required
+              >
+                <option value="expense">Pengeluaran (Expense)</option>
+                <option value="income">Pemasukan (Income)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Nominal / Jumlah (Rp) <span className="text-error">*</span></label>
+              <Input name="amount" type="number" min="1" defaultValue={showEditTx.amount} required />
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Kategori</label>
+              <select
+                name="category"
+                defaultValue={showEditTx.category || ""}
+                className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:outline-none cursor-pointer"
+              >
+                <option value="">Tanpa Kategori</option>
+                {CATEGORY_OPTIONS.filter((c) => c.value).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Deskripsi / Keterangan <span className="text-error">*</span></label>
+              <Input name="description" defaultValue={showEditTx.description} required />
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Tanggal Transaksi</label>
+              <Input name="transaction_date" type="date" defaultValue={showEditTx.transaction_date.slice(0, 10)} />
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Nomor Kwitansi / Nota</label>
+              <Input name="receipt_number" defaultValue={showEditTx.receipt_number || ""} />
+            </div>
+
+            <div className="flex gap-2 justify-end mt-2">
+              <Button type="button" variant="ghost" onClick={() => setShowEditTx(null)} className="cursor-pointer">
+                Batal
+              </Button>
+              <Button type="submit" disabled={updateTxPending} className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black">
+                {updateTxPending ? "Menyimpan..." : "Simpan Perubahan Transaksi"}
+              </Button>
+            </div>
+          </form>
         )}
       </Modal>
     </div>

@@ -1,5 +1,3 @@
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Building2, Shield, Users, Calendar, ArrowUpRight, Cpu, RefreshCw } from "lucide-react";
@@ -36,7 +34,6 @@ export default async function AdminOverviewPage() {
       description: "Terdaftar tahun ini",
       icon: Building2,
       href: "/admin/divisions",
-      color: "text-primary bg-primary/10 border-primary/20",
     },
     {
       label: "ROLE & JABATAN",
@@ -44,7 +41,6 @@ export default async function AdminOverviewPage() {
       description: "Tingkatan kewenangan",
       icon: Shield,
       href: "/admin/roles",
-      color: "text-accent-magenta bg-accent-magenta/10 border-accent-magenta/20",
     },
     {
       label: "PERSONEL AKTIF",
@@ -52,7 +48,6 @@ export default async function AdminOverviewPage() {
       description: "Terisi dalam panitia",
       icon: Users,
       href: "/admin/assignments",
-      color: "text-block-blue bg-block-blue/10 border-block-blue/20",
     },
     {
       label: "TAHUN KEPANITIAAN",
@@ -60,70 +55,67 @@ export default async function AdminOverviewPage() {
       description: "Histori tersimpan",
       icon: Calendar,
       href: "/admin/years",
-      color: "text-on-surface-variant bg-surface-container border-outline-variant/30",
     },
   ];
 
   return (
-    <div className="flex flex-col gap-8 mt-2">
+    <div className="flex flex-col gap-6">
       {/* Live Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link key={stat.label} href={stat.href} className="group">
-              <Card className="bg-white border border-outline-variant/60 rounded-2xl p-5 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-primary/20 hover:-translate-y-0.5 flex flex-col justify-between h-full relative overflow-hidden">
+              <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 transition-all duration-200 hover:shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:border-[#04000D]/15 hover:-translate-y-0.5 flex flex-col justify-between h-full relative overflow-hidden">
                 <div className="flex items-start justify-between">
-                  <div className={`p-2.5 rounded-xl border flex items-center justify-center shrink-0 ${stat.color}`}>
+                  <div className="p-2.5 rounded-xl bg-[#04000D] text-[#DCEEB1] flex items-center justify-center shrink-0 group-hover:bg-accent-magenta group-hover:text-white transition-colors duration-200">
                     <Icon className="size-5" />
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-surface-container text-on-surface-variant">
-                    <ArrowUpRight className="size-4" />
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg bg-[#FDF8FA] text-on-surface-variant">
+                    <ArrowUpRight className="size-4 text-accent-magenta" />
                   </div>
                 </div>
-                
+
                 <div className="mt-4">
-                  <p className="text-xs font-mono font-bold tracking-wider text-on-surface-variant uppercase">{stat.label}</p>
-                  <p className="text-3xl font-black text-on-surface my-1 leading-none group-hover:text-primary transition-colors">
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-wider text-on-surface-variant/60">
+                    {stat.label}
+                  </p>
+                  <p className="text-3xl font-extrabold text-on-surface my-1 leading-none group-hover:text-accent-magenta transition-colors">
                     {stat.count}
                   </p>
-                  <p className="text-xs text-on-surface-variant/70 font-semibold mt-1">{stat.description}</p>
+                  <p className="text-xs text-on-surface-variant/70 font-normal mt-1">{stat.description}</p>
                 </div>
-              </Card>
+              </div>
             </Link>
           );
         })}
       </div>
 
       {/* Guide Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)] transition-all">
-          <CardHeader className="p-0 flex flex-col gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-block-mint/20 text-on-surface border border-block-mint/30 flex items-center justify-center">
-                <Cpu className="size-5" />
-              </div>
-              <CardTitle className="text-base font-bold text-on-surface">Dynamic Structure</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-6 flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-[#DCEEB1]/40 text-[#1D1B1D] border border-[#DCEEB1]/60 flex items-center justify-center shrink-0">
+              <Cpu className="size-5 text-emerald-800" />
             </div>
-            <CardDescription className="text-sm text-on-surface-variant font-sans leading-relaxed">
-              Divisi dan role disimpan secara dinamis di dalam database — bukan melalui hardcode di program. Tahun depan, cukup buat tahun kepanitiaan baru dan langsung pasang personel baru.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        
-        <Card className="bg-white border border-outline-variant/60 rounded-2xl p-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.03)] transition-all">
-          <CardHeader className="p-0 flex flex-col gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-block-lilac/20 text-on-surface border border-block-lilac/30 flex items-center justify-center">
-                <RefreshCw className="size-5" />
-              </div>
-              <CardTitle className="text-base font-bold text-on-surface">Reset Tahunan</CardTitle>
+            <h3 className="text-base font-bold text-on-surface">Dynamic Structure</h3>
+          </div>
+          <p className="text-xs text-on-surface-variant/80 leading-relaxed font-normal">
+            Divisi dan role disimpan secara dinamis di dalam database — bukan melalui hardcode di program. Tahun depan, cukup buat tahun kepanitiaan baru dan langsung pasang personel baru.
+          </p>
+        </div>
+
+        <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-6 flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-[#FF3D8B]/10 text-accent-magenta border border-[#FF3D8B]/20 flex items-center justify-center shrink-0">
+              <RefreshCw className="size-5" />
             </div>
-            <CardDescription className="text-sm text-on-surface-variant font-sans leading-relaxed">
-              Buka menu <Badge variant="outline" className="text-[10px] font-mono px-2 py-0.5 bg-surface-container text-on-surface-variant border-outline-variant/50 inline-flex items-center gap-1 font-bold">Tahun Kepanitiaan</Badge> &rarr; buat tahun baru &rarr; salin struktur data dari tahun sebelumnya secara otomatis tanpa perlu mengubah baris kode program.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            <h3 className="text-base font-bold text-on-surface">Reset Tahunan</h3>
+          </div>
+          <p className="text-xs text-on-surface-variant/80 leading-relaxed font-normal">
+            Buka menu <span className="font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#FDF8FA] text-on-surface border border-[#04000D]/10 rounded-md">Tahun Kepanitiaan</span> &rarr; buat tahun baru &rarr; salin struktur data dari tahun sebelumnya secara otomatis tanpa perlu mengubah baris kode program.
+          </p>
+        </div>
       </div>
     </div>
   );

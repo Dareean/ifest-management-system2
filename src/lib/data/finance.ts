@@ -26,6 +26,11 @@ export interface TransactionData {
   created_at: string;
 }
 
+export interface AllTransactionData extends TransactionData {
+  division_name: string;
+  division_id: string;
+}
+
 export interface BudgetRequestData {
   id: string;
   amount: number;
@@ -229,6 +234,61 @@ export async function getBudgetDetail(divisionId: string): Promise<{
   };
 }
 
+export async function getAllTransactions(): Promise<AllTransactionData[]> {
+  const supabase = createAdminClient();
+  const { data: budgets } = await supabase
+    .from("budgets")
+    .select("id, division_id, division:divisions(id, name)")
+    .eq("committee_year_id", YEAR_ID);
+
+  if (!budgets || budgets.length === 0) return [];
+
+  const budgetMap: Record<string, { id: string; name: string }> = {};
+  budgets.forEach((b: any) => {
+    budgetMap[b.id] = { id: b.division_id, name: b.division?.name || "Divisi" };
+  });
+
+  const budgetIds = Object.keys(budgetMap);
+  if (budgetIds.length === 0) return [];
+
+  const { data: txs } = await supabase
+    .from("budget_transactions")
+    .select("*")
+    .in("budget_id", budgetIds)
+    .order("transaction_date", { ascending: false });
+
+  if (!txs || txs.length === 0) return [];
+
+  const creatorIds = [...new Set(txs.map((t) => t.created_by).filter(Boolean))];
+  const creatorNames: Record<string, string> = {};
+  if (creatorIds.length > 0) {
+    const { data: creators } = await supabase
+      .from("committee_assignments")
+      .select("id, user:profiles(full_name)")
+      .in("id", creatorIds);
+    if (creators) {
+      for (const c of creators) {
+        creatorNames[(c as any).id] = (c as any).user?.full_name ?? "Panitia";
+      }
+    }
+  }
+
+  return txs.map((tx: any) => ({
+    id: tx.id,
+    type: tx.type as "income" | "expense",
+    amount: Number(tx.amount),
+    description: tx.description,
+    category: tx.category,
+    attachment_url: tx.attachment_url ?? null,
+    receipt_number: tx.receipt_number ?? null,
+    transaction_date: tx.transaction_date,
+    created_by_name: creatorNames[tx.created_by] ?? "Panitia",
+    created_at: tx.created_at,
+    division_id: budgetMap[tx.budget_id]?.id ?? "",
+    division_name: budgetMap[tx.budget_id]?.name ?? "Divisi",
+  }));
+}
+
 export interface FinanceReportData {
   committee: string;
   generatedAt: string;
@@ -318,4 +378,49 @@ export async function getBudgetRequests(): Promise<BudgetRequestData[]> {
     notes: r.notes,
     created_at: r.created_at,
   }));
+}
+
+export interface RabItemData {
+  id: string;
+  division_id: string;
+  division_name: string;
+  item_name: string;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  total_estimated: number;
+  category: string | null;
+  status: "draft" | "approved" | "realized";
+  notes: string | null;
+  created_at: string;
+}
+
+export async function getRabItems(): Promise<RabItemData[]> {
+  const supabase = createAdminClient();
+  try {
+    const { data, error } = await supabase
+      .from("rab_items")
+      .select("*, division:divisions(name)")
+      .eq("committee_year_id", YEAR_ID)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) return [];
+
+    return data.map((r: any) => ({
+      id: r.id,
+      division_id: r.division_id,
+      division_name: r.division?.name || "Divisi",
+      item_name: r.item_name,
+      quantity: Number(r.quantity) || 1,
+      unit: r.unit || "unit",
+      unit_price: Number(r.unit_price) || 0,
+      total_estimated: Number(r.total_estimated) || Number(r.quantity || 1) * Number(r.unit_price || 0),
+      category: r.category || null,
+      status: r.status || "draft",
+      notes: r.notes || null,
+      created_at: r.created_at,
+    }));
+  } catch (err) {
+    return [];
+  }
 }

@@ -15,7 +15,11 @@
     "test:ui": "vitest --ui",
     "cf:build": "npm run build",
     "cf:deploy": "npx opennextjs-cloudflare deploy",
-    "cf:preview": "npx opennextjs-cloudflare preview"
+    "cf:preview": "npx opennextjs-cloudflare preview",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:status": "supabase status"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

@@ -23,6 +23,7 @@ import {
   Users,
   CheckSquare,
   Shield,
+  BookOpen,
 } from "lucide-react";
 import type { NotificationItem } from "@/lib/data/notifications";
 import type { ProfileData } from "@/lib/data/profile";
@@ -50,6 +51,7 @@ function getNavItems(level: number): NavItem[] {
   }
 
   if (level >= 90 || level === 70) {
+    items.push({ href: "/dashboard/treasurer-book", label: "PEMBUKUAN BENDAHARA", icon: BookOpen });
     items.push({ href: "/dashboard/finance/report", label: "LPJ", icon: FileText });
   }
 

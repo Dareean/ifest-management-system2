@@ -1,15 +1,26 @@
+const fs = require('fs');
+const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const { randomUUID } = require('crypto');
 
-const supabaseUrl = 'https://xxmxbyiggrottreetrig.supabase.co';
-const svcKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXhieWlnZ3JvdHRyZWV0cmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzM5NjczNSwiZXhwIjoyMDk4OTcyNzM1fQ.XOqLhMsqoHAb3J6FZH6jo4jZiOAxGl6BMhdZshY_3xw';
+// Read .env.local
+const envPath = path.join(__dirname, '../.env.local');
+const envContent = fs.readFileSync(envPath, 'utf8');
+const env = {};
+envContent.split('\n').forEach(line => {
+  const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+  if (match) env[match[1]] = match[2].trim();
+});
+
+const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+const svcKey = env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, svcKey, { auth: { persistSession: false } });
 
 const YEAR_ID = 'c2f2a48e-3e58-4559-aaa0-623a3825348b';
 const DEFAULT_PASSWORD = 'ifest2026';
 
 const personel = [
-  { nama: 'Dareean A. Raffi Mardin', nim: 'F55124086', email: 'dareean@ifest.com', divisi: 'bph', role: 'pic' },
+  { nama: 'Dareean A. Raffi Mardin', nim: 'F55124086', email: 'dmardin@gmail.com', divisi: 'bph', role: 'pic' },
   { nama: 'Gabriel Kristofan', nim: 'F55124076', email: 'gabriel@ifest.com', divisi: 'bph', role: 'ketua-panitia' },
   { nama: 'Reyqal Syawalano', nim: 'F52124039', email: 'reyqal@ifest.com', divisi: 'bph', role: 'wakil-ketua' },
   { nama: 'Nur Ainun', nim: 'F52124024', email: 'ainun@ifest.com', divisi: 'bph', role: 'sekretaris-1' },

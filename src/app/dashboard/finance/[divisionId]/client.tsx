@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
-import { deleteTransaction } from "@/lib/actions/finance";
-import { ArrowLeft, TrendingUp, TrendingDown, Trash2, Eye, ExternalLink, Download } from "lucide-react";
+import { useActionState } from "react";
+import { Input } from "@/components/ui/input";
+import { deleteTransaction, updateTransaction } from "@/lib/actions/finance";
+import { ArrowLeft, TrendingUp, TrendingDown, Trash2, Eye, ExternalLink, Download, Pencil } from "lucide-react";
 import type { BudgetWithDivision, TransactionData } from "@/lib/data/finance";
 
 function formatRp(n: number) {
@@ -39,8 +41,11 @@ export function DivisionDetailClient({ budget, transactions }: {
 }) {
   const router = useRouter();
   const [showPreview, setShowPreview] = useState<string | null>(null);
+  const [showEditTx, setShowEditTx] = useState<TransactionData | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+
+  const [, updateTxAction, updateTxPending] = useActionState(updateTransaction, null);
 
   const filteredTx = transactions.filter((tx) => {
     if (filterType !== "all" && tx.type !== filterType) return false;
@@ -206,12 +211,22 @@ export function DivisionDetailClient({ budget, transactions }: {
                     </td>
                     <td className="px-4 py-3 text-xs font-mono text-on-surface-variant">{tx.created_by_name}</td>
                     <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => handleDelete(tx.id)}
-                        className="inline-flex items-center gap-1 text-xs text-error hover:text-error/70 font-bold cursor-pointer"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => setShowEditTx(tx)}
+                          className="inline-flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary font-bold cursor-pointer"
+                          title="Edit Transaksi"
+                        >
+                          <Pencil className="size-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(tx.id)}
+                          className="inline-flex items-center gap-1 text-xs text-error hover:text-error/70 font-bold cursor-pointer"
+                          title="Hapus Transaksi"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -240,6 +255,72 @@ export function DivisionDetailClient({ budget, transactions }: {
               <ExternalLink className="size-4" /> Buka di Tab Baru
             </a>
           </div>
+        )}
+      </Modal>
+
+      {/* Edit Transaksi Modal */}
+      <Modal open={!!showEditTx} onClose={() => setShowEditTx(null)} title="Edit Data Transaksi Keuangan">
+        {showEditTx && (
+          <form action={updateTxAction} className="flex flex-col gap-4">
+            <input type="hidden" name="id" value={showEditTx.id} />
+            <input type="hidden" name="attachment_url" value={showEditTx.attachment_url || ""} />
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Tipe Transaksi</label>
+              <select
+                name="type"
+                defaultValue={showEditTx.type}
+                className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:outline-none cursor-pointer"
+                required
+              >
+                <option value="expense">Pengeluaran (Expense)</option>
+                <option value="income">Pemasukan (Income)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Nominal / Jumlah (Rp) <span className="text-error">*</span></label>
+              <Input name="amount" type="number" min="1" defaultValue={showEditTx.amount} required />
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Kategori</label>
+              <select
+                name="category"
+                defaultValue={showEditTx.category || ""}
+                className="flex h-11 w-full rounded-md border border-primary bg-surface-bright px-4 py-2 text-base font-sans text-on-surface focus:outline-none cursor-pointer"
+              >
+                <option value="">Tanpa Kategori</option>
+                {Object.entries(categoryLabel).map(([val, label]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Deskripsi / Keterangan <span className="text-error">*</span></label>
+              <Input name="description" defaultValue={showEditTx.description} required />
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Tanggal Transaksi</label>
+              <Input name="transaction_date" type="date" defaultValue={showEditTx.transaction_date.slice(0, 10)} />
+            </div>
+
+            <div>
+              <label className="caption block mb-1 text-on-surface-variant font-bold">Nomor Kwitansi / Nota</label>
+              <Input name="receipt_number" defaultValue={showEditTx.receipt_number || ""} />
+            </div>
+
+            <div className="flex gap-2 justify-end mt-2">
+              <Button type="button" variant="ghost" onClick={() => setShowEditTx(null)} className="cursor-pointer">
+                Batal
+              </Button>
+              <Button type="submit" disabled={updateTxPending} className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black">
+                {updateTxPending ? "Menyimpan..." : "Simpan Perubahan Transaksi"}
+              </Button>
+            </div>
+          </form>
         )}
       </Modal>
     </div>

@@ -101,7 +101,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
           className={`cursor-pointer shrink-0 font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm ${
             editing
               ? "border border-[#04000D]/10 bg-white text-on-surface hover:bg-slate-50"
-              : "bg-[#FF3D8B] text-white hover:bg-[#e03479]"
+              : "bg-[#04000D] text-white hover:bg-black"
           }`}
         >
           <Pencil className="size-4" />
@@ -216,7 +216,7 @@ export function ProfileClient({ profile }: { profile: ProfileData }) {
 
               {editing && (
                 <div className="flex justify-end mt-2">
-                  <Button type="submit" disabled={pending} className="cursor-pointer font-bold bg-[#FF3D8B] text-white hover:bg-[#e03479]">
+                  <Button type="submit" disabled={pending} className="cursor-pointer font-bold bg-[#04000D] text-white hover:bg-black">
                     <Save className="size-4" />
                     {pending ? "Menyimpan..." : "Simpan Perubahan"}
                   </Button>

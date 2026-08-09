@@ -147,8 +147,8 @@ function MemberCard({
 
   const canManagePermissions = callerLevel >= 55;
 
-  const isInherentlyReportCreator = member.roleIsReportCreator || member.roleLevel >= 90;
-  const isInherentlyMeetingCreator = member.roleIsMeetingCreator || member.roleLevel >= 75;
+  const isInherentlyReportCreator = member.roleIsReportCreator;
+  const isInherentlyMeetingCreator = member.roleIsMeetingCreator;
 
   async function handleToggleReportCreator() {
     if (isInherentlyReportCreator) {
