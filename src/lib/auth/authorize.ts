@@ -47,7 +47,7 @@ async function getAuthSession(): Promise<AuthResult> {
 
   const admin = createAdminClient();
 
-  const { data: assignment } = await admin
+  let { data: assignment } = await admin
     .from("committee_assignments")
     .select(`
       id,
@@ -63,15 +63,43 @@ async function getAuthSession(): Promise<AuthResult> {
     .maybeSingle();
 
   if (!assignment) {
+    const { data: fallbackList } = await admin
+      .from("committee_assignments")
+      .select(`
+        id,
+        division_id,
+        can_submit_report,
+        can_create_meeting,
+        division:divisions!committee_assignments_division_id_fkey(name),
+        role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
+      `)
+      .eq("user_id", userId)
+      .eq("is_active", true)
+      .limit(1);
+
+    assignment = fallbackList?.[0] ?? null;
+  }
+
+  if (!assignment) {
     return { authorized: false, error: "Anda tidak memiliki akses ke sistem ini." };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const a = assignment as any;
-  const role = a.role;
+  const rawRole = a.role;
+  const role = Array.isArray(rawRole) ? rawRole[0] : rawRole;
+  const rawDiv = a.division;
+  const div = Array.isArray(rawDiv) ? rawDiv[0] : rawDiv;
 
   const roleSlug = role?.slug ?? "";
   const roleName = role?.name ?? "";
+  const roleLevel = role?.level ?? 0;
+
+  const isTreasurer =
+    TREASURER_SLUGS.includes(roleSlug) ||
+    roleSlug.includes("bendahara") ||
+    roleName.toLowerCase().includes("bendahara") ||
+    roleLevel === 70;
 
   return {
     authorized: true,
@@ -79,19 +107,18 @@ async function getAuthSession(): Promise<AuthResult> {
       userId,
       assignmentId: a.id,
       divisionId: a.division_id,
-      divisionName: a.division?.name ?? "",
+      divisionName: div?.name ?? "",
       roleName,
       roleSlug,
-      roleLevel: role?.level ?? 0,
+      roleLevel,
       isApprover: role?.is_approver ?? false,
       isMeetingCreator: (role?.is_meeting_creator ?? false) || (a.can_create_meeting ?? false),
       isReportCreator: (role?.is_report_creator ?? false) || (a.can_submit_report ?? false),
-      isSecretary: SECRETARY_SLUGS.includes(roleSlug),
-      isTreasurer:
-        TREASURER_SLUGS.includes(roleSlug) ||
-        roleSlug.includes("bendahara") ||
-        roleName.toLowerCase().includes("bendahara") ||
-        role?.level === 70,
+      isSecretary:
+        SECRETARY_SLUGS.includes(roleSlug) ||
+        roleSlug.includes("sekretaris") ||
+        roleName.toLowerCase().includes("sekretaris"),
+      isTreasurer,
     },
   };
 }
@@ -158,7 +185,7 @@ export async function requireSecretary(): Promise<
 
   if (!result.authorized) return result;
 
-  if (!result.session.isSecretary) {
+  if (!result.session.isSecretary && result.session.roleLevel < 80) {
     return {
       authorized: false,
       error: "Akses ditolak. Hanya Sekretaris Panitia yang dapat memproses surat.",
@@ -169,7 +196,7 @@ export async function requireSecretary(): Promise<
 }
 
 /**
- * Hanya Bendahara (atau Pimpinan BPH level >= 80) yang diizinkan.
+ * Hanya Bendahara (atau Pimpinan BPH level >= 55) yang diizinkan.
  * Digunakan untuk halaman Pembukuan Bendahara.
  */
 export async function requireTreasurer(): Promise<
@@ -180,10 +207,10 @@ export async function requireTreasurer(): Promise<
 
   if (!result.authorized) return result;
 
-  if (!result.session.isTreasurer && result.session.roleLevel < 80) {
+  if (!result.session.isTreasurer && result.session.roleLevel < 55) {
     return {
       authorized: false,
-      error: "Akses ditolak. Hanya Bendahara dan Pimpinan BPH yang dapat mengakses halaman ini.",
+      error: "Akses ditolak. Hanya Bendahara dan Pengurus yang dapat mengakses halaman ini.",
     };
   }
 
