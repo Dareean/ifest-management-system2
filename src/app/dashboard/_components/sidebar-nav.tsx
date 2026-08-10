@@ -34,7 +34,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-function getNavItems(level: number): NavItem[] {
+function getNavItems(level: number, roleName: string = ""): NavItem[] {
   const items: NavItem[] = [
     { href: "/dashboard", label: "OVERVIEW", icon: LayoutDashboard },
     { href: "/dashboard/tasks", label: "TASKS", icon: CheckSquare },
@@ -50,8 +50,11 @@ function getNavItems(level: number): NavItem[] {
     items.push({ href: "/dashboard/finance", label: "KEUANGAN", icon: DollarSign });
   }
 
-  if (level >= 90 || level === 70) {
+  if (level === 70 || roleName.toLowerCase().includes("bendahara")) {
     items.push({ href: "/dashboard/treasurer-book", label: "PEMBUKUAN BENDAHARA", icon: BookOpen });
+  }
+
+  if (level >= 90 || level === 70) {
     items.push({ href: "/dashboard/finance/report", label: "LPJ", icon: FileText });
   }
 
@@ -89,8 +92,9 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
 
   const navItems = useMemo(() => {
     const level = profile?.assignment?.level ?? 0;
-    return getNavItems(level);
-  }, [profile?.assignment?.level]);
+    const roleName = profile?.assignment?.roleName || profile?.assignment?.role || "";
+    return getNavItems(level, roleName);
+  }, [profile?.assignment?.level, profile?.assignment?.roleName, profile?.assignment?.role]);
 
   // Dynamically compute sub-tabs for LAPORAN based on supervisor or division membership
   const laporanSubItems = useMemo(() => {

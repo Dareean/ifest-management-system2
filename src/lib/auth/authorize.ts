@@ -7,6 +7,9 @@ const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 /** Slug-slug role yang dianggap "Sekretaris Panitia" — satu-satunya yang boleh memproses surat */
 export const SECRETARY_SLUGS = ["sekretaris-1", "sekretaris-2"];
 
+/** Slug-slug role yang dianggap "Bendahara" */
+export const TREASURER_SLUGS = ["bendahara"];
+
 export interface AuthSession {
   userId: string;
   assignmentId: string;
@@ -19,6 +22,7 @@ export interface AuthSession {
   isMeetingCreator: boolean;
   isReportCreator: boolean;
   isSecretary: boolean;
+  isTreasurer: boolean;
 }
 
 type AuthResult =
@@ -60,6 +64,7 @@ async function getAuthSession(): Promise<AuthResult> {
   const role = a.role;
 
   const roleSlug = role?.slug ?? "";
+  const roleName = role?.name ?? "";
 
   return {
     authorized: true,
@@ -68,13 +73,14 @@ async function getAuthSession(): Promise<AuthResult> {
       assignmentId: a.id,
       divisionId: a.division_id,
       divisionName: a.division?.name ?? "",
-      roleName: role?.name ?? "",
+      roleName,
       roleSlug,
       roleLevel: role?.level ?? 0,
       isApprover: role?.is_approver ?? false,
       isMeetingCreator: (role?.is_meeting_creator ?? false) || (a.can_create_meeting ?? false),
       isReportCreator: (role?.is_report_creator ?? false) || (a.can_submit_report ?? false),
       isSecretary: SECRETARY_SLUGS.includes(roleSlug),
+      isTreasurer: TREASURER_SLUGS.includes(roleSlug) || roleName.toLowerCase().includes("bendahara") || role?.level === 70,
     },
   };
 }
@@ -145,6 +151,28 @@ export async function requireSecretary(): Promise<
     return {
       authorized: false,
       error: "Akses ditolak. Hanya Sekretaris Panitia yang dapat memproses surat.",
+    };
+  }
+
+  return result;
+}
+
+/**
+ * Hanya Bendahara yang diizinkan.
+ * Digunakan untuk halaman Pembukuan Bendahara.
+ */
+export async function requireTreasurer(): Promise<
+  | { authorized: true; session: AuthSession }
+  | { authorized: false; error: string }
+> {
+  const result = await getAuthSession();
+
+  if (!result.authorized) return result;
+
+  if (!result.session.isTreasurer) {
+    return {
+      authorized: false,
+      error: "Akses ditolak. Hanya Bendahara yang dapat mengakses halaman ini.",
     };
   }
 

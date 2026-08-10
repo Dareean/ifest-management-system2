@@ -1,10 +1,10 @@
-import { requireRole } from "@/lib/auth/authorize";
+import { requireTreasurer } from "@/lib/auth/authorize";
 import { redirect } from "next/navigation";
 import { getFinanceOverview, getBudgets, getBudgetRequests, getAllTransactions, getRabItems } from "@/lib/data/finance";
 import { TreasurerBookClient } from "./client";
 
 export default async function TreasurerBookPage() {
-  const auth = await requireRole(70);
+  const auth = await requireTreasurer();
   if (!auth.authorized) {
     redirect("/dashboard");
   }
