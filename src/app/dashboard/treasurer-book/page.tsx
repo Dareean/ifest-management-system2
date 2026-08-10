@@ -11,13 +11,28 @@ export default async function TreasurerBookPage() {
 
   const session = auth.session;
 
-  const [overview, budgets, requests, transactions, rabItems] = await Promise.all([
-    getFinanceOverview(),
-    getBudgets(),
-    getBudgetRequests(),
-    getAllTransactions(),
-    getRabItems(),
-  ]);
+  let overview = { total_budget: 0, total_used: 0, total_remaining: 0, pending_requests: 0 };
+  let budgets: any[] = [];
+  let requests: any[] = [];
+  let transactions: any[] = [];
+  let rabItems: any[] = [];
+
+  try {
+    const res = await Promise.all([
+      getFinanceOverview().catch(() => ({ total_budget: 0, total_used: 0, total_remaining: 0, pending_requests: 0 })),
+      getBudgets().catch(() => []),
+      getBudgetRequests().catch(() => []),
+      getAllTransactions().catch(() => []),
+      getRabItems().catch(() => []),
+    ]);
+    overview = res[0];
+    budgets = res[1];
+    requests = res[2];
+    transactions = res[3];
+    rabItems = res[4];
+  } catch (err) {
+    console.error("Error loading treasurer book data:", err);
+  }
 
   return (
     <TreasurerBookClient
