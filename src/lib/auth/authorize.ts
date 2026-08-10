@@ -8,7 +8,14 @@ const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 export const SECRETARY_SLUGS = ["sekretaris-1", "sekretaris-2"];
 
 /** Slug-slug role yang dianggap "Bendahara" */
-export const TREASURER_SLUGS = ["bendahara"];
+export const TREASURER_SLUGS = [
+  "bendahara",
+  "bendahara-1",
+  "bendahara-2",
+  "bendahara_1",
+  "bendahara_2",
+  "bendahara-utama",
+];
 
 export interface AuthSession {
   userId: string;
@@ -80,7 +87,11 @@ async function getAuthSession(): Promise<AuthResult> {
       isMeetingCreator: (role?.is_meeting_creator ?? false) || (a.can_create_meeting ?? false),
       isReportCreator: (role?.is_report_creator ?? false) || (a.can_submit_report ?? false),
       isSecretary: SECRETARY_SLUGS.includes(roleSlug),
-      isTreasurer: TREASURER_SLUGS.includes(roleSlug) || roleName.toLowerCase().includes("bendahara") || role?.level === 70,
+      isTreasurer:
+        TREASURER_SLUGS.includes(roleSlug) ||
+        roleSlug.includes("bendahara") ||
+        roleName.toLowerCase().includes("bendahara") ||
+        role?.level === 70,
     },
   };
 }
@@ -158,7 +169,7 @@ export async function requireSecretary(): Promise<
 }
 
 /**
- * Hanya Bendahara yang diizinkan.
+ * Hanya Bendahara (atau Pimpinan BPH level >= 80) yang diizinkan.
  * Digunakan untuk halaman Pembukuan Bendahara.
  */
 export async function requireTreasurer(): Promise<
@@ -169,10 +180,10 @@ export async function requireTreasurer(): Promise<
 
   if (!result.authorized) return result;
 
-  if (!result.session.isTreasurer) {
+  if (!result.session.isTreasurer && result.session.roleLevel < 80) {
     return {
       authorized: false,
-      error: "Akses ditolak. Hanya Bendahara yang dapat mengakses halaman ini.",
+      error: "Akses ditolak. Hanya Bendahara dan Pimpinan BPH yang dapat mengakses halaman ini.",
     };
   }
 

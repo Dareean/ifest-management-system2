@@ -34,7 +34,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-function getNavItems(level: number, roleName: string = ""): NavItem[] {
+function getNavItems(level: number, roleName: string = "", roleSlug: string = ""): NavItem[] {
   const items: NavItem[] = [
     { href: "/dashboard", label: "OVERVIEW", icon: LayoutDashboard },
     { href: "/dashboard/tasks", label: "TASKS", icon: CheckSquare },
@@ -50,7 +50,7 @@ function getNavItems(level: number, roleName: string = ""): NavItem[] {
     items.push({ href: "/dashboard/finance", label: "KEUANGAN", icon: DollarSign });
   }
 
-  if (level === 70 || roleName.toLowerCase().includes("bendahara")) {
+  if (level >= 80 || level === 70 || roleName.toLowerCase().includes("bendahara") || roleSlug.includes("bendahara")) {
     items.push({ href: "/dashboard/treasurer-book", label: "PEMBUKUAN BENDAHARA", icon: BookOpen });
   }
 
@@ -93,8 +93,9 @@ export function SidebarNav({ profile, notifications }: SidebarNavProps) {
   const navItems = useMemo(() => {
     const level = profile?.assignment?.level ?? 0;
     const roleName = profile?.assignment?.roleName || profile?.assignment?.role || "";
-    return getNavItems(level, roleName);
-  }, [profile?.assignment?.level, profile?.assignment?.roleName, profile?.assignment?.role]);
+    const roleSlug = (profile?.assignment as any)?.roleSlug || "";
+    return getNavItems(level, roleName, roleSlug);
+  }, [profile?.assignment?.level, profile?.assignment?.roleName, profile?.assignment?.role, (profile?.assignment as any)?.roleSlug]);
 
   // Dynamically compute sub-tabs for LAPORAN based on supervisor or division membership
   const laporanSubItems = useMemo(() => {
