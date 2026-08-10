@@ -6,6 +6,7 @@ import { TreasurerBookClient } from "./client";
 export default async function TreasurerBookPage() {
   const auth = await requireTreasurer();
   if (!auth.authorized) {
+    console.warn("Access denied to Treasurer Book:", auth.error);
     redirect("/dashboard");
   }
 

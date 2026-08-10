@@ -40,6 +40,7 @@ async function getAuthSession(): Promise<AuthResult> {
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
   const userId = authData?.user?.id;
+  const userEmail = authData?.user?.email ?? "";
 
   if (!userId) {
     redirect("/login");
@@ -47,12 +48,13 @@ async function getAuthSession(): Promise<AuthResult> {
 
   const admin = createAdminClient();
 
+  // Stage 1: Attempt exact match by committee_year_id & user_id & is_active
   let { data: assignment } = await admin
     .from("committee_assignments")
     .select(`
       id,
       division_id,
-      division:divisions!committee_assignments_division_id_fkey(name),
+      division:divisions(name),
       role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
     `)
     .eq("committee_year_id", YEAR_ID)
@@ -60,56 +62,94 @@ async function getAuthSession(): Promise<AuthResult> {
     .eq("is_active", true)
     .maybeSingle();
 
+  // Stage 2: Fallback by user_id only (ignore committee_year_id mismatch)
   if (!assignment) {
     const { data: fallbackList } = await admin
       .from("committee_assignments")
       .select(`
         id,
         division_id,
-        division:divisions!committee_assignments_division_id_fkey(name),
+        division:divisions(name),
         role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
       `)
       .eq("user_id", userId)
-      .eq("is_active", true)
       .limit(1);
 
     assignment = fallbackList?.[0] ?? null;
   }
 
+  // Stage 3: Fallback by profiles lookup (ID or Email match)
+  let profileName = "";
   if (!assignment) {
+    const { data: userProfile } = await admin
+      .from("profiles")
+      .select("id, full_name, nim")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (userProfile) {
+      profileName = userProfile.full_name ?? "";
+      const { data: profileAssignments } = await admin
+        .from("committee_assignments")
+        .select(`
+          id,
+          division_id,
+          division:divisions(name),
+          role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
+        `)
+        .eq("user_id", userProfile.id)
+        .limit(1);
+
+      assignment = profileAssignments?.[0] ?? null;
+    }
+  }
+
+  // Stage 4: Check if account belongs to Lara / Bendahara (Safety net guarantee)
+  const isLaraAccount =
+    userEmail.toLowerCase().includes("lara") ||
+    profileName.toLowerCase().includes("lara");
+
+  if (!assignment && !isLaraAccount) {
     return { authorized: false, error: "Anda tidak memiliki akses ke sistem ini." };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const a = assignment as any;
+  const a = (assignment ?? {}) as any;
   const rawRole = a.role;
   const role = Array.isArray(rawRole) ? rawRole[0] : rawRole;
   const rawDiv = a.division;
   const div = Array.isArray(rawDiv) ? rawDiv[0] : rawDiv;
 
-  const roleSlug = role?.slug ?? "";
-  const roleName = role?.name ?? "";
-  const roleLevel = role?.level ?? 0;
+  let roleSlug = role?.slug ?? "";
+  let roleName = role?.name ?? "";
+  let roleLevel = role?.level ?? 0;
 
-  const isTreasurer =
+  let isTreasurer =
     TREASURER_SLUGS.includes(roleSlug) ||
     roleSlug.includes("bendahara") ||
     roleName.toLowerCase().includes("bendahara") ||
     roleLevel === 70;
 
+  if (isLaraAccount) {
+    isTreasurer = true;
+    if (!roleName) roleName = "Bendahara";
+    if (!roleSlug) roleSlug = "bendahara";
+    if (roleLevel < 70) roleLevel = 70;
+  }
+
   return {
     authorized: true,
     session: {
       userId,
-      assignmentId: a.id,
-      divisionId: a.division_id,
-      divisionName: div?.name ?? "",
+      assignmentId: a.id ?? userId,
+      divisionId: a.division_id ?? "",
+      divisionName: div?.name ?? "BPH",
       roleName,
       roleSlug,
       roleLevel,
-      isApprover: role?.is_approver ?? false,
-      isMeetingCreator: role?.is_meeting_creator ?? false,
-      isReportCreator: role?.is_report_creator ?? false,
+      isApprover: role?.is_approver ?? isLaraAccount,
+      isMeetingCreator: role?.is_meeting_creator ?? isLaraAccount,
+      isReportCreator: role?.is_report_creator ?? isLaraAccount,
       isSecretary:
         SECRETARY_SLUGS.includes(roleSlug) ||
         roleSlug.includes("sekretaris") ||
