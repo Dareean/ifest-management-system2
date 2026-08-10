@@ -13,5 +13,9 @@ binding = "R2_BUCKET"
 bucket_name = "sintuwu-ifest"
 preview_bucket_name = "sintuwu-ifest"
 
+[vars]
+APPSCRIPT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwXE0TGix0aNSElZhW5ShDVvMG7yrMAfSVyyqPK9ZEhRIWXhAPtILwNv_ilsxzf63BM/exec"
+
+
 
 

@@ -29,6 +29,7 @@ import {
   Pencil,
   Trash2,
   Search,
+  PieChart,
 } from "lucide-react";
 import type { BudgetWithDivision, BudgetRequestData, FinanceOverview, AllTransactionData } from "@/lib/data/finance";
 
@@ -82,6 +83,13 @@ export function FinanceClient({
   const [txSearch, setTxSearch] = useState("");
   const [txTypeFilter, setTxTypeFilter] = useState("all");
   const [txDivFilter, setTxDivFilter] = useState("all");
+
+  const totalIncome = allTransactions.filter((t) => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+  const totalExpense = allTransactions.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+  const currentBalance = totalIncome - totalExpense;
+  const totalVolume = totalIncome + totalExpense;
+  const incomePercent = totalVolume > 0 ? Math.round((totalIncome / totalVolume) * 100) : 0;
+  const expensePercent = totalVolume > 0 ? Math.round((totalExpense / totalVolume) * 100) : 0;
 
   const [, setBudgetAction, setBudgetPending] = useActionState(setBudget, null);
   const [, addTxAction, addTxPending] = useActionState(addTransaction, null);
@@ -223,6 +231,56 @@ export function FinanceClient({
       {actionMsg && (
         <div className="text-xs font-mono text-error bg-error-container/20 rounded-xl p-4 border border-error/20">
           {actionMsg}
+        </div>
+      )}
+
+      {/* Visual Cash-Flow Gauge Banner Card — ONLY visible for Bendahara & BPH */}
+      {isTreasurerOrBPH && (
+        <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#04000D]/5 pb-3">
+            <div>
+              <h3 className="font-extrabold text-lg text-on-surface flex items-center gap-2">
+                <PieChart className="size-5 text-accent-magenta" /> Visual Cash-Flow Gauge Panitia
+              </h3>
+              <p className="text-xs font-medium text-on-surface-variant/70 mt-0.5">
+                Rasio perbandingan arus kas masuk (pemasukan) vs arus kas keluar (pengeluaran realisasi)
+              </p>
+            </div>
+            <div className="font-mono text-xs text-right">
+              <span className="text-on-surface-variant/60 font-bold block text-[10px] uppercase">Saldo Kas Net</span>
+              <span className={`font-extrabold text-base ${currentBalance >= 0 ? "text-emerald-700" : "text-error"}`}>
+                {formatRp(currentBalance)}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-emerald-700 font-bold">Pemasukan ({incomePercent}%)</span>
+              <span className="text-accent-magenta font-bold">Pengeluaran ({expensePercent}%)</span>
+            </div>
+            <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+              <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${incomePercent}%` }} />
+              <div className="h-full bg-accent-magenta transition-all duration-500" style={{ width: `${expensePercent}%` }} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 font-mono text-xs">
+            <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/50">
+              <span className="text-[10px] text-emerald-800 uppercase font-bold block">Total Kas Masuk</span>
+              <span className="font-extrabold text-emerald-700 text-sm">{formatRp(totalIncome)}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-red-50/60 border border-red-200/50">
+              <span className="text-[10px] text-accent-magenta uppercase font-bold block">Total Kas Keluar</span>
+              <span className="font-extrabold text-accent-magenta text-sm">{formatRp(totalExpense)}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 border border-[#04000D]/5 col-span-2 sm:col-span-1">
+              <span className="text-[10px] text-on-surface-variant uppercase font-bold block">Saldo Kas Net</span>
+              <span className={`font-extrabold text-sm ${currentBalance >= 0 ? "text-emerald-800" : "text-error"}`}>
+                {formatRp(currentBalance)}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -653,6 +711,8 @@ export function FinanceClient({
               </div>
             )}
           </div>
+
+
 
           {/* Card 2: Panduan & Akses LPJ */}
           <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5 sm:p-6 space-y-4">

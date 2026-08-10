@@ -11,6 +11,7 @@ import {
   updateTransaction,
   deleteTransaction,
   syncAllToAppsScript,
+  uploadReceiptToDriveAction,
   addRabItem,
   updateRabItem,
   deleteRabItem,
@@ -213,7 +214,7 @@ export function TreasurerBookClient({
     }
   }
 
-  async function handleFileUpload(file: File) {
+  async function handleFileUpload(file: File, divName?: string) {
     if (file.size > 90 * 1024 * 1024) {
       setActionMsg("Ukuran file maksimal 90MB.");
       return;
@@ -223,10 +224,17 @@ export function TreasurerBookClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const json = (await res.json()) as any;
-      if (!res.ok || json.error) throw new Error(json.error || "Gagal mengunggah");
-      setUploadedUrl(json.url);
+      fd.append("division_name", divName || "UMUM");
+
+      const driveRes = await uploadReceiptToDriveAction(fd);
+      if (driveRes.success && driveRes.fileUrl) {
+        setUploadedUrl(driveRes.fileUrl);
+      } else {
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const json = (await res.json()) as any;
+        if (!res.ok || json.error) throw new Error(json.error || "Gagal mengunggah");
+        setUploadedUrl(json.url);
+      }
     } catch (e: any) {
       setActionMsg(e.message || "Gagal mengunggah file");
     } finally {
@@ -236,17 +244,19 @@ export function TreasurerBookClient({
 
   async function handleSyncToSpreadsheet() {
     setSyncingAppsScript(true);
-    setSyncStatusMsg(null);
-    const res = await syncAllToAppsScript(appsScriptUrlInput || undefined);
-    if (res.error) {
-      setSyncStatusMsg({ type: "error", text: res.error });
-    } else {
-      setSyncStatusMsg({
-        type: "success",
-        text: res.message || "Seluruh pembukuan berhasil disinkronkan ke Google Sheets!",
-      });
+    setActionMsg(null);
+    try {
+      const res = await syncAllToAppsScript();
+      if (res.error) {
+        setActionMsg("Gagal sinkronisasi: " + res.error);
+      } else {
+        setActionMsg("✓ Seluruh data kas & transaksi berhasil disinkronkan ke Google Sheets!");
+      }
+    } catch (err: any) {
+      setActionMsg("Gagal terhubung ke Google Sheets: " + (err.message || "Error"));
+    } finally {
+      setSyncingAppsScript(false);
     }
-    setSyncingAppsScript(false);
   }
 
   // Quick Express Submission Handler
@@ -383,19 +393,51 @@ export function TreasurerBookClient({
 
           <Button
             variant="outline"
-            onClick={() => setShowAppsScriptModal(true)}
-            className="cursor-pointer text-xs font-bold rounded-xl border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-700 hover:text-white transition-all flex items-center gap-2 group"
+            disabled={syncingAppsScript}
+            onClick={handleSyncToSpreadsheet}
+            className="cursor-pointer text-xs font-bold rounded-xl border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-700 hover:text-white transition-all flex items-center gap-2 group disabled:opacity-60"
           >
-            <Share2 className="size-4 text-emerald-600 group-hover:text-emerald-200 transition-colors" />
-            Connect Google Sheets
+            {syncingAppsScript ? (
+              <>
+                <Loader2 className="size-4 text-emerald-600 animate-spin" />
+                Menyinkronkan...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="size-4 text-emerald-600 group-hover:text-emerald-200 transition-colors" />
+                Sinkron ke Google sheets
+              </>
+            )}
           </Button>
         </div>
       </div>
 
       {actionMsg && (
-        <div className="text-xs font-mono text-error bg-error-container/20 rounded-xl p-4 border border-error/20 flex items-center justify-between">
-          <span>{actionMsg}</span>
-          <button onClick={() => setActionMsg(null)} className="text-error font-bold">✕</button>
+        <div
+          className={`text-xs font-sans rounded-2xl p-4 border shadow-sm flex items-center justify-between gap-3 transition-all ${
+            actionMsg.startsWith("✓") || actionMsg.toLowerCase().includes("berhasil")
+              ? "bg-emerald-50 text-emerald-950 border-emerald-300"
+              : "bg-rose-50 text-rose-950 border-rose-300"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            {actionMsg.startsWith("✓") || actionMsg.toLowerCase().includes("berhasil") ? (
+              <CheckCircle className="size-4 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertCircle className="size-4 text-rose-600 shrink-0" />
+            )}
+            <span className="font-semibold text-xs md:text-sm">{actionMsg.replace(/^✓\s*/, "")}</span>
+          </div>
+          <button
+            onClick={() => setActionMsg(null)}
+            className={`p-1 rounded-lg transition-colors cursor-pointer ${
+              actionMsg.startsWith("✓") || actionMsg.toLowerCase().includes("berhasil")
+                ? "text-emerald-700 hover:bg-emerald-200/60"
+                : "text-rose-700 hover:bg-rose-200/60"
+            }`}
+          >
+            <X className="size-4" />
+          </button>
         </div>
       )}
 
@@ -514,10 +556,9 @@ export function TreasurerBookClient({
         )}
       </div>
 
-      {/* Main Workspace Layout: Dual Pane (Grid Editor + Right Widgets) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Pane (8 Cols): Interactive Live Grid Editor */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
+      {/* Main Workspace Layout: Full Width Interactive Grid */}
+      <div className="w-full flex flex-col gap-6">
+        <div className="w-full flex flex-col gap-6">
           {/* Workspace Tab Switcher */}
           <div className="flex items-center gap-2 border-b border-[#04000D]/5 pb-1">
             <button
@@ -865,132 +906,6 @@ export function TreasurerBookClient({
               </div>
             </div>
           )}
-        </div>
-
-        {/* Right Pane (4 Cols): Visual Cash-Flow Gauge + Mini Calculator + Sync Status */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          {/* Visual Cash Flow Gauge Card */}
-          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5">
-            <h3 className="font-extrabold text-sm text-on-surface flex items-center gap-2 mb-3">
-              <PieChart className="size-4 text-accent-magenta" /> Visual Cash-Flow Gauge
-            </h3>
-
-            {/* Gauge Progress Bar */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-emerald-700 font-bold">Pemasukan ({incomePercent}%)</span>
-                <span className="text-accent-magenta font-bold">Pengeluaran ({100 - incomePercent}%)</span>
-              </div>
-              <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">
-                <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${incomePercent}%` }} />
-                <div className="h-full bg-accent-magenta transition-all duration-500" style={{ width: `${100 - incomePercent}%` }} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-[#04000D]/5">
-              <div>
-                <span className="text-[10px] font-mono font-bold uppercase text-emerald-700">Total Masuk</span>
-                <p className="font-extrabold text-sm text-emerald-800">{formatRp(totalIncome)}</p>
-              </div>
-              <div>
-                <span className="text-[10px] font-mono font-bold uppercase text-accent-magenta">Total Keluar</span>
-                <p className="font-extrabold text-sm text-accent-magenta">{formatRp(totalExpense)}</p>
-              </div>
-            </div>
-
-            <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-[#04000D]/5 text-xs flex items-center justify-between">
-              <span className="font-mono text-on-surface-variant font-bold">Saldo Kas Net:</span>
-              <span className={`font-extrabold font-mono text-sm ${currentBalance >= 0 ? "text-emerald-800" : "text-error"}`}>
-                {formatRp(currentBalance)}
-              </span>
-            </div>
-          </div>
-
-          {/* Interactive Mini Calculator Widget */}
-          <div className="bg-white border border-[#04000D]/5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] rounded-2xl p-5">
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <h3 className="font-extrabold text-sm text-on-surface flex items-center gap-2">
-                <Calculator className="size-4 text-accent-magenta" /> Kalkulator Kas Cepat
-              </h3>
-              <button onClick={handleCalcClear} className="text-[10px] font-mono font-bold text-accent-magenta hover:underline cursor-pointer">
-                Reset
-              </button>
-            </div>
-
-            {/* Calc Display */}
-            <div className="p-3 bg-slate-900 text-white rounded-xl font-mono text-right text-lg font-bold tracking-wider mb-3 shadow-inner">
-              {calcDisplay}
-            </div>
-
-            {/* Calc Pad Grid */}
-            <div className="grid grid-cols-4 gap-1.5 font-mono text-xs font-bold">
-              {["7", "8", "9", "/"].map((btn) => (
-                <button
-                  key={btn}
-                  onClick={() => (btn === "/" ? handleCalcOp("/") : handleCalcNum(btn))}
-                  className="p-2.5 rounded-lg border border-[#04000D]/10 bg-slate-50 hover:bg-slate-100 cursor-pointer active:scale-95 transition-transform"
-                >
-                  {btn}
-                </button>
-              ))}
-              {["4", "5", "6", "*"].map((btn) => (
-                <button
-                  key={btn}
-                  onClick={() => (btn === "*" ? handleCalcOp("*") : handleCalcNum(btn))}
-                  className="p-2.5 rounded-lg border border-[#04000D]/10 bg-slate-50 hover:bg-slate-100 cursor-pointer active:scale-95 transition-transform"
-                >
-                  {btn}
-                </button>
-              ))}
-              {["1", "2", "3", "-"].map((btn) => (
-                <button
-                  key={btn}
-                  onClick={() => (btn === "-" ? handleCalcOp("-") : handleCalcNum(btn))}
-                  className="p-2.5 rounded-lg border border-[#04000D]/10 bg-slate-50 hover:bg-slate-100 cursor-pointer active:scale-95 transition-transform"
-                >
-                  {btn}
-                </button>
-              ))}
-              {["0", ".", "=", "+"].map((btn) => (
-                <button
-                  key={btn}
-                  onClick={() => {
-                    if (btn === "=") handleCalcEquals();
-                    else if (btn === "+") handleCalcOp("+");
-                    else handleCalcNum(btn);
-                  }}
-                  className={`p-2.5 rounded-lg border border-[#04000D]/10 cursor-pointer active:scale-95 transition-transform ${
-                    btn === "=" ? "bg-[#04000D] text-white" : "bg-slate-50 hover:bg-slate-100"
-                  }`}
-                >
-                  {btn}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Apps Script Live Sync Status Box */}
-          <div className="bg-emerald-50/80 border border-emerald-200 shadow-sm rounded-2xl p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] font-bold uppercase text-emerald-800 flex items-center gap-1.5">
-                <Share2 className="size-3.5" /> SPREADSHEET AUTO-SYNC
-              </span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            </div>
-
-            <p className="text-xs text-emerald-950 font-medium leading-relaxed">
-              Seluruh transaksi kas dan rincian RAB di atas tersinkronisasi otomatis dengan Google Spreadsheet milik Bendahara.
-            </p>
-
-            <Button
-              onClick={handleSyncToSpreadsheet}
-              disabled={syncingAppsScript}
-              className="w-full cursor-pointer font-bold bg-emerald-900 text-white hover:bg-emerald-950 text-xs py-2 rounded-xl gap-2 shadow-sm"
-            >
-              {syncingAppsScript ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
-              Kirim & Synchronize Now
-            </Button>
-          </div>
         </div>
       </div>
 

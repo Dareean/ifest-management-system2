@@ -610,3 +610,52 @@ export async function deleteRabItem(id: string) {
   revalidatePath("/dashboard/treasurer-book");
   return { success: true };
 }
+
+// ============================================================
+// Google Drive Receipt Direct Upload
+// ============================================================
+
+export async function uploadReceiptToDriveAction(
+  formData: FormData
+): Promise<{ success?: boolean; fileUrl?: string; error?: string }> {
+  const file = formData.get("file") as File;
+  const divisionName = (formData.get("division_name") as string) || "UMUM";
+
+  if (!file || file.size === 0) {
+    return { error: "File nota tidak ditemukan atau kosong" };
+  }
+
+  const webhookUrl = process.env.APPSCRIPT_WEBHOOK_URL;
+  if (!webhookUrl) {
+    return { error: "APPSCRIPT_WEBHOOK_URL belum dikonfigurasi di .env.local atau Vercel Environment Variables" };
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const base64File = Buffer.from(arrayBuffer).toString("base64");
+
+    const res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "upload_receipt",
+        data: {
+          division_name: divisionName,
+          file_name: file.name,
+          mime_type: file.type,
+          file_base64: base64File,
+        },
+      }),
+    });
+
+    const result = (await res.json()) as any;
+    if (result.success && result.file_url) {
+      return { success: true, fileUrl: result.file_url };
+    } else {
+      return { error: result.error || "Gagal mengunggah nota ke Google Drive" };
+    }
+  } catch (err: any) {
+    console.error("Upload receipt to Google Drive error:", err);
+    return { error: "Gagal terhubung ke Google Drive: " + err.message };
+  }
+}
