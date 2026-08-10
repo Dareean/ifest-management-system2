@@ -1,12 +1,12 @@
 import { getAllMembers } from "@/lib/data/members";
-import { requireRole } from "@/lib/auth/authorize";
+import { requirePermission } from "@/lib/auth/authorize";
 import { NewMeetingForm } from "./form";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
 export default async function NewMeetingPage() {
-  const auth = await requireRole(55);
+  const auth = await requirePermission("is_meeting_creator");
   if (!auth.authorized) {
     return <div className="text-pink-600 font-mono p-8">{auth.error}</div>;
   }

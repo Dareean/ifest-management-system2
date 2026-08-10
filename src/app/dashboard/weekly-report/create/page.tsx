@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/auth/authorize";
+import { requirePermission } from "@/lib/auth/authorize";
 import { WeeklyReportCreateClient } from "./client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mapDbRowToReport } from "@/lib/data/weekly-report";
@@ -10,7 +10,7 @@ interface CreatePageProps {
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
 export default async function WeeklyReportCreatePage({ searchParams }: CreatePageProps) {
-  const authResult = await requireRole(55);
+  const authResult = await requirePermission("is_report_creator");
   if (!authResult.authorized) {
     return (
       <div className="p-8 text-center text-error bg-error-container/30 rounded-3xl border border-error/20">

@@ -18,8 +18,23 @@ export interface MeetingData {
   notesStatus: "none" | "draft" | "published";
 }
 
-export const getMeetings = cache(async (): Promise<MeetingData[]> => {
+export const getMeetings = cache(async (
+  userAssignmentId?: string,
+  isMeetingCreator?: boolean,
+  isBph?: boolean
+): Promise<MeetingData[]> => {
   const supabase = createAdminClient();
+
+  let invitedMeetingIds: string[] = [];
+  if (userAssignmentId && !isMeetingCreator && !isBph) {
+    const { data: inviteRecords } = await supabase
+      .from("meeting_invitees")
+      .select("meeting_id")
+      .eq("committee_assignment_id", userAssignmentId);
+    if (inviteRecords) {
+      invitedMeetingIds = inviteRecords.map((r: any) => r.meeting_id);
+    }
+  }
 
   const { data } = await supabase
     .from("meetings")
@@ -33,6 +48,7 @@ export const getMeetings = cache(async (): Promise<MeetingData[]> => {
       started_at,
       ended_at,
       created_at,
+      creator_id,
       scope,
       creator:committee_assignments!creator_id(
         user:profiles(full_name)
@@ -43,7 +59,17 @@ export const getMeetings = cache(async (): Promise<MeetingData[]> => {
 
   if (!data) return [];
 
-  const meetingIds = data.map((m: any) => m.id);
+  let filteredData = data;
+  if (userAssignmentId && !isMeetingCreator && !isBph) {
+    const inviteSet = new Set(invitedMeetingIds);
+    filteredData = data.filter((m: any) =>
+      m.scope === "all" ||
+      m.creator_id === userAssignmentId ||
+      inviteSet.has(m.id)
+    );
+  }
+
+  const meetingIds = filteredData.map((m: any) => m.id);
   let notesMap: Record<string, string | null> = {};
   if (meetingIds.length > 0) {
     const { data: notes } = await supabase
@@ -72,7 +98,7 @@ export const getMeetings = cache(async (): Promise<MeetingData[]> => {
     }
   }
 
-  const meetingsWithCounts = data.map((m: any) => {
+  const meetingsWithCounts = filteredData.map((m: any) => {
     const inviteeCount = inviteeCountMap[m.id] ?? 0;
     const notesPub = notesMap[m.id];
     const notesStatus: "none" | "draft" | "published" = notesPub === undefined ? "none" : notesPub ? "published" : "draft";

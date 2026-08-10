@@ -17,6 +17,7 @@ import { updateMeetingDate } from "@/lib/actions/meetings";
 interface MeetingsClientProps {
   initialMeetings: MeetingData[];
   exportMeetingsCSV: any;
+  canCreateMeeting?: boolean;
 }
 
 interface Toast {
@@ -270,7 +271,7 @@ function SectionDivider({
 }
 
 /* ─── Main Component ─────────────────────────────────────────────────── */
-export function MeetingsClient({ initialMeetings, exportMeetingsCSV }: MeetingsClientProps) {
+export function MeetingsClient({ initialMeetings, exportMeetingsCSV, canCreateMeeting = false }: MeetingsClientProps) {
   const router = useRouter();
   const [meetings, setMeetings] = useState<MeetingData[]>(initialMeetings);
   const [view, setView] = useState<"daftar" | "kalender">("daftar");
@@ -458,12 +459,14 @@ export function MeetingsClient({ initialMeetings, exportMeetingsCSV }: MeetingsC
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <ExportButton label="Export CSV" filename="rapat" fetchCsv={exportMeetingsCSV} />
-          <Link href="/dashboard/meetings/new">
-            <Button className="cursor-pointer">
-              <Plus className="size-4" />
-              Buat Rapat
-            </Button>
-          </Link>
+          {canCreateMeeting && (
+            <Link href="/dashboard/meetings/new">
+              <Button className="cursor-pointer">
+                <Plus className="size-4" />
+                Buat Rapat
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 

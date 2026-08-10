@@ -15,6 +15,7 @@ interface Props {
   callerDivisionName: string;
   canInvite: boolean;
   isBPH: boolean;
+  isAuthorityUser?: boolean;
   ownMembers?: MemberRow[];
   allDivisions?: DivisionGroup[];
 }
@@ -124,9 +125,11 @@ function MemberDetailModal({
 function MemberCard({
   member,
   callerLevel,
+  isAuthorityUser = false,
 }: {
   member: MemberRow;
   callerLevel: number;
+  isAuthorityUser?: boolean;
 }) {
   const router = useRouter();
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -151,6 +154,10 @@ function MemberCard({
   const isInherentlyMeetingCreator = member.roleIsMeetingCreator;
 
   async function handleToggleReportCreator() {
+    if (!isAuthorityUser) {
+      alert("Akses Ditolak: HANYA Gabriel, Nakita, dan Dareean yang berhak memberikan otoritas izin ini.");
+      return;
+    }
     if (isInherentlyReportCreator) {
       alert(`Personel ini sudah memiliki hak Setor Laporan otomatis dari jabatannya (${member.roleName}).`);
       return;
@@ -158,13 +165,21 @@ function MemberCard({
     const actionText = member.canSubmitReport ? "mencabut" : "memberikan";
     if (confirm(`Apakah Anda yakin ingin ${actionText} hak Laporan Creator untuk ${member.name}?`)) {
       startTransition(async () => {
-        await togglePersonnelReportCreator(member.assignmentId, !member.canSubmitReport);
-        router.refresh();
+        const res = await togglePersonnelReportCreator(member.assignmentId, !member.canSubmitReport);
+        if (res?.error) {
+          alert(res.error);
+        } else {
+          router.refresh();
+        }
       });
     }
   }
 
   async function handleToggleMeetingCreator() {
+    if (!isAuthorityUser) {
+      alert("Akses Ditolak: HANYA Gabriel, Nakita, dan Dareean yang berhak memberikan otoritas izin ini.");
+      return;
+    }
     if (isInherentlyMeetingCreator) {
       alert(`Personel ini sudah memiliki hak Membuat Rapat otomatis dari jabatannya (${member.roleName}).`);
       return;
@@ -172,8 +187,12 @@ function MemberCard({
     const actionText = member.canCreateMeeting ? "mencabut" : "memberikan";
     if (confirm(`Apakah Anda yakin ingin ${actionText} hak Meeting Creator untuk ${member.name}?`)) {
       startTransition(async () => {
-        await togglePersonnelMeetingCreator(member.assignmentId, !member.canCreateMeeting);
-        router.refresh();
+        const res = await togglePersonnelMeetingCreator(member.assignmentId, !member.canCreateMeeting);
+        if (res?.error) {
+          alert(res.error);
+        } else {
+          router.refresh();
+        }
       });
     }
   }
@@ -264,8 +283,8 @@ function MemberCard({
           </div>
         </div>
 
-      {/* Permission Delegation Badges for Coordinators / BPH */}
-      {canManagePermissions && (
+      {/* Permission Delegation / Preview Badges */}
+      {isAuthorityUser ? (
         <div className="flex items-center gap-1.5 pt-2 border-t border-outline-variant/20 flex-wrap">
           <button
             onClick={handleToggleReportCreator}
@@ -311,6 +330,37 @@ function MemberCard({
             {isInherentlyMeetingCreator ? "Meeting Creator (Role)" : member.canCreateMeeting ? "Meeting Creator" : "+ Meeting Creator"}
           </button>
         </div>
+      ) : (
+        (isInherentlyReportCreator || member.canSubmitReport || isInherentlyMeetingCreator || member.canCreateMeeting) && (
+          <div className="flex items-center gap-1.5 pt-2 border-t border-outline-variant/20 flex-wrap">
+            {(isInherentlyReportCreator || member.canSubmitReport) && (
+              <span
+                title={isInherentlyReportCreator ? `Hak akses otomatis dari jabatan ${member.roleName}` : "Hak akses disetujui pimpinan"}
+                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border font-mono uppercase tracking-wider select-none ${
+                  isInherentlyReportCreator
+                    ? "bg-amber-100/80 text-amber-800 border-amber-300"
+                    : "bg-amber-50 text-amber-700 border-amber-300"
+                }`}
+              >
+                <FileText className="size-3" />
+                {isInherentlyReportCreator ? "Laporan Creator (Role)" : "Laporan Creator"}
+              </span>
+            )}
+            {(isInherentlyMeetingCreator || member.canCreateMeeting) && (
+              <span
+                title={isInherentlyMeetingCreator ? `Hak akses otomatis dari jabatan ${member.roleName}` : "Hak akses disetujui pimpinan"}
+                className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg border font-mono uppercase tracking-wider select-none ${
+                  isInherentlyMeetingCreator
+                    ? "bg-blue-100/80 text-blue-800 border-blue-300"
+                    : "bg-blue-50 text-blue-700 border-blue-300"
+                }`}
+              >
+                <Video className="size-3" />
+                {isInherentlyMeetingCreator ? "Meeting Creator (Role)" : "Meeting Creator"}
+              </span>
+            )}
+          </div>
+        )
       )}
       </div>
 
@@ -328,6 +378,7 @@ export function MembersClient({
   callerDivisionName,
   canInvite,
   isBPH,
+  isAuthorityUser = false,
   ownMembers,
   allDivisions,
 }: Props) {
@@ -490,6 +541,7 @@ export function MembersClient({
                         key={member.assignmentId}
                         member={member}
                         callerLevel={callerLevel}
+                        isAuthorityUser={isAuthorityUser}
                       />
                     ))}
                   </div>
@@ -505,6 +557,7 @@ export function MembersClient({
                 key={member.assignmentId}
                 member={member}
                 callerLevel={callerLevel}
+                isAuthorityUser={isAuthorityUser}
               />
             ))}
           </div>

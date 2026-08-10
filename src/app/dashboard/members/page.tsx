@@ -55,6 +55,19 @@ export default async function MembersPage() {
     redirect("/dashboard");
   }
 
+  const { data: callerProfile } = await admin
+    .from("profiles")
+    .select("full_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const callerNameLower = ((callerProfile as any)?.full_name ?? "").toLowerCase();
+  const isAuthorityUser =
+    callerNameLower.includes("gabriel") ||
+    callerNameLower.includes("nakita") ||
+    callerNameLower.includes("daren") ||
+    callerNameLower.includes("dareean");
+
   const divisionId = a.division_id;
   const divisionName = a.division?.name ?? "";
   const isBPH = callerLevel >= 75;
@@ -111,8 +124,8 @@ export default async function MembersPage() {
         avatarUrl: m.user?.avatar_url ?? null,
         roleName: m.role?.name ?? "",
         roleLevel: m.role?.level ?? 0,
-        roleIsReportCreator: m.role?.is_report_creator ?? ((m.role?.level ?? 0) >= 55),
-        roleIsMeetingCreator: m.role?.is_meeting_creator ?? ((m.role?.level ?? 0) >= 75 || m.role?.slug === "koordinator"),
+        roleIsReportCreator: !!m.role?.is_report_creator,
+        roleIsMeetingCreator: !!m.role?.is_meeting_creator,
         canSubmitReport: m.can_submit_report ?? false,
         canCreateMeeting: m.can_create_meeting ?? false,
         divisionName: m.division?.name ?? "",
@@ -125,6 +138,7 @@ export default async function MembersPage() {
         callerDivisionName={divisionName}
         canInvite
         isBPH
+        isAuthorityUser={isAuthorityUser}
         allDivisions={Object.values(grouped)}
       />
     );
@@ -168,8 +182,8 @@ export default async function MembersPage() {
     avatarUrl: m.user?.avatar_url ?? null,
     roleName: m.role?.name ?? "",
     roleLevel: m.role?.level ?? 0,
-    roleIsReportCreator: m.role?.is_report_creator ?? ((m.role?.level ?? 0) >= 55),
-    roleIsMeetingCreator: m.role?.is_meeting_creator ?? ((m.role?.level ?? 0) >= 75 || m.role?.slug === "koordinator"),
+    roleIsReportCreator: !!m.role?.is_report_creator,
+    roleIsMeetingCreator: !!m.role?.is_meeting_creator,
     canSubmitReport: m.can_submit_report ?? false,
     canCreateMeeting: m.can_create_meeting ?? false,
   }));
@@ -180,6 +194,7 @@ export default async function MembersPage() {
       callerDivisionName={divisionName}
       canInvite
       isBPH={false}
+      isAuthorityUser={isAuthorityUser}
       ownMembers={memberList}
     />
   );

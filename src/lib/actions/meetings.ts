@@ -32,13 +32,19 @@ export async function createMeeting(prevState: ActionState, formData: FormData):
 
   const { data: callerAssignment } = await admin
     .from("committee_assignments")
-    .select("id")
+    .select("id, can_create_meeting, role:roles(is_meeting_creator, level)")
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", userId)
     .eq("is_active", true)
     .maybeSingle();
 
   if (!callerAssignment) return { error: "Anda tidak terdaftar sebagai panitia aktif." };
+
+  const c = callerAssignment as any;
+  const canCreate = !!c.role?.is_meeting_creator || !!c.can_create_meeting || (c.role?.level ?? 0) >= 90;
+  if (!canCreate) {
+    return { error: "Akses ditolak. Anda tidak memiliki izin untuk membuat rapat." };
+  }
 
   // Infer meeting scope from invitees
   const { count: totalActive } = await admin

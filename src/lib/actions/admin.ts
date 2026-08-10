@@ -390,9 +390,33 @@ export async function deleteAssignment(id: string) {
   return { success: true };
 }
 
+async function requireAuthorityUser() {
+  const auth = await createClient();
+  const { data: authData } = await auth.auth.getUser();
+  const userId = authData?.user?.id;
+  if (!userId) return null;
+
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("full_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const nameLower = ((profile as any)?.full_name ?? "").toLowerCase();
+  const isAuthorized =
+    nameLower.includes("gabriel") ||
+    nameLower.includes("nakita") ||
+    nameLower.includes("daren") ||
+    nameLower.includes("dareean");
+
+  if (!isAuthorized) return null;
+  return profile;
+}
+
 export async function togglePersonnelReportCreator(id: string, canSubmit: boolean) {
-  const caller = await requireAdmin(60);
-  if (!caller) return { error: "Akses ditolak" };
+  const caller = await requireAuthorityUser();
+  if (!caller) return { error: "Akses ditolak. HANYA Gabriel, Nakita, dan Dareean yang berhak memberikan otoritas izin." };
 
   const supabase = createAdminClient();
   const { error } = await supabase
@@ -408,8 +432,8 @@ export async function togglePersonnelReportCreator(id: string, canSubmit: boolea
 }
 
 export async function togglePersonnelMeetingCreator(id: string, canCreate: boolean) {
-  const caller = await requireAdmin(60);
-  if (!caller) return { error: "Akses ditolak" };
+  const caller = await requireAuthorityUser();
+  if (!caller) return { error: "Akses ditolak. HANYA Gabriel, Nakita, dan Dareean yang berhak memberikan otoritas izin." };
 
   const supabase = createAdminClient();
   const { error } = await supabase
