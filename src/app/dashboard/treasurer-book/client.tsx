@@ -45,6 +45,12 @@ import {
   Percent,
   ChevronRight,
   ArrowRight,
+  HandCoins,
+  Utensils,
+  Printer,
+  Car,
+  Mic,
+  Ticket,
 } from "lucide-react";
 import type {
   BudgetWithDivision,
@@ -74,13 +80,32 @@ const CATEGORY_OPTIONS = [
 ];
 
 const EXPRESS_PRESETS = [
-  { label: "Sponsorship", icon: "💰", type: "income", category: "sponsorship", defaultDesc: "Pemasukan dana sponsor " },
-  { label: "Konsumsi Rapat", icon: "📦", type: "expense", category: "konsumsi", defaultDesc: "Konsumsi panitia & rapat " },
-  { label: "Cetak & Banner", icon: "🖨️", type: "expense", category: "cetak", defaultDesc: "Cetak banner & spanduk " },
-  { label: "Transportasi", icon: "🚗", type: "expense", category: "transport", defaultDesc: "Operasional transportasi " },
-  { label: "Sewa Sound/Alat", icon: "🎤", type: "expense", category: "sewa", defaultDesc: "Sewa perlengkapan & panggung " },
-  { label: "Hasil Danus", icon: "🎟️", type: "income", category: "dana_usaha", defaultDesc: "Hasil jualan Danus " },
+  { label: "Sponsorship", iconName: "HandCoins", type: "income", category: "sponsorship", defaultDesc: "Pemasukan dana sponsor " },
+  { label: "Konsumsi Rapat", iconName: "Utensils", type: "expense", category: "konsumsi", defaultDesc: "Konsumsi panitia & rapat " },
+  { label: "Cetak & Banner", iconName: "Printer", type: "expense", category: "cetak", defaultDesc: "Cetak banner & spanduk " },
+  { label: "Transportasi", iconName: "Car", type: "expense", category: "transport", defaultDesc: "Operasional transportasi " },
+  { label: "Sewa Sound/Alat", iconName: "Mic", type: "expense", category: "sewa", defaultDesc: "Sewa perlengkapan & panggung " },
+  { label: "Hasil Danus", iconName: "Ticket", type: "income", category: "dana_usaha", defaultDesc: "Hasil jualan Danus " },
 ];
+
+function ExpressPresetIcon({ name, className }: { name: string; className?: string }) {
+  switch (name) {
+    case "HandCoins":
+      return <HandCoins className={className} />;
+    case "Utensils":
+      return <Utensils className={className} />;
+    case "Printer":
+      return <Printer className={className} />;
+    case "Car":
+      return <Car className={className} />;
+    case "Mic":
+      return <Mic className={className} />;
+    case "Ticket":
+      return <Ticket className={className} />;
+    default:
+      return <Zap className={className} />;
+  }
+}
 
 function formatRp(n: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -384,37 +409,42 @@ export function TreasurerBookClient({
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-          {EXPRESS_PRESETS.map((preset, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setExpressPreset(preset);
-                setExpressDesc(preset.defaultDesc);
-                setExpressAmount("");
-              }}
-              className={`flex items-center gap-2.5 p-3 rounded-xl border text-left cursor-pointer transition-all ${
-                expressPreset?.label === preset.label
-                  ? "border-[#04000D] bg-[#04000D] text-white shadow-md scale-[1.02]"
-                  : "border-[#04000D]/10 bg-slate-50/70 hover:bg-white hover:border-[#04000D]/30 text-on-surface"
-              }`}
-            >
-              <span className="text-lg">{preset.icon}</span>
-              <div className="flex flex-col min-w-0">
-                <span className="font-bold text-xs truncate">{preset.label}</span>
-                <span
-                  className={`text-[9px] font-mono font-semibold ${
-                    expressPreset?.label === preset.label
-                      ? "text-slate-300"
-                      : preset.type === "income"
-                      ? "text-emerald-700"
-                      : "text-accent-magenta"
-                  }`}
-                >
-                  {preset.type === "income" ? "+ Pemasukan" : "- Pengeluaran"}
-                </span>
-              </div>
-            </button>
-          ))}
+          {EXPRESS_PRESETS.map((preset, idx) => {
+            const isSelected = expressPreset?.label === preset.label;
+            return (
+              <button
+                key={idx}
+                onClick={() => {
+                  setExpressPreset(preset);
+                  setExpressDesc(preset.defaultDesc);
+                  setExpressAmount("");
+                }}
+                className={`flex items-center gap-2.5 p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                  isSelected
+                    ? "border-[#04000D] bg-[#04000D] text-white shadow-md scale-[1.02]"
+                    : "border-[#04000D]/10 bg-slate-50/70 hover:bg-white hover:border-[#04000D]/30 text-on-surface"
+                }`}
+              >
+                <div className={`p-2 rounded-lg shrink-0 flex items-center justify-center ${isSelected ? "bg-white/15 text-white" : "bg-slate-200/60 text-slate-700"}`}>
+                  <ExpressPresetIcon name={preset.iconName} className="size-4" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-bold text-xs truncate">{preset.label}</span>
+                  <span
+                    className={`text-[9px] font-mono font-semibold ${
+                      isSelected
+                        ? "text-slate-300"
+                        : preset.type === "income"
+                        ? "text-emerald-700"
+                        : "text-accent-magenta"
+                    }`}
+                  >
+                    {preset.type === "income" ? "+ Pemasukan" : "- Pengeluaran"}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         {/* Express Quick Input Bar Dropdown */}
@@ -424,7 +454,7 @@ export function TreasurerBookClient({
             className="mt-4 p-4 rounded-xl border border-accent-magenta/30 bg-accent-magenta/5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-in fade-in slide-in-from-top-2"
           >
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xl">{expressPreset.icon}</span>
+              <ExpressPresetIcon name={expressPreset.iconName} className="size-5 text-accent-magenta shrink-0" />
               <Badge variant={expressPreset.type === "income" ? "success" : "danger"} className="font-mono text-[9px] uppercase">
                 {expressPreset.label} ({expressPreset.type === "income" ? "+" : "-"})
               </Badge>
