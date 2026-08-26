@@ -1,6 +1,7 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, hasServiceRoleKey } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
@@ -36,6 +37,46 @@ type AuthResult =
   | { authorized: true; session: AuthSession }
   | { authorized: false; error: string };
 
+/** Kolom yang dibutuhkan dari committee_assignments (dengan join divisi & role). */
+const ASSIGNMENT_SELECT = `
+  id,
+  division_id,
+  division:divisions(name),
+  role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
+`;
+
+/**
+ * Ambil assignment user dengan filter tertentu.
+ * Mengembalikan baris pertama atau null — TIDAK melempar error saat kosong.
+ * `.limit(1)` dipakai (bukan .maybeSingle()) supaya tidak error ketika
+ * database kebetulan punya baris ganda untuk user yang sama.
+ */
+async function queryFirst(
+  client: SupabaseClient,
+  userId: string,
+  filters: { yearOnly?: boolean } = {},
+): Promise<{ row: Record<string, unknown> | null; error: string | null }> {
+  let query = client
+    .from("committee_assignments")
+    .select(ASSIGNMENT_SELECT)
+    .eq("user_id", userId);
+
+  if (filters.yearOnly) {
+    query = query.eq("committee_year_id", YEAR_ID).eq("is_active", true);
+  }
+
+  const { data, error } = await (query as {
+    limit: (n: number) => PromiseLike<{
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: any[] | null;
+      error: { message: string } | null;
+    }>;
+  }).limit(1);
+
+  if (error) return { row: null, error: error.message };
+  return { row: (data?.[0] as Record<string, unknown>) ?? null, error: null };
+}
+
 async function getAuthSession(): Promise<AuthResult> {
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
@@ -46,71 +87,72 @@ async function getAuthSession(): Promise<AuthResult> {
     redirect("/login");
   }
 
-  const admin = createAdminClient();
-
-  // Stage 1: Attempt exact match by committee_year_id & user_id & is_active
-  let { data: assignment } = await admin
-    .from("committee_assignments")
-    .select(`
-      id,
-      division_id,
-      division:divisions(name),
-      role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
-    `)
-    .eq("committee_year_id", YEAR_ID)
-    .eq("user_id", userId)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  // Stage 2: Fallback by user_id only (ignore committee_year_id mismatch)
-  if (!assignment) {
-    const { data: fallbackList } = await admin
-      .from("committee_assignments")
-      .select(`
-        id,
-        division_id,
-        division:divisions(name),
-        role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
-      `)
-      .eq("user_id", userId)
-      .limit(1);
-
-    assignment = fallbackList?.[0] ?? null;
-  }
-
-  // Stage 3: Fallback by profiles lookup (ID or Email match)
-  let profileName = "";
-  if (!assignment) {
-    const { data: userProfile } = await admin
-      .from("profiles")
-      .select("id, full_name, nim")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (userProfile) {
-      profileName = userProfile.full_name ?? "";
-      const { data: profileAssignments } = await admin
-        .from("committee_assignments")
-        .select(`
-          id,
-          division_id,
-          division:divisions(name),
-          role:roles(name, slug, level, is_approver, is_meeting_creator, is_report_creator)
-        `)
-        .eq("user_id", userProfile.id)
-        .limit(1);
-
-      assignment = profileAssignments?.[0] ?? null;
+  // ── Pilih client untuk membaca data panitia ──
+  // Prioritas 1: service-role client (melewati RLS) jika key tersedia.
+  // Prioritas 2 (fallback penting): user-scoped client biasa. Kebijakan
+  // RLS database mengizinkan user 'authenticated' membaca tabel panitia,
+  // jadi query ini VALID tanpa service-role key.
+  //
+  // BUG LAMA: kalau SUPABASE_SERVICE_ROLE_KEY tidak terpasang di suatu
+  // environment, admin client diam-diam memakai anon key -> RLS memblokir
+  // -> semua halaman menolak akses WALAU user sudah login dengan benar.
+  let db: SupabaseClient = supabase;
+  if (hasServiceRoleKey()) {
+    try {
+      db = createAdminClient();
+    } catch {
+      console.warn(
+        "[auth] Service-role client gagal dibuat, fallback ke user-scoped client (RLS).",
+      );
+      db = supabase;
     }
   }
 
-  // Stage 4: Check if account belongs to Lara / Bendahara (Safety net guarantee)
+  // Stage 1: exact match by committee_year_id & user_id & is_active
+  let assignment: Record<string, unknown> | null = null;
+  const stage1 = await queryFirst(db, userId, { yearOnly: true });
+  if (stage1.error) console.warn("[auth] Stage 1:", stage1.error);
+  assignment = stage1.row;
+
+  // Stage 2: fallback by user_id only (abaikan committee_year mismatch)
+  if (!assignment) {
+    const stage2 = await queryFirst(db, userId);
+    if (stage2.error) console.warn("[auth] Stage 2:", stage2.error);
+    assignment = stage2.row;
+  }
+
+  // Stage 3: fallback via profiles lookup (pastikan user ada di profiles)
+  let profileName = "";
+  if (!assignment) {
+    try {
+      const { data: userProfile } = await db
+        .from("profiles")
+        .select("id, full_name, nim")
+        .eq("id", userId)
+        .limit(1);
+
+      if (userProfile && userProfile.length > 0) {
+        profileName =
+          (userProfile[0] as { full_name?: string }).full_name ?? "";
+        const retry = await queryFirst(db, userId);
+        assignment = retry.row;
+      }
+    } catch (e) {
+      console.warn("[auth] Stage 3 gagal:", e);
+    }
+  }
+
+  // Stage 4: safety net akun Bendahara (Lara)
   const isLaraAccount =
     userEmail.toLowerCase().includes("lara") ||
     profileName.toLowerCase().includes("lara");
 
   if (!assignment && !isLaraAccount) {
-    return { authorized: false, error: "Anda tidak memiliki akses ke sistem ini." };
+    return {
+      authorized: false,
+      error:
+        "Anda tidak memiliki akses ke sistem ini. Pastikan akun Anda sudah didaftarkan sebagai panitia oleh PIC.",
+    };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,9 +162,9 @@ async function getAuthSession(): Promise<AuthResult> {
   const rawDiv = a.division;
   const div = Array.isArray(rawDiv) ? rawDiv[0] : rawDiv;
 
-  let roleSlug = role?.slug ?? "";
-  let roleName = role?.name ?? "";
-  let roleLevel = role?.level ?? 0;
+  let roleSlug: string = role?.slug ?? "";
+  let roleName: string = role?.name ?? "";
+  let roleLevel: number = role?.level ?? 0;
 
   let isTreasurer =
     TREASURER_SLUGS.includes(roleSlug) ||
@@ -246,7 +288,8 @@ export async function requireTreasurer(): Promise<
   if (!result.session.isTreasurer && result.session.roleLevel < 55) {
     return {
       authorized: false,
-      error: "Akses ditolak. Hanya Bendahara dan Pengurus yang dapat mengakses halaman ini.",
+      error:
+        "Akses ditolak. Hanya Bendahara dan Pengurus yang dapat mengakses halaman ini.",
     };
   }
 

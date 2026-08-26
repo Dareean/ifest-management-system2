@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const YEAR_ID = "c2f2a48e-3e58-4559-aaa0-623a3825348b";
 
@@ -36,15 +37,27 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
 
   if (!userId) return null;
 
-  const admin = createAdminClient();
+  // Fallback RLS: kalau service-role key tidak tersedia, pakai user-scoped
+  // client. Kebijakan RLS mengizinkan 'authenticated' membaca tabel ini,
+  // jadi profil & assignment tetap terbaca tanpa service-role key.
+  let admin: SupabaseClient;
+  try {
+    admin = createAdminClient();
+  } catch {
+    console.warn(
+      "[profile] Service-role key tidak tersedia, fallback ke user-scoped client (RLS).",
+    );
+    admin = supabase as unknown as SupabaseClient;
+  }
 
-  const { data: profile } = await admin
+  const { data: profileRows } = await admin
     .from("profiles")
     .select("full_name, nim, phone, avatar_url, created_at")
     .eq("id", userId)
-    .maybeSingle();
+    .limit(1);
+  const profile = profileRows?.[0] ?? null;
 
-  const { data: assignment } = await admin
+  const { data: assignmentRows } = await admin
     .from("committee_assignments")
     .select(`
       id, is_active, assigned_at,
@@ -54,7 +67,8 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
     .eq("committee_year_id", YEAR_ID)
     .eq("user_id", userId)
     .eq("is_active", true)
-    .maybeSingle();
+    .limit(1);
+  const assignment = assignmentRows?.[0] ?? null;
 
   // Stats
   let totalLetters = 0;
@@ -62,54 +76,65 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
   let totalTasks = 0;
   let doneTasks = 0;
 
-  if (assignment) {
-    const a = assignment as any;
-    const assignmentId = (assignment as any).id;
+  interface ProfileRow {
+    full_name?: string | null;
+    nim?: string | null;
+    phone?: string | null;
+    avatar_url?: string | null;
+    created_at?: string | null;
+  }
+  interface AssignmentJoin {
+    id: string;
+    is_active: boolean;
+    assigned_at: string;
+    division?: { name?: string } | { name?: string }[] | null;
+    role?: { name?: string; level?: number } | { name?: string; level?: number }[] | null;
+  }
+  const p = profile as unknown as ProfileRow | null;
+  const a = assignment as unknown as AssignmentJoin | null;
+  const divName = Array.isArray(a?.division) ? a.division[0]?.name : a?.division?.name;
+  const roleName = Array.isArray(a?.role) ? a.role[0]?.name : a?.role?.name;
+  const roleLevel = Array.isArray(a?.role) ? a.role[0]?.level : a?.role?.level;
 
-    if (assignmentId) {
-      const [letterRes, meetingRes, taskRes] = await Promise.all([
-        admin
-          .from("letter_requests")
-          .select("*", { count: "exact", head: true })
-          .eq("requester_id", assignmentId),
-        admin
-          .from("meeting_invitees")
-          .select("*", { count: "exact", head: true })
-          .eq("committee_assignment_id", assignmentId),
-        admin
-          .from("tasks")
-          .select("*", { count: "exact", head: true })
-          .eq("assignee_id", assignmentId),
-      ]);
+  if (a?.id) {
+    const [letterRes, meetingRes] = await Promise.all([
+      admin
+        .from("letter_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("requester_id", a.id),
+      admin
+        .from("meeting_invitees")
+        .select("*", { count: "exact", head: true })
+        .eq("committee_assignment_id", a.id),
+    ]);
 
-      totalLetters = letterRes.count ?? 0;
-      totalMeetings = meetingRes.count ?? 0;
+    totalLetters = letterRes.count ?? 0;
+    totalMeetings = meetingRes.count ?? 0;
 
-      const { data: tasks } = await admin
-        .from("tasks")
-        .select("status")
-        .eq("assignee_id", assignmentId);
-      totalTasks = tasks?.length ?? 0;
-      doneTasks = tasks?.filter((t) => t.status === "done").length ?? 0;
-    }
+    const { data: tasks } = await admin
+      .from("tasks")
+      .select("status")
+      .eq("assignee_id", a.id);
+    totalTasks = tasks?.length ?? 0;
+    doneTasks = tasks?.filter((t) => t.status === "done").length ?? 0;
   }
 
   return {
     userId,
     email,
-    fullName: (profile as any)?.full_name ?? "",
-    nim: (profile as any)?.nim ?? "",
-    phone: (profile as any)?.phone ?? null,
-    avatarUrl: (profile as any)?.avatar_url ?? null,
-    createdAt: (profile as any)?.created_at ?? null,
-    assignment: assignment
+    fullName: p?.full_name ?? "",
+    nim: p?.nim ?? "",
+    phone: p?.phone ?? null,
+    avatarUrl: p?.avatar_url ?? null,
+    createdAt: p?.created_at ?? null,
+    assignment: a
       ? {
-          division: (assignment as any).division?.name ?? "",
-          role: (assignment as any).role?.name ?? "",
-          roleName: (assignment as any).role?.name ?? "",
-          level: (assignment as any).role?.level ?? 0,
-          isActive: (assignment as any).is_active,
-          assignedAt: (assignment as any).assigned_at,
+          division: divName ?? "",
+          role: roleName ?? "",
+          roleName: roleName ?? "",
+          level: roleLevel ?? 0,
+          isActive: a.is_active,
+          assignedAt: a.assigned_at,
         }
       : null,
     stats: { totalLetters, totalMeetings, totalTasks, doneTasks },
