@@ -1,21 +1,40 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { DEFAULT_SUPABASE_URL } from "./config";
 
-const DEFAULT_URL = "https://xxmxbyiggrottreetrig.supabase.co";
-const DEFAULT_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bXhieWlnZ3JvdHRyZWV0cmlnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzM5NjczNSwiZXhwIjoyMDk4OTcyNzM1fQ.XOqLhMsqoHAb3J6FZH6jo4jZiOAxGl6BMhdZshY_3xw";
-
+/**
+ * Admin client (service role) — melewati RLS.
+ *
+ * PENTING: service-role key HANYA boleh ada di environment server
+ * (Vercel server env / .env.local yang tidak ter-commit). Kalau key ini
+ * tidak tersedia, JANGAN pernah fallback diam-diam ke anon key: semua
+ * query admin akan gagal karena RLS dan autentikasi halaman ikut rusak.
+ * Sebaliknya, lempar error yang jelas agar pemanggil bisa fallback
+ * ke user-scoped client (RLS) — lihat lib/auth/authorize.ts.
+ */
 export function createAdminClient(): SupabaseClient {
-  const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL !== "https://placeholder.supabase.co"
-      ? process.env.NEXT_PUBLIC_SUPABASE_URL
-      : DEFAULT_URL;
+  const url = resolveSupabaseUrl();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY !== "placeholder-service-role-key"
-      ? process.env.SUPABASE_SERVICE_ROLE_KEY
-      : DEFAULT_KEY;
+  if (!key || key === "placeholder-service-role-key") {
+    throw new Error(
+      "[admin.ts] SUPABASE_SERVICE_ROLE_KEY tidak tersedia di environment ini. " +
+        "Gunakan fallback user-scoped client (RLS) atau set env var tersebut.",
+    );
+  }
 
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
+/** True kalau service-role key benar-benar tersedia. */
+export function hasServiceRoleKey(): boolean {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  return Boolean(key && key !== "placeholder-service-role-key");
+}
+
+function resolveSupabaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!url || url === "https://placeholder.supabase.co") {
+    return DEFAULT_SUPABASE_URL;
+  }
+  return url;
+}
